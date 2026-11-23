@@ -1,0 +1,106 @@
+{
+  "app": {
+    "name": "Entreno",
+    "skipToContent": "Saltar al contenido principal"
+  },
+  "nav": {
+    "label": "Navegación principal",
+    "home": "Inicio",
+    "activities": "Actividades",
+    "upload": "Subir",
+    "goals": "Metas",
+    "more": "Más",
+    "metrics": "Métricas",
+    "season": "Temporada",
+    "import": "Importación",
+    "guides": "Guías",
+    "profile": "Perfil",
+    "settings": "Ajustes",
+    "glossary": "¿Qué significa?",
+    "privacy": "Privacidad"
+  },
+  "common": {
+    "loading": "Cargando…",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "saved": "Guardado",
+    "cancel": "Cancelar",
+    "continue": "Continuar",
+    "back": "Atrás",
+    "skip": "Saltar por ahora",
+    "optional": "opcional",
+    "retry": "Intentar de nuevo",
+    "close": "Cerrar",
+    "comingSoon": "Esta sección está en construcción."
+  },
+  "theme": {
+    "label": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Según el sistema",
+    "help": "«Según el sistema» usa el mismo tema de tu celular o computador."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "languageEsCO": "Español (Colombia)",
+    "units": "Unidades",
+    "unitsMetric": "Métrico (km, m, kg, °C)",
+    "onlyOptionForNow": "Por ahora es la única opción disponible.",
+    "account": "Cuenta",
+    "signOut": "Cerrar sesión"
+  },
+  "empty": {
+    "activities": {
+      "title": "Aún no tienes actividades",
+      "body": "Sube la exportación de Strava o de Garmin, un archivo suelto o registra una actividad a mano.",
+      "action": "Subir actividades"
+    },
+    "goals": {
+      "title": "Aún no tienes metas",
+      "body": "Crea tu primera meta: una salida, una carrera o una vuelta por etapas.",
+      "action": "Crear meta"
+    },
+    "home": {
+      "title": "Bienvenido",
+      "body": "Cuando tengas actividades, aquí verás tu forma física, tu fatiga y tu próxima meta."
+    }
+  },
+  "errors": {
+    "generic": "Algo salió mal. Intenta de nuevo en un momento.",
+    "network": "No pudimos conectarnos. Revisa tu internet e intenta de nuevo.",
+    "notFoundTitle": "No encontramos esta página",
+    "notFoundBody": "Puede que el enlace esté mal o que no tengas acceso a este contenido.",
+    "goHome": "Ir al inicio",
+    "config": "La aplicación no está configurada: faltan los datos de conexión con Supabase. Revisa el README."
+  },
+  "auth": {
+    "welcomeTitle": "Tus entrenamientos, en un solo lugar",
+    "welcomeBody": "Mira tu forma física, planea tu temporada y prepárate para tus metas.",
+    "google": "Continuar con Google",
+    "or": "o con tu correo",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "passwordHint": "Mínimo 8 caracteres.",
+    "signIn": "Ingresar",
+    "signUp": "Crear cuenta",
+    "haveAccount": "¿Ya tienes cuenta? Ingresa",
+    "noAccount": "¿No tienes cuenta? Créala",
+    "forgot": "Olvidé mi contraseña",
+    "sendReset": "Enviar enlace para cambiarla",
+    "resetSent": "Si el correo está registrado, te enviamos un enlace para cambiar la contraseña.",
+    "checkEmail": "Te enviamos un correo para confirmar tu cuenta. Ábrelo y sigue el enlace.",
+    "newPassword": "Nueva contraseña",
+    "updatePassword": "Cambiar contraseña",
+    "passwordUpdated": "Listo, tu contraseña quedó cambiada.",
+    "invalidCredentials": "El correo o la contraseña no coinciden.",
+    "emailInvalid": "Escribe un correo válido, por ejemplo nombre@correo.com.",
+    "passwordShort": "La contraseña debe tener al menos 8 caracteres.",
+    "privacyNotice": "Al crear tu cuenta aceptas la",
+    "privacyLink": "política de privacidad",
+    "finishing": "Terminando de ingresar…"
+  },
+  "privacy": {
+    "title": "Política de privacidad"
+  }
+}
