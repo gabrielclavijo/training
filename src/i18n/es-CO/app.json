@@ -1,0 +1,81 @@
+{
+  "local": {
+    "title": "Modo local de prueba",
+    "explain": "Esta copia de la app todavía no está conectada a una base de datos. Puedes probarla en modo local: todo funciona, pero tus datos quedan solo en este navegador y nadie más los ve.",
+    "enter": "Probar en modo local",
+    "banner": "Modo local: tus datos se guardan solo en este navegador."
+  },
+  "sports": {
+    "cycling": "Ciclismo",
+    "running": "Running",
+    "swimming": "Natación",
+    "strength": "Gimnasio",
+    "other": "Otro"
+  },
+  "subSports": {
+    "road": "Ruta",
+    "mtb": "MTB",
+    "gravel": "Gravel",
+    "indoor": "Rodillo",
+    "track": "Pista",
+    "trail": "Trail",
+    "treadmill": "Caminadora",
+    "pool": "Piscina",
+    "open_water": "Aguas abiertas",
+    "generic": "General",
+    "none": "Sin especificar"
+  },
+  "terrain": {
+    "paved": "Asfalto",
+    "unpaved": "Destapado",
+    "mixed": "Mixto",
+    "technical": "Trocha técnica",
+    "track": "Pista",
+    "pool": "Piscina",
+    "open_water": "Aguas abiertas"
+  },
+  "load": {
+    "method": {
+      "power_tss": "Potencia (TSS)",
+      "hr_tss": "Pulso (hrTSS)",
+      "trimp": "Pulso (TRIMP)",
+      "rpe": "Esfuerzo percibido",
+      "none": "Sin calcular"
+    },
+    "confidence": {
+      "high": "Confianza alta",
+      "medium": "Confianza media",
+      "low": "Confianza baja"
+    },
+    "points": "{{value}} puntos",
+    "noLoad": "Sin dato de carga",
+    "hints": {
+      "add_ftp": "Registra tu FTP en el perfil para calcular con la potencia.",
+      "add_hr_threshold": "Registra tu umbral de pulso en el perfil para un cálculo más preciso.",
+      "add_hr_rest": "Registra tu pulso en reposo para poder usar tu pulso.",
+      "add_rpe": "Cuéntanos qué tan duro se sintió (de 1 a 10).",
+      "measure_hr_max": "Tu pulso máximo está estimado por la edad; si lo mides, el cálculo mejora.",
+      "hr_medication": "Tomas un medicamento que altera el pulso; el esfuerzo percibido es más confiable.",
+      "swim_wrist_hr": "El pulso de muñeca en el agua suele fallar; el esfuerzo percibido es más confiable."
+    }
+  },
+  "rpe": {
+    "label": "¿Qué tan duro se sintió? (1 a 10)",
+    "help": "1 = muy suave, puedes conversar sin problema · 5 = moderado · 7 = duro pero sostenible · 10 = máximo esfuerzo.",
+    "scale": {
+      "1": "1 · Muy suave",
+      "2": "2 · Suave",
+      "3": "3 · Cómodo",
+      "4": "4 · Algo exigente",
+      "5": "5 · Moderado",
+      "6": "6 · Exigente",
+      "7": "7 · Duro",
+      "8": "8 · Muy duro",
+      "9": "9 · Casi al máximo",
+      "10": "10 · Máximo"
+    },
+    "save": "Guardar esfuerzo",
+    "pending": "{{count}} actividad espera tu esfuerzo percibido",
+    "pending_other": "{{count}} actividades esperan tu esfuerzo percibido"
+  }
+}

@@ -1,8 +1,10 @@
 # Publica la app en GitHub Pages cada vez que hay cambios en la rama main.
-# Requisitos (ver README): Settings → Pages → Source: "GitHub Actions", y las
-# variables del repositorio VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY
-# (son valores públicos; los secretos de verdad viven solo en Supabase).
-name: Desplegar en GitHub Pages
+# La app compilada se sube a la rama gh-pages. En GitHub:
+#   Settings → Pages → Source: "Deploy from a branch" → gh-pages / (root)
+# Variables del repositorio (Settings → Secrets and variables → Actions → Variables):
+#   VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY (valores públicos).
+# Sin esas variables la app funciona en «modo local de prueba».
+name: Publicar en GitHub Pages
 
 on:
   push:
@@ -10,16 +12,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,16 +35,11 @@ jobs:
           VITE_BASE: /${{ github.event.repository.name }}/
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publicar en la rama gh-pages
+        run: |
+          cd dist
+          touch .nojekyll
+          git init -q -b gh-pages
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Publicar ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages

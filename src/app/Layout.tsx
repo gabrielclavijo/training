@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Icon, type IconName } from '../components/ui/Icon'
+import { useAuth } from '../features/auth/AuthProvider'
 
 interface NavItem {
   to: string
@@ -32,9 +33,18 @@ const SIDEBAR: NavItem[] = [...BOTTOM.filter((i) => i.to !== '/mas'), ...SECONDA
 
 export function Layout() {
   const { t } = useTranslation()
+  const { mode } = useAuth()
   return (
     <div className="layout">
-      <a className="skip-link" href="#contenido">
+      {/* Con HashRouter un enlace "#ancla" cambiaría de página: movemos el foco a mano */}
+      <a
+        className="skip-link"
+        href="#contenido"
+        onClick={(e) => {
+          e.preventDefault()
+          document.getElementById('contenido')?.focus()
+        }}
+      >
         {t('app.skipToContent')}
       </a>
       <header className="topbar">
@@ -58,6 +68,7 @@ export function Layout() {
       </nav>
 
       <main className="main" id="contenido" tabIndex={-1}>
+        {mode === 'local' && <p className="local-banner">{t('local.banner')}</p>}
         <Outlet />
       </main>
 

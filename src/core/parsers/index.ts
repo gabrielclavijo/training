@@ -58,12 +58,19 @@ export function parseActivityFile(entry: FileEntry, hint?: SportMapping, originH
  * (Strava o Garmin, con zips dentro de zips). Va entregando resultados uno a
  * uno para poder mostrar el progreso.
  */
-export function* parseUpload(entry: FileEntry): Generator<ParseOutcome, void, void> {
+export interface UploadOptions {
+  /** Avisa cuántas actividades se encontraron (para «Importando 340 de 1.200»). */
+  onDiscovered?: (count: number) => void
+}
+
+export function* parseUpload(entry: FileEntry, opts: UploadOptions = {}): Generator<ParseOutcome, void, void> {
   if (entry.bytes.byteLength > MAX_FILE_BYTES) {
+    opts.onDiscovered?.(1)
     yield { ok: false, name: entry.name, code: 'too_large' }
     return
   }
   if (!/\.zip$/i.test(entry.name)) {
+    opts.onDiscovered?.(1)
     yield parseOne(entry)
     return
   }
@@ -71,10 +78,11 @@ export function* parseUpload(entry: FileEntry): Generator<ParseOutcome, void, vo
   try {
     files = unzipSync(entry.bytes)
   } catch {
+    opts.onDiscovered?.(1)
     yield { ok: false, name: entry.name, code: 'corrupt' }
     return
   }
-  yield* parseArchive(files)
+  yield* parseArchive(files, 0, undefined, opts)
 }
 
 function parseOne(entry: FileEntry, hint?: SportMapping, originHint?: OriginHint): ParseOutcome {
@@ -93,6 +101,7 @@ function* parseArchive(
   files: Record<string, Uint8Array>,
   depth = 0,
   inheritedOrigin?: OriginHint,
+  opts: UploadOptions = {},
 ): Generator<ParseOutcome, void, void> {
   const names = Object.keys(files)
   const csvName = names.find((n) => /(^|\/)activities\.csv$/i.test(n))
@@ -103,6 +112,8 @@ function* parseArchive(
   let stravaRows: StravaExportRow[] = []
   if (csvName) stravaRows = parseStravaActivitiesCsv(new TextDecoder().decode(files[csvName]))
   const byFile = new Map(stravaRows.filter((r) => r.filename).map((r) => [lower(r.filename!), r]))
+  const manualRows = stravaRows.filter((r) => !r.filename)
+  opts.onDiscovered?.(names.filter(isActivityFile).length + manualRows.length)
 
   for (const name of names) {
     if (name.endsWith('/')) continue
@@ -110,8 +121,9 @@ function* parseArchive(
       // Exportación de Garmin: los .fit vienen en zips dentro del zip principal.
       try {
         const nestedOrigin = /DI_CONNECT|DI-Connect/i.test(name) ? 'garmin_export' : originHint
-        yield* parseArchive(unzipSync(files[name]), depth + 1, nestedOrigin)
+        yield* parseArchive(unzipSync(files[name]), depth + 1, nestedOrigin, opts)
       } catch {
+        opts.onDiscovered?.(1)
         yield { ok: false, name, code: 'corrupt' }
       }
       continue
@@ -128,7 +140,7 @@ function* parseArchive(
   }
 
   // Actividades de Strava registradas a mano (sin archivo)
-  for (const row of stravaRows.filter((r) => !r.filename)) {
+  for (const row of manualRows) {
     const a = manualFromStravaRow(row)
     if (a) {
       a.summary.externalId = `strava-export:${row.activityId}`

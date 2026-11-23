@@ -1,0 +1,80 @@
+{
+  "guides": {
+    "title": "Guías paso a paso",
+    "intro": "Instrucciones sencillas para traer tus entrenamientos. Elige la que necesites.",
+    "account": {
+      "title": "1. Crear tu cuenta",
+      "steps": [
+        "Abre la app en tu celular o computador.",
+        "Toca «Continuar con Google», o escribe tu correo y una contraseña y toca «Crear cuenta».",
+        "Si usaste correo, abre el mensaje que te llegó y toca el enlace para confirmar.",
+        "Completa tus datos básicos. Lo demás es opcional y lo puedes hacer después."
+      ]
+    },
+    "strava": {
+      "title": "2. Traer todo tu historial de Strava",
+      "note": "Esto se hace desde el sitio web de Strava (no desde la app del celular). Funciona con cuentas gratuitas.",
+      "steps": [
+        "En un computador, entra a strava.com e inicia sesión.",
+        "Haz clic en tu foto (arriba a la derecha) → «Configuración».",
+        "Ve a «Mi cuenta» y busca «Descargar o eliminar tu cuenta». Haz clic en «Comenzar».",
+        "En «Descargar solicitud», haz clic en «Solicitar tu archivo». Strava te enviará un correo con un enlace; puede tardar unas horas.",
+        "Descarga el archivo .zip del correo. No lo descomprimas.",
+        "En esta app, ve a «Subir» y elige ese .zip. Verás el progreso: «Importando 340 de 1.200 actividades…»."
+      ]
+    },
+    "garmin": {
+      "title": "3. Traer tu historial de Garmin Connect",
+      "note": "Útil si no usas Strava o si quieres los archivos originales de tu reloj (con potencia y cadencia completas).",
+      "steps": [
+        "En un computador, entra a connect.garmin.com e inicia sesión.",
+        "Haz clic en tu foto → «Configuración de la cuenta» → «Administración de datos» (o búscalo como «Exportar tus datos»).",
+        "Elige «Exportar datos» y confirma. Garmin te enviará un correo con el enlace; puede tardar hasta un par de días.",
+        "Descarga el .zip y súbelo tal cual en «Subir». La app abre los archivos internos sola."
+      ]
+    },
+    "single": {
+      "title": "4. Subir una actividad nueva",
+      "intro": "Después de cada entrenamiento (toma menos de un minuto):",
+      "garmin": "Desde Garmin Connect (web): abre la actividad → ícono de engranaje → «Exportar original» (descarga un .zip con el .fit) o «Exportar a GPX».",
+      "strava": "Desde Strava (web): abre la actividad → botón «…» → «Exportar original» o «Exportar GPX».",
+      "other": "Otros relojes (Coros, Suunto, Polar, Wahoo, Apple Watch): en su app o sitio web busca «Exportar» y elige .FIT o .GPX.",
+      "upload": "Luego, en esta app, toca «Subir» y elige el archivo. Si la misma actividad ya estaba (por ejemplo, la subiste desde Strava y desde Garmin), aparecerá una sola vez."
+    },
+    "manual": {
+      "title": "5. Registrar a mano",
+      "text": "Para el gimnasio o si no llevabas reloj: toca «Subir» → «Registra una actividad a mano». Con la duración y qué tan duro se sintió (1 a 10) ya calculamos tu carga."
+    },
+    "trouble": {
+      "title": "6. Si algo falla",
+      "items": [
+        "«Este archivo no es una actividad válida»: puede ser una ruta planeada (GPX sin horas) o un archivo de configuración. Exporta la actividad grabada.",
+        "«El archivo está dañado»: vuelve a descargarlo; a veces la descarga queda incompleta.",
+        "El .zip de Strava es muy grande: hazlo desde un computador, no desde el celular, y deja la pestaña abierta mientras importa.",
+        "Una actividad salió repetida o se fusionó con otra que no era: abre la actividad → «De dónde vino» → «No son la misma actividad».",
+        "La carga dice «Sin calcular»: registra qué tan duro se sintió (1 a 10) o agrega tus datos fisiológicos en el perfil.",
+        "Si nada de esto funciona, escríbele a la persona que administra el grupo de prueba."
+      ]
+    },
+    "strava_api_note": "¿Por qué no hay botón «Conectar con Strava»? Strava exige una suscripción paga a quien crea la app y no permite guardar sus datos más de 7 días. Por eso usamos la exportación de tu cuenta, que es tuya y gratuita."
+  },
+  "settingsExtra": {
+    "demo": "Datos de prueba",
+    "demoHelp": "Carga un historial de 16 semanas, dos metas, una pausa y una actividad repetida (Strava + .FIT) para explorar la app. Se marcan como «de prueba» y se borran con un clic. Recomendado: usar una cuenta aparte.",
+    "demoLoad": "Cargar datos de prueba",
+    "demoLoading": "Cargando datos de prueba… {{processed}} de {{total}}",
+    "demoLoaded": "Listo: datos de prueba cargados.",
+    "demoClear": "Borrar datos de prueba",
+    "demoCleared": "Datos de prueba borrados.",
+    "data": "Tus datos",
+    "export": "Exportar mis datos",
+    "exportHelp": "Descarga un archivo .zip con todo lo que guardaste: perfil, actividades, metas, datos de salud y las series de tus actividades.",
+    "exporting": "Preparando tu archivo…",
+    "deleteAccount": "Borrar mi cuenta",
+    "deleteHelp": "Elimina tu cuenta y todo su contenido (actividades, metas, datos de salud). No se puede deshacer.",
+    "deleteConfirmLabel": "Para confirmar, escribe BORRAR",
+    "deleteWord": "BORRAR",
+    "deleteButton": "Borrar mi cuenta para siempre",
+    "deleting": "Borrando…"
+  }
+}

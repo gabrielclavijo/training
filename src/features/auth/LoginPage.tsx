@@ -12,7 +12,7 @@ const emailSchema = z.email()
 
 export function LoginPage() {
   const { t } = useTranslation()
-  const { session } = useAuth()
+  const { user, localModeAvailable, enterLocalMode } = useAuth()
   const [mode, setMode] = useState<Mode>('signIn')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -25,13 +25,30 @@ export function LoginPage() {
     document.title = `${t('auth.signIn')} · ${t('app.name')}`
   }, [t])
 
-  if (session) return <Navigate to="/" replace />
+  if (user) return <Navigate to="/" replace />
 
   if (!isSupabaseConfigured || !supabase) {
     return (
       <main className="auth-page" id="contenido">
-        <h1>{t('app.name')}</h1>
-        <Alert kind="error">{t('errors.config')}</Alert>
+        <p className="brand" aria-hidden="true">
+          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={32} height={32} /> {t('app.name')}
+        </p>
+        <h1>{t('auth.welcomeTitle')}</h1>
+        <p className="muted">{t('auth.welcomeBody')}</p>
+        {localModeAvailable ? (
+          <div className="callout">
+            <h2>{t('local.title')}</h2>
+            <p>{t('local.explain')}</p>
+            <button type="button" className="btn btn-primary btn-block" onClick={enterLocalMode}>
+              {t('local.enter')}
+            </button>
+          </div>
+        ) : (
+          <Alert kind="error">{t('errors.config')}</Alert>
+        )}
+        <p className="muted" style={{ marginTop: 'var(--space-5)', fontSize: '0.9rem' }}>
+          <Link to="/privacidad">{t('auth.privacyLink')}</Link>
+        </p>
       </main>
     )
   }

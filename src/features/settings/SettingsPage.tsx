@@ -1,21 +1,35 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useTheme, type ThemePreference } from '../../app/theme'
-import { Page } from '../../components/ui/Page'
+import { Alert, Page } from '../../components/ui/Page'
+import { localDayKey } from '../../core/dates'
+import { useRepo } from '../../data/RepoProvider'
 import { useAuth } from '../auth/AuthProvider'
+import { DemoDataButton } from './DemoData'
+import { buildExport } from './exportData'
 
 const THEMES: ThemePreference[] = ['light', 'dark', 'system']
 
 export function SettingsPage() {
   const { t } = useTranslation()
   const { preference, setPreference } = useTheme()
-  const { user, signOut } = useAuth()
+  const { user, signOut, mode } = useAuth()
+  const repo = useRepo()
+
+  function changeTheme(th: ThemePreference) {
+    setPreference(th)
+    void repo.updateProfile({ theme: th }).catch(() => undefined)
+  }
 
   return (
     <Page title={t('settings.title')}>
       <section className="card" aria-labelledby="theme-h">
         <fieldset>
-          <legend id="theme-h">
-            <h2 style={{ margin: 0 }}>{t('theme.label')}</h2>
+          <legend>
+            <h2 id="theme-h" style={{ margin: 0 }}>
+              {t('theme.label')}
+            </h2>
           </legend>
           <p className="hint muted" id="theme-help">
             {t('theme.help')}
@@ -23,13 +37,7 @@ export function SettingsPage() {
           <div className="choice-list" aria-describedby="theme-help">
             {THEMES.map((th) => (
               <label key={th} className="choice">
-                <input
-                  type="radio"
-                  name="theme"
-                  value={th}
-                  checked={preference === th}
-                  onChange={() => setPreference(th)}
-                />
+                <input type="radio" name="theme" value={th} checked={preference === th} onChange={() => changeTheme(th)} />
                 {t(`theme.${th}`)}
               </label>
             ))}
@@ -38,7 +46,9 @@ export function SettingsPage() {
       </section>
 
       <section className="card" aria-labelledby="locale-h">
-        <h2 id="locale-h">{t('settings.language')} y {t('settings.units').toLowerCase()}</h2>
+        <h2 id="locale-h">
+          {t('settings.language')} y {t('settings.units').toLowerCase()}
+        </h2>
         <div className="field">
           <label htmlFor="locale">{t('settings.language')}</label>
           <select id="locale" disabled aria-describedby="only-one" defaultValue="es-CO">
@@ -56,13 +66,99 @@ export function SettingsPage() {
         </p>
       </section>
 
+      <section className="card" aria-labelledby="demo-h">
+        <h2 id="demo-h">{t('settingsExtra.demo')}</h2>
+        <p className="muted">{t('settingsExtra.demoHelp')}</p>
+        <DemoDataButton withClear />
+      </section>
+
+      <section className="card" aria-labelledby="data-h">
+        <h2 id="data-h">{t('settingsExtra.data')}</h2>
+        <ExportButton />
+        <hr className="sep" />
+        <DeleteAccount />
+      </section>
+
       <section className="card" aria-labelledby="account-h">
         <h2 id="account-h">{t('settings.account')}</h2>
-        {user?.email && <p className="muted">{user.email}</p>}
+        {mode === 'local' ? <p className="muted">{t('local.banner')}</p> : user?.email && <p className="muted">{user.email}</p>}
         <button type="button" className="btn btn-secondary" onClick={() => void signOut()}>
           {t('settings.signOut')}
         </button>
       </section>
     </Page>
+  )
+}
+
+function ExportButton() {
+  const { t } = useTranslation()
+  const repo = useRepo()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(false)
+  async function run() {
+    setBusy(true)
+    setError(false)
+    try {
+      const blob = await buildExport(repo)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `mis-datos-${localDayKey(new Date())}.zip`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    } catch (e) {
+      console.error(e)
+      setError(true)
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <div>
+      <h3>{t('settingsExtra.export')}</h3>
+      <p className="muted">{t('settingsExtra.exportHelp')}</p>
+      {error && <Alert kind="error">{t('errors.generic')}</Alert>}
+      <button type="button" className="btn btn-secondary" onClick={run} disabled={busy} aria-busy={busy}>
+        {busy ? t('settingsExtra.exporting') : t('settingsExtra.export')}
+      </button>
+    </div>
+  )
+}
+
+function DeleteAccount() {
+  const { t } = useTranslation()
+  const repo = useRepo()
+  const { signOut } = useAuth()
+  const navigate = useNavigate()
+  const [word, setWord] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(false)
+  const ok = word.trim().toUpperCase() === t('settingsExtra.deleteWord')
+  async function run() {
+    setBusy(true)
+    setError(false)
+    try {
+      await repo.deleteAccount()
+      await signOut()
+      navigate('/ingresar')
+    } catch (e) {
+      console.error(e)
+      setError(true)
+      setBusy(false)
+    }
+  }
+  return (
+    <div>
+      <h3>{t('settingsExtra.deleteAccount')}</h3>
+      <p className="muted">{t('settingsExtra.deleteHelp')}</p>
+      {error && <Alert kind="error">{t('errors.generic')}</Alert>}
+      <div className="field">
+        <label htmlFor="del-word">{t('settingsExtra.deleteConfirmLabel')}</label>
+        <input id="del-word" type="text" value={word} onChange={(e) => setWord(e.target.value)} autoComplete="off" />
+      </div>
+      <button type="button" className="btn btn-danger" disabled={!ok || busy} onClick={run}>
+        {busy ? t('settingsExtra.deleting') : t('settingsExtra.deleteButton')}
+      </button>
+    </div>
   )
 }

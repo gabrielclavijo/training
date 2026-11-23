@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:db": "bash scripts/test-db.sh"
+    "test:db": "bash scripts/test-db.sh",
+    "test:e2e": "node scripts/e2e-smoke.cjs"
   },
   "dependencies": {
     "@garmin/fitsdk": "^21.222.0",

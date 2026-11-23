@@ -1,42 +1,59 @@
-import type { Session, User } from '@supabase/supabase-js'
+import type { Session } from '@supabase/supabase-js'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { supabase } from '../../lib/supabase'
+import { isSupabaseConfigured, supabase } from '../../lib/supabase'
+
+/**
+ * Sesión de la persona.
+ *  - mode 'supabase': cuenta real (Google o correo).
+ *  - mode 'local': «modo local de prueba», solo disponible mientras la app no tenga
+ *    Supabase configurado. Los datos quedan únicamente en este navegador.
+ */
+export interface AppUser {
+  id: string
+  email: string | null
+}
 
 interface AuthState {
-  session: Session | null
-  user: User | null
+  user: AppUser | null
+  mode: 'supabase' | 'local' | null
   loading: boolean
-  /** true cuando la persona llegó desde el enlace de "olvidé mi contraseña". */
   recovering: boolean
+  localModeAvailable: boolean
+  enterLocalMode: () => void
   clearRecovering: () => void
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
+const LOCAL_FLAG = 'entreno.localMode'
+const LOCAL_USER: AppUser = { id: 'local', email: null }
 
-// Solo en desarrollo local (npm run dev con VITE_FAKE_AUTH=1): sesión ficticia para
-// revisar pantallas y accesibilidad sin Supabase. Nunca existe en el build publicado.
-const FAKE_SESSION: Session | null =
-  import.meta.env.DEV && import.meta.env.VITE_FAKE_AUTH === '1'
-    ? ({ user: { id: '00000000-0000-0000-0000-000000000000', email: 'demo@ejemplo.co' } } as unknown as Session)
-    : null
+const localModeAvailable = !isSupabaseConfigured
+function readLocalFlag() {
+  if (!localModeAvailable) return false
+  if (import.meta.env.DEV && import.meta.env.VITE_FAKE_AUTH === '1') return true
+  try {
+    return localStorage.getItem(LOCAL_FLAG) === '1'
+  } catch {
+    return false
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(FAKE_SESSION)
-  const [loading, setLoading] = useState(Boolean(supabase) && !FAKE_SESSION)
+  const [session, setSession] = useState<Session | null>(null)
+  const [local, setLocal] = useState(readLocalFlag)
+  const [loading, setLoading] = useState(Boolean(supabase))
   const [recovering, setRecovering] = useState(false)
 
   useEffect(() => {
-    if (!supabase || FAKE_SESSION) return
+    if (!supabase) return
     let active = true
-
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return
       setSession(data.session)
       setLoading(false)
       cleanAuthParamsFromUrl()
     })
-
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
       if (event === 'PASSWORD_RECOVERY') setRecovering(true)
@@ -47,19 +64,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const value = useMemo<AuthState>(
-    () => ({
-      session,
-      user: session?.user ?? null,
+  const value = useMemo<AuthState>(() => {
+    const user: AppUser | null = session
+      ? { id: session.user.id, email: session.user.email ?? null }
+      : local
+        ? LOCAL_USER
+        : null
+    return {
+      user,
+      mode: session ? 'supabase' : local ? 'local' : null,
       loading,
       recovering,
+      localModeAvailable,
+      enterLocalMode: () => {
+        try {
+          localStorage.setItem(LOCAL_FLAG, '1')
+        } catch {
+          /* sin almacenamiento: dura mientras la pestaña esté abierta */
+        }
+        setLocal(true)
+      },
       clearRecovering: () => setRecovering(false),
       signOut: async () => {
-        await supabase?.auth.signOut()
+        if (session) await supabase?.auth.signOut()
+        try {
+          localStorage.removeItem(LOCAL_FLAG)
+        } catch {
+          /* nada */
+        }
+        setLocal(false)
       },
-    }),
-    [session, loading, recovering],
-  )
+    }
+  }, [session, local, loading, recovering])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
@@ -70,14 +106,10 @@ export function useAuth() {
   return ctx
 }
 
-/** Quita ?code=… de la barra de direcciones después de iniciar sesión. */
 function cleanAuthParamsFromUrl() {
   const u = new URL(window.location.href)
   if (u.searchParams.has('code') || u.searchParams.has('error_description')) {
-    u.searchParams.delete('code')
-    u.searchParams.delete('error')
-    u.searchParams.delete('error_code')
-    u.searchParams.delete('error_description')
+    for (const k of ['code', 'error', 'error_code', 'error_description']) u.searchParams.delete(k)
     window.history.replaceState(null, '', u.toString())
   }
 }

@@ -5,7 +5,7 @@ import { Spinner } from '../../components/ui/Page'
 import { useAuth } from './AuthProvider'
 
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { session, loading, recovering } = useAuth()
+  const { user, loading, recovering } = useAuth()
   const location = useLocation()
   const { t } = useTranslation()
 
@@ -17,6 +17,6 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     )
   }
   if (recovering && location.pathname !== '/cambiar-clave') return <Navigate to="/cambiar-clave" replace />
-  if (!session) return <Navigate to="/ingresar" replace state={{ from: location.pathname }} />
+  if (!user) return <Navigate to="/ingresar" replace state={{ from: location.pathname }} />
   return <>{children}</>
 }
