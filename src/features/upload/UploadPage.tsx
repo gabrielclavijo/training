@@ -7,7 +7,7 @@ import { Alert, Page } from '../../components/ui/Page'
 import { runImportJob, type ImportCandidate, type ImportProgress } from '../../data/importer'
 import { useRepo } from '../../data/RepoProvider'
 import type { ImportItemStatus, ImportKind } from '../../data/types'
-import type { WorkerOut } from '../../workers/import.worker'
+import type { WorkerIn, WorkerOut } from '../../workers/import.worker'
 
 type QueueItem = { name: string; candidate?: ImportCandidate; errorCode?: string }
 interface Row {
@@ -77,9 +77,21 @@ export function UploadPage() {
         else queue.push({ name: m.name, errorCode: m.code })
       } else queue.close()
     }
-    worker.onerror = () => queue.close()
+    let workerFailed = false
+    worker.onerror = (e) => {
+      console.error('Error en el lector de archivos', e)
+      workerFailed = true
+      queue.close()
+    }
     const abort = new AbortController()
     abortRef.current = abort
+    // «Detener»: corta el lector aunque esté esperando el siguiente archivo
+    abort.signal.addEventListener('abort', () => {
+      worker.terminate()
+      queue.close()
+    })
+    // Entregar los archivos al lector en segundo plano
+    worker.postMessage({ files } satisfies WorkerIn)
 
     try {
       // Envolvemos la cola para registrar el resultado de cada archivo
@@ -103,7 +115,7 @@ export function UploadPage() {
       for (const i of items) seen.push({ name: i.filename, status: i.status, errorCode: i.errorCode ?? undefined })
       setRows(seen)
       setProgress({ ...result.progress, total: result.progress.processed })
-      setPhase(abort.signal.aborted ? 'cancelled' : 'done')
+      setPhase(workerFailed ? 'error' : abort.signal.aborted ? 'cancelled' : 'done')
     } catch (e) {
       console.error(e)
       setPhase('error')
@@ -144,7 +156,6 @@ export function UploadPage() {
           ref={inputRef}
           type="file"
           multiple
-          accept=".fit,.gpx,.tcx,.zip,.gz,application/zip,application/gpx+xml"
           className="visually-hidden"
           tabIndex={-1}
           aria-hidden="true"

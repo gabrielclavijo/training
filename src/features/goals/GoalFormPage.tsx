@@ -366,7 +366,7 @@ function GoalForm({ initial }: { initial: Goal | null }) {
             <p className="muted">{t('goals.gpxHelp')}</p>
             <div className="field">
               <label htmlFor="g-gpx">{t('goals.gpxChoose')}</label>
-              <input id="g-gpx" type="file" accept=".gpx,application/gpx+xml" onChange={(e) => void onGpx(e.target.files?.[0])} />
+              <input id="g-gpx" type="file" onChange={(e) => void onGpx(e.target.files?.[0])} />
             </div>
             <div aria-live="polite">
               {gpxInfo && <Alert kind="success">{gpxInfo}</Alert>}

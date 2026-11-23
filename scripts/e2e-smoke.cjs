@@ -5,6 +5,31 @@ const { chromium } = require('playwright');
 const { AxeBuilder } = require('@axe-core/playwright');
 const out = process.env.SHOTS_DIR || require('os').tmpdir() + '/';
 const base = process.env.APP_URL || 'http://localhost:4173/';
+async function makeUploadFiles() {
+  const fs = require('fs'), path = require('path'), os = require('os');
+  const root = path.resolve(__dirname, '..');
+  const { Encoder, Profile } = await import(path.join(root, 'node_modules/@garmin/fitsdk/src/index.js'));
+  const { zipSync, gzipSync, strToU8 } = await import(path.join(root, 'node_modules/fflate/esm/index.mjs'));
+  const fit = (start, secs, km) => {
+    const e = new Encoder();
+    e.writeMesg({ mesgNum: Profile.MesgNum.FILE_ID, type: 'activity', manufacturer: 'garmin', product: 1, serialNumber: 77, timeCreated: start });
+    for (let i = 0; i <= secs; i++) e.writeMesg({ mesgNum: Profile.MesgNum.RECORD, timestamp: new Date(start.getTime() + i * 1000), heartRate: 130 + (i % 20), distance: (km * 1000 * i) / secs });
+    e.writeMesg({ mesgNum: Profile.MesgNum.SESSION, timestamp: new Date(start.getTime() + secs * 1000), startTime: start, sport: 'cycling', subSport: 'road', totalElapsedTime: secs, totalTimerTime: secs, totalDistance: km * 1000 });
+    return e.close();
+  };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-'));
+  const a = path.join(dir, 'salida.fit');
+  // Fechas recientes (hace unas horas) para que aparezcan arriba en la lista
+  const h = 3600 * 1000, now = Math.floor(Date.now() / 1000) * 1000;
+  fs.writeFileSync(a, fit(new Date(now - 4 * h), 3600, 30));
+  const d2 = new Date(now - 2 * h);
+  const stravaDate = d2.toLocaleString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
+  const csv = '"Activity ID","Activity Date","Activity Name","Activity Type","Filename"\n"1","' + stravaDate + '","Prueba de subida","Gravel Ride","activities/1.fit.gz"\n';
+  const z = path.join(dir, 'export_strava.zip');
+  fs.writeFileSync(z, zipSync({ 'activities.csv': strToU8(csv), 'activities/1.fit.gz': gzipSync(fit(d2, 5400, 40)) }));
+  return [a, z];
+}
+
 (async () => {
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 360, height: 740 } });
@@ -38,6 +63,19 @@ const base = process.env.APP_URL || 'http://localhost:4173/';
       if (scheme === 'light' || r === '/') await p.screenshot({ path: out + 'e2e_' + scheme + r.replace(/\//g, '_') + '.png', fullPage: true });
     }
   }
+  // Subida real de archivos: un .FIT suelto y un .zip con formato de exportación de Strava
+  const files = await makeUploadFiles();
+  await p.goto(base + '#/subir'); await p.waitForTimeout(400);
+  const [fc] = await Promise.all([p.waitForEvent('filechooser'), p.getByRole('button', { name: 'Elegir archivos' }).click()]);
+  await fc.setFiles(files);
+  await p.getByText('Importación terminada').waitFor({ timeout: 30000 });
+  const summary = await p.locator('[role=status], [role=alert]').allInnerTexts();
+  console.log('subida:', summary.join(' | ').replace(/\n/g, ' '));
+  if (!/2 nuevas/.test(summary.join(' '))) throw new Error('La subida de archivos no importó las 2 actividades');
+  await p.getByRole('link', { name: 'Ver mis actividades' }).click();
+  await p.getByRole('link', { name: /Prueba de subida/ }).first().waitFor();
+  console.log('subida: la actividad aparece en la lista');
+
   // detalle de la actividad fusionada
   await p.goto(base + '#/actividades'); await p.waitForTimeout(400);
   await p.getByRole('link', { name: /Gravel por la Sabana con el parche/ }).first().click();
