@@ -111,13 +111,15 @@ async function makeUploadFiles() {
   await axe('alimentación (necesidades)');
   await p.getByRole('button', { name: 'Generar menú de la semana' }).click();
   await p.getByRole('heading', { name: 'Lista de mercado' }).waitFor({ timeout: 20000 });
-  await p.locator('details.menu-day').first().locator('summary').click();
+  await p.locator('.meal-card').first().waitFor();
   await p.getByRole('button', { name: /^Otra opción para/ }).first().click(); await p.waitForTimeout(300);
   await p.getByText('Lo que se envió a la IA').click();
   const sent = await p.locator('details.sent pre').innerText();
   for (const banned of ['Gabriel', 'Persona de prueba', 'Gravel', 'strava', 'Vuelta', 'weight', 'birth', 'hr']) if (sent.includes(banned)) throw new Error('Se enviaría a la IA: ' + banned);
   if (!sent.includes('maní')) throw new Error('Las alergias no llegan a la IA');
-  console.log('alimentación: menú de ejemplo con', await p.locator('details.menu-day').count(), 'días; lo enviado no tiene nombre, actividades ni peso');
+  console.log('alimentación: menú de ejemplo con', await p.locator('.meal-card').count(), 'comidas en el día elegido; lo enviado no tiene nombre, actividades ni peso');
+  await p.locator('.shop-list input[type=checkbox]').first().check();
+  await p.getByText(/1 de \d+ en el carrito/).waitFor();
   await axe('alimentación (menú)');
   await p.screenshot({ path: out + 'e2e_nutricion.png', fullPage: true });
 

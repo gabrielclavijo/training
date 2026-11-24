@@ -6,13 +6,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
 import { NumberField, RadioGroup, SelectField, TextField } from '../../components/ui/Field'
 import { addDays, formatDate, formatDateTime, formatLongDate, localDayKey, weekStart as weekOf } from '../../core/dates'
-import { sessionFueling, type DaySession } from '../../core/nutrition/needs'
 import { formatNumber } from '../../core/units'
 import { keys, useNutrition, useRepoMutation } from '../../data/hooks'
 import { useRepo } from '../../data/RepoProvider'
 import { DEFAULT_NUTRITION, type MealPlan, type NutritionPrefs } from '../../data/types'
 import { LegalNotice } from '../plan/SessionView'
 import { toMenuRequest, useWeekNeeds, type DayRow } from './useWeekNeeds'
+import { Icon } from '../../components/ui/Icon'
+import { DAY_ICON, FuelingTimeline, MacroBars, MacroDonut, MealMacros, mealIcon, ShoppingChecklist, WeekDays } from './NutritionVisuals'
 
 const MENUS_PER_DAY = 3
 const d = (day: string) => formatDate(`${day}T12:00:00Z`)
@@ -66,19 +67,32 @@ function ProfileCard({ prefs }: { prefs: NutritionPrefs | null }) {
   if (!editing && prefs) {
     return (
       <section className="card" aria-labelledby="nprofile-h">
-        <h2 id="nprofile-h">{t('nutrition.profileTitle')}</h2>
-        <p>
-          <strong>{t(`nutrition.goals.${prefs.goal}`)}</strong>
-          <br />
-          {t('nutrition.summary', {
-            diet: t(`nutrition.diets.${prefs.dietType}`),
-            meals: prefs.mealsPerDay,
-            minutes: prefs.cookingMinutes,
-            budget: t(`nutrition.budgets.${prefs.budget}`).toLowerCase(),
-          })}
-          <br />
-          {prefs.foodAllergies.length ? t('nutrition.summaryAllergies', { list: prefs.foodAllergies.join(', ') }) : t('nutrition.noAllergies')}
-        </p>
+        <h2 id="nprofile-h" className="card-title-icon">
+          <span className="icon-tile" aria-hidden="true">
+            <Icon name="user" />
+          </span>
+          {t('nutrition.profileTitle')}
+        </h2>
+        <ul className="chips">
+          <li className="chip chip-strong">
+            <Icon name="target" /> {t(`nutrition.goals.${prefs.goal}`)}
+          </li>
+          <li className="chip">
+            <Icon name="leaf" /> {t(`nutrition.diets.${prefs.dietType}`)}
+          </li>
+          <li className="chip">
+            <Icon name="food" /> {t('nutrition.chipMeals', { count: prefs.mealsPerDay })}
+          </li>
+          <li className="chip">
+            <Icon name="clock" /> {t('nutrition.chipMinutes', { count: prefs.cookingMinutes })}
+          </li>
+          <li className="chip">
+            <Icon name="coins" /> {t('nutrition.chipBudget', { value: t(`nutrition.budgets.${prefs.budget}`).toLowerCase() })}
+          </li>
+          <li className={`chip${prefs.foodAllergies.length ? ' chip-warn' : ''}`}>
+            <Icon name="alert" /> {prefs.foodAllergies.length ? t('nutrition.summaryAllergies', { list: prefs.foodAllergies.join(', ') }) : t('nutrition.noAllergies')}
+          </li>
+        </ul>
         <button type="button" className="btn btn-secondary" onClick={() => setEditing(true)}>
           {t('nutrition.editProfile')}
         </button>
@@ -177,12 +191,20 @@ export function NutritionForm({ prefs, onSaved }: { prefs: NutritionPrefs | null
 
 function Week({ start, prefs }: { start: string; prefs: NutritionPrefs | null }) {
   const { t } = useTranslation()
+  const today = localDayKey(new Date())
   const { person, missing, days, hasPlan, isLoading } = useWeekNeeds(start, prefs)
+  const [selected, setSelected] = useState(today >= start && today <= addDays(start, 6) ? today : start)
   if (isLoading) return <Spinner />
+  const day = days?.find((x) => x.date === selected) ?? days?.[0]
   return (
     <>
       <section className="card" aria-labelledby="needs-h">
-        <h2 id="needs-h">{t('nutrition.needsTitle')}</h2>
+        <h2 id="needs-h" className="card-title-icon">
+          <span className="icon-tile icon-tile-coral" aria-hidden="true">
+            <Icon name="flame" />
+          </span>
+          {t('nutrition.needsTitle')}
+        </h2>
         <p className="muted">{t('nutrition.needsHelp')}</p>
         {missing.length > 0 && (
           <Alert kind="info">
@@ -191,71 +213,43 @@ function Week({ start, prefs }: { start: string; prefs: NutritionPrefs | null })
           </Alert>
         )}
         {days && !hasPlan && <p className="notice-estimate">{t('nutrition.noPlan')}</p>}
-        {days && person && <NeedsList days={days} weightKg={person.weightKg} />}
+        {days && person && day && (
+          <>
+            <WeekDays days={days} selected={day.date} onSelect={setSelected} today={today} />
+            <DayDetail key={day.date} day={day} weightKg={person.weightKg} />
+          </>
+        )}
       </section>
-      <MenuSection start={start} prefs={prefs} days={days} />
+      <MenuSection start={start} prefs={prefs} days={days} selected={day?.date ?? start} onSelect={setSelected} />
     </>
   )
 }
 
-function NeedsList({ days, weightKg }: { days: DayRow[]; weightKg: number }) {
+function DayDetail({ day, weightKg }: { day: DayRow; weightKg: number }) {
   const { t } = useTranslation()
   return (
-    <ul className="plain-list needs-list">
-      {days.map((day) => (
-        <li key={day.date} className="needs-day">
-          <div className="row-between">
-            <strong className="capitalize-first">
-              {longDay(day.date)}
-            </strong>
-            <span className="badge">{t(`nutrition.dayType.${day.needs.dayType}`)}</span>
-          </div>
-          <span className="muted">{day.sessions.length ? day.sessions.map((s) => `${t(`plan.kind.${s.kind}`)} · ${t('plan.minutes', { count: s.durationMin })}`).join(' + ') : t('nutrition.rest')}</span>
-          <dl className="macro-row">
-            <div>
-              <dt>{t('nutrition.kcal')}</dt>
-              <dd>{formatNumber(day.needs.kcal)}</dd>
-            </div>
-            <div>
-              <dt>{t('nutrition.protein')}</dt>
-              <dd>{t('nutrition.grams', { value: day.needs.proteinG })}</dd>
-            </div>
-            <div>
-              <dt>{t('nutrition.carbs')}</dt>
-              <dd>{t('nutrition.grams', { value: day.needs.carbsG })}</dd>
-            </div>
-            <div>
-              <dt>{t('nutrition.fat')}</dt>
-              <dd>{t('nutrition.grams', { value: day.needs.fatG })}</dd>
-            </div>
-          </dl>
-          {day.sessions.map((s, i) => (
-            <FuelingNote key={i} session={s} weightKg={weightKg} />
-          ))}
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-function FuelingNote({ session, weightKg }: { session: DaySession; weightKg: number }) {
-  const { t } = useTranslation()
-  const f = sessionFueling(session, weightKg)
-  const lines: string[] = []
-  if (f.before) lines.push(t('nutrition.before', { from: f.before.carbsFromG, to: f.before.carbsToG, hours: f.before.hoursBefore }))
-  if (f.during) {
-    const o = { from: f.during.carbsPerHourFrom, to: f.during.carbsPerHourTo, fluidFrom: f.during.fluidMlPerHourFrom, fluidTo: f.during.fluidMlPerHourTo }
-    lines.push(f.during.carbsPerHourTo > 0 && f.during.carbsPerHourFrom > 0 ? t('nutrition.during', o) : t('nutrition.duringWater', o))
-    if (f.during.sodium) lines.push(t('nutrition.sodium'))
-  }
-  if (f.after) lines.push(f.after.carbsG ? t('nutrition.after', { protein: f.after.proteinG, carbs: f.after.carbsG }) : t('nutrition.afterProtein', { protein: f.after.proteinG }))
-  if (!lines.length) return null
-  return (
-    <ul className="fueling">
-      {lines.map((l) => (
-        <li key={l}>{l}</li>
-      ))}
-    </ul>
+    <div className="nday-detail" aria-live="polite">
+      <div className="row-between nday-head">
+        <h3 className="capitalize-first">{longDay(day.date)}</h3>
+        <span className={`daytype daytype-${day.needs.dayType}`}>
+          <Icon name={DAY_ICON[day.needs.dayType]} /> {t(`nutrition.dayType.${day.needs.dayType}`)}
+        </span>
+      </div>
+      <div className="nday-macros">
+        <MacroDonut needs={day.needs} />
+        <MacroBars needs={day.needs} weightKg={weightKg} />
+      </div>
+      {day.sessions.length === 0 ? (
+        <p className="fuel-none">
+          <span className="icon-tile icon-tile-soft" aria-hidden="true">
+            <Icon name="moon" />
+          </span>
+          {t('nutrition.fuelingNone')}
+        </p>
+      ) : (
+        day.sessions.map((s, i) => <FuelingTimeline key={i} session={s} weightKg={weightKg} />)
+      )}
+    </div>
   )
 }
 
@@ -265,7 +259,19 @@ function errorText(t: TFunction, e: unknown) {
   return known.includes(code) ? t(`nutrition.errors.${code}`) : t('nutrition.errors.generic')
 }
 
-function MenuSection({ start, prefs, days }: { start: string; prefs: NutritionPrefs | null; days: DayRow[] | null }) {
+function MenuSection({
+  start,
+  prefs,
+  days,
+  selected,
+  onSelect,
+}: {
+  start: string
+  prefs: NutritionPrefs | null
+  days: DayRow[] | null
+  selected: string
+  onSelect: (d: string) => void
+}) {
   const { t } = useTranslation()
   const repo = useRepo()
   const qc = useQueryClient()
@@ -277,25 +283,46 @@ function MenuSection({ start, prefs, days }: { start: string; prefs: NutritionPr
   const canGenerate = Boolean(prefs && days)
   return (
     <section className="card" aria-labelledby="menu-h">
-      <h2 id="menu-h">{t('nutrition.menuTitle')}</h2>
-      <p className="muted">{t('nutrition.menuHelp', { count: MENUS_PER_DAY })}</p>
+      <h2 id="menu-h" className="card-title-icon">
+        <span className="icon-tile" aria-hidden="true">
+          <Icon name="food" />
+        </span>
+        {t('nutrition.menuTitle')}
+      </h2>
       {repo.kind === 'memory' && <p className="notice-estimate">{t('nutrition.localNotice')}</p>}
       {!prefs && <Alert kind="info">{t('nutrition.needProfile')}</Alert>}
       {prefs && !days && <Alert kind="info">{t('nutrition.needData')}</Alert>}
       {generate.isError && <Alert kind="error">{errorText(t, generate.error)}</Alert>}
       {generate.isPending ? (
-        <Spinner label={t('nutrition.generating')} />
+        <div className="ai-working">
+          <span className="ai-orb" aria-hidden="true">
+            <Icon name="sparkles" />
+          </span>
+          <Spinner label={t('nutrition.generating')} />
+        </div>
       ) : (
-        <p>
-          <button type="button" className="btn btn-primary" disabled={!canGenerate} onClick={() => generate.mutate(undefined)}>
-            {plan ? t('nutrition.regenerate') : t('nutrition.generate')}
+        <div className={`ai-cta${plan ? ' ai-cta-small' : ''}`}>
+          {!plan && (
+            <>
+              <span className="ai-orb" aria-hidden="true">
+                <Icon name="sparkles" />
+              </span>
+              <p className="ai-cta-title">{t('nutrition.generateTitle')}</p>
+              <p className="muted">{t('nutrition.menuHelp', { count: MENUS_PER_DAY })}</p>
+            </>
+          )}
+          <button type="button" className={`btn ${plan ? 'btn-secondary' : 'btn-primary'}`} disabled={!canGenerate} onClick={() => generate.mutate(undefined)}>
+            <Icon name={plan ? 'refresh' : 'sparkles'} /> {plan ? t('nutrition.regenerate') : t('nutrition.generate')}
           </button>
-        </p>
+        </div>
       )}
       {plans.isLoading && <Spinner />}
       {plan && !generate.isPending && (
         <MenuView
           plan={plan}
+          days={days}
+          selected={selected}
+          onSelect={onSelect}
           onChanged={(p) => qc.setQueryData<MealPlan[]>(['mealPlans'], (old) => [p, ...(old ?? []).filter((x) => x.id !== p.id)])}
           onDelete={() => {
             if (window.confirm(t('nutrition.deleteConfirm'))) del.mutate(plan.id)
@@ -306,12 +333,28 @@ function MenuSection({ start, prefs, days }: { start: string; prefs: NutritionPr
   )
 }
 
-function MenuView({ plan, onChanged, onDelete }: { plan: MealPlan; onChanged: (p: MealPlan) => void; onDelete: () => void }) {
+function MenuView({
+  plan,
+  days,
+  selected,
+  onSelect,
+  onChanged,
+  onDelete,
+}: {
+  plan: MealPlan
+  days: DayRow[] | null
+  selected: string
+  onSelect: (d: string) => void
+  onChanged: (p: MealPlan) => void
+  onDelete: () => void
+}) {
   const { t } = useTranslation()
   const repo = useRepo()
   const [swapping, setSwapping] = useState<string | null>(null)
   const [swapError, setSwapError] = useState<string | null>(null)
   const targets = new Map(plan.inputs.days.map((x) => [x.date, x.kcal]))
+  const today = localDayKey(new Date())
+  const day = plan.menu.days.find((x) => x.date === selected) ?? plan.menu.days[0]
 
   async function swap(date: string, index: number) {
     setSwapping(`${date}-${index}`)
@@ -329,90 +372,112 @@ function MenuView({ plan, onChanged, onDelete }: { plan: MealPlan; onChanged: (p
     <div className="menu-view">
       <p className="muted">{t('nutrition.createdAt', { date: formatDateTime(plan.updatedAt) })}</p>
       {swapError && <Alert kind="error">{swapError}</Alert>}
-      {plan.menu.days.map((day) => {
-        const total = day.meals.reduce((a, m) => a + m.kcal, 0)
-        return (
-          <details key={day.date} className="menu-day">
-            <summary>
-              <span className="capitalize-first">
-                {longDay(day.date)}
-              </span>{' '}
-              <span className="muted">· {t('nutrition.kcalValue', { value: formatNumber(total) })}</span>
-            </summary>
-            {day.note && <p className="notice-estimate">{day.note}</p>}
-            <p className="muted">{t('nutrition.dayTotal', { kcal: formatNumber(total), target: formatNumber(targets.get(day.date) ?? 0) })}</p>
-            <ol className="plain-list">
-              {day.meals.map((m, i) => {
-                const busy = swapping === `${day.date}-${i}`
-                return (
-                  <li key={i} className="meal">
-                    <div className="row-between">
-                      <h3 className="meal-title">
-                        {m.label}
-                        {m.time && <span className="muted"> · {m.time}</span>}
-                      </h3>
-                    </div>
-                    <p className="meal-dish">{m.dish}</p>
-                    <ul>
-                      {m.items.map((it, j) => (
-                        <li key={j}>
-                          {it.food}: {it.amount}
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="muted">{t('nutrition.mealKcal', { kcal: m.kcal, p: m.proteinG, c: m.carbsG, f: m.fatG })}</p>
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-small no-print"
-                      disabled={swapping !== null}
-                      aria-label={t('nutrition.swapLabel', { meal: m.label, date: d(day.date) })}
-                      onClick={() => swap(day.date, i)}
-                    >
-                      {busy ? t('nutrition.swapping') : t('nutrition.swap')}
-                    </button>
-                  </li>
-                )
-              })}
-            </ol>
-          </details>
-        )
-      })}
-
-      <h3>{t('nutrition.shoppingTitle')}</h3>
-      {plan.menu.shopping.map((list) => (
-        <section key={list.from} className="shopping">
-          <h4>{t('nutrition.shoppingRange', { from: d(list.from).slice(0, 5), to: d(list.to).slice(0, 5) })}</h4>
-          <ul>
-            {list.items.map((it, i) => (
-              <li key={i}>
-                {it.food}: {it.amount}
+      {days && <WeekDays days={days} selected={day.date} onSelect={onSelect} today={today} />}
+      <div key={day.date} className="menu-day-view">
+        <div className="row-between">
+          <h3 className="capitalize-first">{t('nutrition.menuOfDay', { date: longDay(day.date) })}</h3>
+          <span className="pill-kcal num">
+            <Icon name="flame" /> {t('nutrition.dayTotalShort', { kcal: formatNumber(day.meals.reduce((a, m) => a + m.kcal, 0)), target: formatNumber(targets.get(day.date) ?? 0) })}
+          </span>
+        </div>
+        {day.note && (
+          <p className="tip-inline">
+            <Icon name="drop" /> {day.note}
+          </p>
+        )}
+        <ol className="meal-cards">
+          {day.meals.map((m, i) => {
+            const busy = swapping === `${day.date}-${i}`
+            return (
+              <li key={`${m.dish}-${i}`} className={`meal-card${busy ? ' meal-busy' : ''}`} style={{ animationDelay: `${i * 70}ms` }}>
+                <div className="meal-top">
+                  <span className="meal-icon" aria-hidden="true">
+                    <Icon name={mealIcon(m)} />
+                  </span>
+                  <div className="meal-headings">
+                    <span className="meal-label">
+                      {m.label}
+                      {m.time && <span className="meal-time"> · {m.time}</span>}
+                    </span>
+                    <h4 className="meal-dish">{m.dish}</h4>
+                  </div>
+                  <span className="pill-kcal num">{m.kcal} kcal</span>
+                </div>
+                <MealMacros meal={m} />
+                <ul className="ingredients" aria-label={t('nutrition.ingredients')}>
+                  {m.items.map((it, j) => (
+                    <li key={j}>
+                      <span className="ing-food">{it.food}</span>
+                      <span className="ing-amount">{it.amount}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small no-print"
+                  disabled={swapping !== null}
+                  aria-label={t('nutrition.swapLabel', { meal: m.label, date: d(day.date) })}
+                  onClick={() => swap(day.date, i)}
+                >
+                  <Icon name="refresh" /> {busy ? t('nutrition.swapping') : t('nutrition.swap')}
+                </button>
               </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+            )
+          })}
+        </ol>
+      </div>
 
       {plan.menu.tips.length > 0 && (
         <>
-          <h3>{t('nutrition.tips')}</h3>
-          <ul>
+          <h3 className="card-title-icon">
+            <span className="icon-tile icon-tile-sky" aria-hidden="true">
+              <Icon name="bulb" />
+            </span>
+            {t('nutrition.tips')}
+          </h3>
+          <ul className="tips">
             {plan.menu.tips.map((tip) => (
-              <li key={tip}>{tip}</li>
+              <li key={tip}>
+                <Icon name="bulb" /> <span>{tip}</span>
+              </li>
             ))}
           </ul>
         </>
       )}
 
-      <div className="row no-print">
-        <button type="button" className="btn btn-secondary" onClick={() => {
-            // Abre todos los días para que salgan en la impresión
-            document.querySelectorAll<HTMLDetailsElement>('details.menu-day').forEach((el) => (el.open = true))
-            window.print()
-          }}>
-          {t('nutrition.print')}
+      <h3 className="card-title-icon">
+        <span className="icon-tile icon-tile-coral" aria-hidden="true">
+          <Icon name="cart" />
+        </span>
+        {t('nutrition.shoppingTitle')}
+      </h3>
+      <ShoppingChecklist planId={plan.id} lists={plan.menu.shopping} />
+
+      {/* Para imprimir: la semana completa */}
+      <div className="print-only">
+        {plan.menu.days.map((pd) => (
+          <section key={pd.date}>
+            <h3>{longDay(pd.date)}</h3>
+            <ul>
+              {pd.meals.map((m, i) => (
+                <li key={i}>
+                  <strong>
+                    {m.label} {m.time}: {m.dish}
+                  </strong>{' '}
+                  ({m.kcal} kcal) — {m.items.map((it) => `${it.food} ${it.amount}`).join(', ')}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+
+      <div className="row no-print menu-actions">
+        <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
+          <Icon name="printer" /> {t('nutrition.print')}
         </button>
         <button type="button" className="btn btn-secondary" onClick={onDelete}>
-          {t('nutrition.delete')}
+          <Icon name="trash" /> {t('nutrition.delete')}
         </button>
       </div>
 
