@@ -25,8 +25,32 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Revisar los datos (sin mostrarlos)
+        run: |
+          # Quita espacios o saltos de línea pegados por error al copiar
+          tok="$(printf '%s' "$SUPABASE_ACCESS_TOKEN" | tr -d '[:space:]')"
+          ref="$(printf '%s' "$PROJECT_REF" | tr -d '[:space:]')"
+          ok=true
+          if [ -z "$tok" ]; then
+            echo "::error::Falta el secreto SUPABASE_ACCESS_TOKEN."; ok=false
+          elif [[ "$tok" != sbp_* ]]; then
+            echo "::error::SUPABASE_ACCESS_TOKEN no empieza por 'sbp_' (empieza por '${tok:0:4}'). Debe ser el token de supabase.com/dashboard/account/tokens, no la Publishable key ni la Secret key."; ok=false
+          elif ! [[ "$tok" =~ ^sbp_[A-Za-z0-9]+$ ]]; then
+            echo "::error::SUPABASE_ACCESS_TOKEN tiene caracteres de más (comillas, flechas, la palabra 'valor', etc.). Pega solo el token."; ok=false
+          fi
+          if ! [[ "$ref" =~ ^[a-z0-9]{20}$ ]]; then
+            echo "::error::La variable SUPABASE_PROJECT_REF debe ser el Project ID de 20 letras y números (Supabase → Project Settings → General). Tiene ${#ref} caracteres."; ok=false
+          fi
+          if [ -z "$SUPABASE_DB_PASSWORD" ]; then
+            echo "::error::Falta el secreto SUPABASE_DB_PASSWORD."; ok=false
+          fi
+          $ok || exit 1
+          echo "::add-mask::$tok"
+          echo "SUPABASE_ACCESS_TOKEN=$tok" >> "$GITHUB_ENV"
+          echo "PROJECT_REF=$ref" >> "$GITHUB_ENV"
+          echo "Datos con formato correcto."
       - name: Conectar con el proyecto
-        run: supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+        run: supabase link --project-ref "$PROJECT_REF"
       - name: Crear o actualizar las tablas
         run: supabase db push --linked --password "$SUPABASE_DB_PASSWORD"
       - name: Secretos de las funciones
