@@ -92,9 +92,7 @@ export function BarChart({
         </ul>
       )}
       <div ref={ref} className={`bars${seen ? ' bars-in' : ''}${dense ? ' bars-dense' : ''}`} role="img" aria-label={summary}>
-        {average && average.value > 0 && (
-          <div className="bars-avg" style={{ bottom: `${(average.value / max) * 100}%` }} aria-hidden="true" />
-        )}
+        {average && average.value > 0 && <div className="bars-avg" style={{ bottom: `${(average.value / max) * 100}%` }} aria-hidden="true" />}
         {data.map((d, i) => (
           <div key={d.label + i} className="bar-col" aria-hidden="true">
             <span className={`bar-value${d.highlight ? ' bar-value-strong' : ''}`} style={{ animationDelay: `${300 + i * 40}ms` }}>
@@ -102,7 +100,9 @@ export function BarChart({
               {d.short ?? d.display}
             </span>
             <div
-              className={['bar-rect', d.highlight && 'bar-rect-highlight', d.warn && 'bar-rect-warn', d.partial && 'bar-rect-partial'].filter(Boolean).join(' ')}
+              className={['bar-rect', d.highlight && 'bar-rect-highlight', d.warn && 'bar-rect-warn', d.partial && 'bar-rect-partial']
+                .filter(Boolean)
+                .join(' ')}
               style={{ height: `${(d.value / max) * 100}%`, animationDelay: `${i * 40}ms` }}
             />
           </div>
@@ -155,6 +155,7 @@ export function LineChart({
     .map((l, i) => ({ l, i }))
     .filter(({ i }) => (labels.length - 1 - i) % tableEvery === 0)
     .map(({ l, i }) => [formatLabel(l), ...series.map((s) => String(Math.round(s.values[i])))])
+  const view = useInView<HTMLDivElement>()
   return (
     <figure className="chart" aria-labelledby={titleId}>
       <figcaption id={titleId} className="chart-title">
@@ -171,19 +172,21 @@ export function LineChart({
           </li>
         ))}
       </ul>
-      <svg viewBox="0 0 100 50" preserveAspectRatio="none" role="img" aria-label={summary} className="chart-svg">
-        {zeroLine && min < 0 && <line x1="0" x2="100" y1={y(0)} y2={y(0)} className="axis" />}
-        {series.map((s) => (
-          <polyline
-            key={s.name}
-            fill="none"
-            className={`line ${s.className}`}
-            strokeDasharray={s.dash}
-            vectorEffect="non-scaling-stroke"
-            points={s.values.map((v, i) => `${(i / n) * 100},${y(v)}`).join(' ')}
-          />
-        ))}
-      </svg>
+      <div ref={view.ref} className={`line-wrap${view.seen ? ' line-in' : ''}`}>
+        <svg viewBox="0 0 100 50" preserveAspectRatio="none" role="img" aria-label={summary} className="chart-svg">
+          {zeroLine && min < 0 && <line x1="0" x2="100" y1={y(0)} y2={y(0)} className="axis" />}
+          {series.map((s) => (
+            <polyline
+              key={s.name}
+              fill="none"
+              className={`line ${s.className}`}
+              strokeDasharray={s.dash}
+              vectorEffect="non-scaling-stroke"
+              points={s.values.map((v, i) => `${(i / n) * 100},${y(v)}`).join(' ')}
+            />
+          ))}
+        </svg>
+      </div>
       <div className="chart-xlabels" aria-hidden="true">
         <span>{labels[0] && formatLabel(labels[0])}</span>
         <span>{labels.length > 0 && formatLabel(labels[labels.length - 1])}</span>

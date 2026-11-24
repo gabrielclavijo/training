@@ -4,9 +4,11 @@ import { LoadBadge } from '../../components/ui/Badges'
 import { BarChart, LineChart } from '../../components/ui/Charts'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
-import { daysBetween, formatDate, formatLongDate, weekStart } from '../../core/dates'
+import { daysBetween, formatDate, formatLongDate, localDayKey, weekStart } from '../../core/dates'
 import type { LoadMethod } from '../../core/load'
-import { formatNumber } from '../../core/units'
+import { formatClock, formatNumber } from '../../core/units'
+import { fatigueStatus, fitnessVsBest, formStatus, rampStatus, type IndicatorStatus } from '../../core/fitness/status'
+import { CountUp, Gauge, Progress, Semaphore } from '../../components/ui/Status'
 import { useFitness, useGoals } from '../../data/hooks'
 import { ActivityRow } from '../activities/ActivitiesPage'
 import { TodayCard } from '../plan/TodayCard'
@@ -26,12 +28,10 @@ export function tsbState(tsb: number) {
 export function HomePage() {
   const { t } = useTranslation()
   const { loaded, overview, isLoading, error, today } = useFitness()
-  const goals = useGoals()
 
   if (isLoading) return <Page title={t('nav.home')}><Spinner full /></Page>
   if (error) return <Page title={t('nav.home')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
 
-  const nextGoal = goals.data?.find((g) => g.status === 'active' && g.eventDate >= today)
   const pending = loaded?.filter((l) => l.load.method === 'none' && l.day >= daysAgo(today, 41)) ?? []
 
   return (
@@ -42,17 +42,10 @@ export function HomePage() {
 
       <TodayCard />
 
+      <GoalOverview />
+
       <RecommendationsCard />
 
-      {nextGoal && (
-        <Link to={`/metas/${nextGoal.id}`} className="card card-link">
-          <span className="muted">{t('fitness.nextGoal')}</span>
-          <strong className="big-text">{nextGoal.name}</strong>
-          <span>
-            {t('fitness.daysLeft', { count: daysBetween(today, nextGoal.eventDate) })} · {formatDate(`${nextGoal.eventDate}T12:00:00Z`)}
-          </span>
-        </Link>
-      )}
 
       {!loaded || loaded.length === 0 ? (
         <EmptyState icon="activity" title={t('empty.activities.title')} body={t('empty.activities.body')} actionLabel={t('empty.activities.action')} actionTo="/subir" />
@@ -92,7 +85,10 @@ function FitnessCards() {
   const { overview } = useFitness()
   const s = overview?.snapshot
   if (!overview || !s) return <Alert kind="info">{t('fitness.noData')}</Alert>
-  const state = tsbState(s.tsb)
+  const form = formStatus(s.tsb)
+  const fat = fatigueStatus(s.atl, s.ctl)
+  const ramp = rampStatus(s.rampPerWeek)
+  const best = fitnessVsBest(s.ctl, overview.series)
   return (
     <section aria-labelledby="fitness-h">
       <h2 id="fitness-h" className="visually-hidden">
@@ -100,16 +96,49 @@ function FitnessCards() {
       </h2>
       {s.warming && <Alert kind="info">{t('fitness.warming', { days: s.historyDays })}</Alert>}
       <div className="metric-grid">
-        <Metric icon="trend" label={t('fitness.ctl')} value={formatNumber(s.ctl)} help={t('fitness.ctlHelp')} />
-        <Metric icon="bolt" tile="coral" label={t('fitness.atl')} value={formatNumber(s.atl)} help={t('fitness.atlHelp')} />
-        <Metric icon="gauge" tile="sky" label={t('fitness.tsb')} value={formatNumber(s.tsb)} sub={t(`fitness.${state}`)} tone={state === 'tsbVeryTired' ? 'warning' : undefined} help={t('fitness.tsbHelp')} />
+        <Metric
+          icon="trend"
+          label={t('fitness.ctl')}
+          value={s.ctl}
+          status={best}
+          verdict={t(`fitness.verdict.${best.verdict}`)}
+          detail={best.bestDay && best.best >= 10 ? t('fitness.vsBest', { pct: best.pct, best: formatNumber(best.best), date: formatDate(`${best.bestDay}T12:00:00Z`) }) : undefined}
+          gaugeLabel={t('fitness.gaugeFitness', { value: formatNumber(s.ctl), pct: best.pct, best: formatNumber(best.best) })}
+          gaugeTicks={[{ value: 100, label: t('fitness.bestTick') }]}
+          help={t('fitness.ctlHelp')}
+        />
+        <Metric
+          icon="bolt"
+          tile="coral"
+          label={t('fitness.atl')}
+          value={s.atl}
+          status={fat}
+          verdict={t(`fitness.verdict.${fat.verdict}`, { pct: fat.ratio ? Math.round(fat.ratio * 100) : 0 })}
+          gaugeLabel={t('fitness.gaugeFatigue', { value: formatNumber(s.atl), verdict: t(`fitness.level.${fat.level}`) })}
+          help={t('fitness.atlHelp')}
+        />
+        <Metric
+          icon="gauge"
+          tile="sky"
+          label={t('fitness.tsb')}
+          value={s.tsb}
+          status={form}
+          verdict={t(`fitness.verdict.${form.verdict}`)}
+          gaugeLabel={t('fitness.gaugeForm', { value: formatNumber(s.tsb), verdict: t(`fitness.level.${form.level}`) })}
+          gaugeEnds={[t('fitness.scaleBad'), t('fitness.scaleGood')]}
+          help={t('fitness.tsbHelp')}
+        />
         <Metric
           icon="chart"
           tile="soft"
           label={t('fitness.ramp')}
-          value={`${s.rampPerWeek > 0 ? '+' : ''}${formatNumber(s.rampPerWeek, 1)}`}
+          value={s.rampPerWeek}
+          decimals={1}
+          signed
           unit={t('fitness.rampValue', { value: '' }).trim()}
-          tone={s.rampPerWeek > 8 ? 'warning' : undefined}
+          status={ramp}
+          verdict={t(`fitness.verdict.${ramp.verdict}`, { value: formatNumber(s.rampPerWeek, 1) })}
+          gaugeLabel={t('fitness.gaugeRamp', { value: formatNumber(s.rampPerWeek, 1), verdict: t(`fitness.level.${ramp.level}`) })}
           help={t('fitness.rampHelp')}
         />
       </div>
@@ -126,6 +155,77 @@ function FitnessCards() {
       <p>
         <Link to="/glosario">{t('nav.glossary')}</Link>
       </p>
+    </section>
+  )
+}
+
+const DIAG_LEVEL = { on_track: 'good', tight: 'caution', behind: 'alert', past: 'good' } as const
+
+/** Resumen de la meta principal más cercana: semáforo del diagnóstico, forma hoy vs. recomendada y tiempo estimado. */
+function GoalOverview() {
+  const { t } = useTranslation()
+  const goals = useGoals()
+  const { derived } = usePlan()
+  const today = localDayKey(new Date())
+  const active = (goals.data ?? []).filter((g) => g.status === 'active' && g.eventDate >= today)
+  if (active.length === 0) return null
+  const goal = [...active].sort((a, b) => (a.priority === b.priority ? a.eventDate.localeCompare(b.eventDate) : a.priority === 'primary' ? -1 : 1))[0]
+  const d = derived?.diagnoses.find((x) => x.goalId === goal.id)
+  const days = daysBetween(today, goal.eventDate)
+  const x = d?.diagnosis
+  const level = x ? DIAG_LEVEL[x.status] : null
+  const pct = x && x.targetCtl > 0 ? Math.round((x.currentCtl / x.targetCtl) * 100) : 0
+  const projPct = x && x.targetCtl > 0 ? (x.projectedCtl / x.targetCtl) * 100 : 0
+  return (
+    <section className={`card goal-overview${level ? ` goal-${level}` : ''}`} aria-labelledby="goalov-h">
+      <div className="row-between">
+        <span className="eyebrow">
+          <Icon name="flag" /> {t('fitness.goalTitle')}
+        </span>
+        {x && level && <Semaphore level={level} label={t(`diagnosis.status.${x.status}`)} />}
+      </div>
+      <h2 id="goalov-h" className="goal-ov-name">
+        {goal.name}
+      </h2>
+      <p className="muted">
+        {t('fitness.goalDays', { count: days })} · {formatDate(`${goal.eventDate}T12:00:00Z`)}
+        {active.length > 1 && ` · ${t('fitness.goalOthers', { count: active.length - 1 })}`}
+      </p>
+      {x && (
+        <>
+          <p>{t(`diagnosis.statusHelp.${x.status}`)}</p>
+          <dl className="goal-ov-stats">
+            <div>
+              <dt>{t('fitness.goalFormNow')}</dt>
+              <dd className="num">
+                <CountUp value={x.currentCtl} format={(n) => formatNumber(n)} />
+              </dd>
+            </div>
+            <div>
+              <dt>{t('fitness.goalFormProjected')}</dt>
+              <dd className="num">
+                <CountUp value={x.projectedCtl} format={(n) => formatNumber(n)} />
+              </dd>
+            </div>
+            <div>
+              <dt>{t('fitness.goalFormTarget')}</dt>
+              <dd className="num">{formatNumber(x.targetCtl)}</dd>
+            </div>
+          </dl>
+          <Progress
+            pct={pct}
+            level={level ?? 'good'}
+            label={t('fitness.goalProgress', { current: formatNumber(x.currentCtl), target: formatNumber(x.targetCtl), pct, projected: formatNumber(x.projectedCtl) })}
+            marks={[{ pct: projPct, label: t('fitness.goalFormProjected') }]}
+          />
+          {d?.estimate && d.targetTimeS !== null && (
+            <p className="goal-ov-time">
+              <Icon name="timer" /> {t('fitness.goalEstimate', { time: formatClock(d.estimate.seconds), target: formatClock(d.targetTimeS) })}
+            </p>
+          )}
+        </>
+      )}
+      <Link to={`/metas/${goal.id}`}>{t('fitness.goalSeeMore')} →</Link>
     </section>
   )
 }
@@ -154,6 +254,9 @@ function FitnessHero({ state, ctl, atl, tsb }: { state: string; ctl: number; atl
           <Icon name="trend" /> {t('fitness.heroEyebrow')}
         </span>
         <p className="hero-title">{state}</p>
+        <p className="hero-verdict">
+          <Semaphore level={formStatus(tsb).level} label={t(`fitness.level.${formStatus(tsb).level}`)} />
+        </p>
         <p className="hero-sub">{t('fitness.heroSummary', { ctl: formatNumber(ctl), atl: formatNumber(atl), tsb: formatNumber(tsb) })}</p>
       </div>
       {pct !== null && week && (
@@ -192,41 +295,65 @@ function Ring({ pct, label, caption }: { pct: number; label: string; caption: st
 function Metric({
   label,
   value,
-  help,
-  sub,
-  tone,
+  decimals = 0,
+  signed = false,
   unit,
+  help,
   icon,
   tile,
+  status,
+  verdict,
+  detail,
+  gaugeLabel,
+  gaugeTicks,
+  gaugeEnds,
 }: {
   label: string
-  value: string
-  help: string
-  sub?: string
-  tone?: 'warning'
+  value: number
+  decimals?: number
+  signed?: boolean
   unit?: string
+  help: string
   icon: IconName
   tile?: 'coral' | 'sky' | 'soft'
+  status: IndicatorStatus
+  verdict: string
+  detail?: string
+  gaugeLabel: string
+  gaugeTicks?: { value: number; label: string }[]
+  gaugeEnds?: [string, string]
 }) {
+  const { t } = useTranslation()
+  const fmt = (n: number) => `${signed && n > 0 ? '+' : ''}${formatNumber(n, decimals)}`
   return (
-    <div className={`metric card${tone ? ` metric-${tone}` : ''}`}>
+    <div className={`metric card metric-${status.level}`}>
       <div className="row-between metric-head">
         <span className={`icon-tile${tile ? ` icon-tile-${tile}` : ''}`}>
           <Icon name={icon} />
         </span>
-        {sub && (
-          <span className={`metric-sub${tone === 'warning' ? ' metric-sub-warning' : ''}`}>
-            {tone === 'warning' && '⚠ '}
-            {sub}
-          </span>
-        )}
+        <Semaphore level={status.level} label={t(`fitness.level.${status.level}`)} />
       </div>
       <span className="metric-value">
-        {value}
+        <span aria-hidden="true">
+          <CountUp value={value} format={fmt} />
+        </span>
+        <span className="visually-hidden">{fmt(value)}</span>
         {unit && <span className="metric-unit"> {unit}</span>}
       </span>
       <span className="metric-label">{label}</span>
-      <span className="metric-help">{help}</span>
+      <p className={`metric-verdict verdict-${status.level}`}>{verdict}</p>
+      {detail && <p className="metric-detail">{detail}</p>}
+      <Gauge scale={status.scale} value={status.marker} label={gaugeLabel} ticks={gaugeTicks} />
+      {gaugeEnds && (
+        <span className="gauge-ends" aria-hidden="true">
+          <span>{gaugeEnds[0]}</span>
+          <span>{gaugeEnds[1]}</span>
+        </span>
+      )}
+      <details className="metric-more">
+        <summary>{t('fitness.whatIsIt')}</summary>
+        <p className="metric-help">{help}</p>
+      </details>
     </div>
   )
 }

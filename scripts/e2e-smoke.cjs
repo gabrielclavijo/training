@@ -137,7 +137,7 @@ async function makeUploadFiles() {
   p.once('dialog', d => d.accept());
   await p.getByRole('button', { name: 'Quitar foto' }).click();
   await p.getByText('ahora ves el avatar estándar').waitFor();
-  if (await p.locator('.topbar-avatar img').count()) throw new Error('Al quitar la foto debe volver el avatar estándar');
+  await p.waitForFunction(() => !document.querySelector('.topbar-avatar img'), null, { timeout: 5000 }).catch(() => { throw new Error('Al quitar la foto debe volver el avatar estándar'); });
   await p.getByRole('button', { name: 'Acepto que se guarden mis datos de salud' }).click(); await p.waitForTimeout(300);
   await p.goto(base + '#/laboratorio'); await p.waitForTimeout(500);
   await p.getByLabel('Examen', { exact: true }).selectOption('ferritin');

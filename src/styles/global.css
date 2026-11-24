@@ -1892,8 +1892,21 @@ textarea {
   transform-origin: bottom;
   animation: bar-grow 520ms var(--ease) both;
 }
-.chart-svg:has(polyline) {
-  animation: reveal-x 900ms var(--ease) both;
+.line-wrap .chart-svg {
+  clip-path: inset(0 100% 0 0);
+}
+.line-in .chart-svg {
+  animation: reveal-x 1100ms var(--ease) both;
+}
+@media print {
+  .line-wrap .chart-svg {
+    clip-path: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .line-wrap .chart-svg {
+    clip-path: none;
+  }
 }
 .ring-value {
   animation: ring-draw 900ms 150ms var(--ease) both;
@@ -2213,4 +2226,303 @@ details[open] > *:not(summary) {
   .bar-value {
     opacity: 1 !important;
   }
+}
+
+/* ---------- Semáforo, escalas y progreso ---------- */
+.semaphore {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 6px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  background: var(--surface-low);
+  border: 1px solid var(--border);
+}
+.semaphore-lights {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 6px;
+  background: #2c322f;
+}
+.semaphore-lights i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4a524e;
+}
+.semaphore-lights i:nth-child(1).on {
+  background: #ff4d3d;
+  box-shadow: 0 0 6px #ff4d3d;
+}
+.semaphore-lights i:nth-child(2).on {
+  background: #ffb020;
+  box-shadow: 0 0 6px #ffb020;
+}
+.semaphore-lights i:nth-child(3).on {
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+.semaphore-lights i.on {
+  animation: light-on 600ms 250ms var(--ease) both;
+}
+@keyframes light-on {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.3;
+  }
+  60% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+.semaphore-good {
+  color: #0f5e2c;
+  background: var(--success-bg);
+  border-color: #9fd8b3;
+}
+.semaphore-caution {
+  color: #7a3800;
+  background: var(--warning-bg);
+  border-color: #f0c78f;
+}
+.semaphore-alert {
+  color: #8c0009;
+  background: var(--danger-bg);
+  border-color: #f2a9a2;
+}
+.hero-verdict {
+  margin: var(--space-3) 0 0;
+}
+.hero-verdict .semaphore {
+  white-space: normal;
+}
+
+.metric {
+  border-top-width: 4px;
+}
+.metric-good {
+  border-top-color: var(--success);
+}
+.metric-caution {
+  border-top-color: #d97706;
+}
+.metric-alert {
+  border-top-color: var(--danger);
+}
+.metric-head .semaphore {
+  flex: none;
+}
+.metric-verdict {
+  margin: var(--space-2) 0 var(--space-1);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+.verdict-good {
+  color: var(--success);
+}
+.verdict-caution {
+  color: var(--warning);
+}
+.verdict-alert {
+  color: var(--danger);
+}
+.metric-detail {
+  margin: 0 0 var(--space-1);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+.metric-more {
+  margin-top: var(--space-2);
+  font-size: 0.875rem;
+}
+.metric-more > summary {
+  cursor: pointer;
+  color: var(--primary);
+  font-weight: 600;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+.metric-more .metric-help {
+  margin: var(--space-1) 0 0;
+}
+
+.gauge {
+  margin: var(--space-3) 0 var(--space-1);
+  padding-top: 4px;
+}
+.gauge-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.gauge-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.gauge-zone:first-child {
+  border-radius: 999px 0 0 999px;
+}
+.gauge-zone:last-of-type {
+  border-radius: 0 999px 999px 0;
+}
+.gauge-good {
+  background: #4ade80;
+}
+.gauge-caution {
+  background: #fbbf24;
+}
+.gauge-alert {
+  background: #f87171;
+}
+.gauge-marker {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: var(--text);
+  border: 3px solid var(--surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transition: left 900ms var(--ease) 200ms;
+}
+.gauge-tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+}
+.gauge-tick span {
+  position: absolute;
+  top: 16px;
+  right: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.gauge:has(.gauge-tick) {
+  margin-bottom: var(--space-4);
+}
+.gauge-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.progress {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  margin: var(--space-3) 0 var(--space-5);
+}
+.progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  transition: width 1000ms var(--ease) 150ms;
+}
+.progress-good {
+  background: var(--success);
+}
+.progress-caution {
+  background: #d97706;
+}
+.progress-alert {
+  background: var(--danger);
+}
+.progress-mark {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--tertiary);
+  border-radius: 2px;
+}
+.progress-mark span {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--tertiary);
+  white-space: nowrap;
+}
+
+/* Meta en el resumen */
+.goal-overview {
+  border-left: 6px solid var(--primary);
+}
+.goal-overview.goal-caution {
+  border-left-color: #d97706;
+}
+.goal-overview.goal-alert {
+  border-left-color: var(--danger);
+}
+.goal-ov-name {
+  font-size: 1.375rem;
+  margin: var(--space-1) 0;
+}
+.goal-ov-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+}
+.goal-ov-stats dt {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+.goal-ov-stats dd {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.goal-ov-time {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+.goal-ov-time svg {
+  width: 20px;
+  height: 20px;
+  color: var(--tertiary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gauge-marker,
+  .progress-fill {
+    transition: none;
+  }
+}
+.progress-mark-end span {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+.progress-mark-start span {
+  left: 0;
+  transform: none;
+}
+.hero-verdict .semaphore {
+  background: rgba(255, 255, 255, 0.92);
 }

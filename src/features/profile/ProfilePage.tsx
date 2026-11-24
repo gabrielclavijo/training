@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Alert, Page } from '../../components/ui/Page'
@@ -69,7 +70,11 @@ function PhotoControls() {
   const input = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const save = useRepoMutation(async (file: File) => repo.saveAvatar(await prepareAvatar(file)), [keys.avatar])
-  const remove = useRepoMutation(() => repo.deleteAvatar(), [keys.avatar])
+  const qc = useQueryClient()
+  const remove = useRepoMutation(async () => {
+    await repo.deleteAvatar()
+    qc.setQueryData(keys.avatar, null) // se ve el avatar estándar de inmediato
+  }, [keys.avatar])
   const busy = save.isPending || remove.isPending
   const hasPhoto = Boolean(avatar.data)
 
