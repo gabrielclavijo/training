@@ -31,7 +31,12 @@ export function NutritionPage() {
   const [week, setWeek] = useState<'this' | 'next'>('this')
   const start = week === 'this' ? weekOf(today) : addDays(weekOf(today), 7)
 
-  if (nutrition.isLoading) return <Page title={t('nutrition.title')}><Spinner full /></Page>
+  if (nutrition.isLoading)
+    return (
+      <Page title={t('nutrition.title')}>
+        <Spinner full />
+      </Page>
+    )
   const prefs = nutrition.data ?? null
 
   return (
@@ -90,7 +95,8 @@ function ProfileCard({ prefs }: { prefs: NutritionPrefs | null }) {
             <Icon name="coins" /> {t('nutrition.chipBudget', { value: t(`nutrition.budgets.${prefs.budget}`).toLowerCase() })}
           </li>
           <li className={`chip${prefs.foodAllergies.length ? ' chip-warn' : ''}`}>
-            <Icon name="alert" /> {prefs.foodAllergies.length ? t('nutrition.summaryAllergies', { list: prefs.foodAllergies.join(', ') }) : t('nutrition.noAllergies')}
+            <Icon name="alert" />{' '}
+            {prefs.foodAllergies.length ? t('nutrition.summaryAllergies', { list: prefs.foodAllergies.join(', ') }) : t('nutrition.noAllergies')}
           </li>
         </ul>
         <button type="button" className="btn btn-secondary" onClick={() => setEditing(true)}>
@@ -101,7 +107,12 @@ function ProfileCard({ prefs }: { prefs: NutritionPrefs | null }) {
   }
   return (
     <section className="card" aria-labelledby="nprofile-h">
-      <h2 id="nprofile-h">{t('nutrition.profileTitle')}</h2>
+      <h2 id="nprofile-h" className="card-title-icon">
+        <span className="icon-tile" aria-hidden="true">
+          <Icon name="user" />
+        </span>
+        {t('nutrition.profileTitle')}
+      </h2>
       <p className="muted">{t('nutrition.profileHelp')}</p>
       <NutritionForm prefs={prefs} onSaved={() => setEditing(false)} />
     </section>
@@ -160,9 +171,30 @@ export function NutritionForm({ prefs, onSaved }: { prefs: NutritionPrefs | null
         onChange={setDiet}
         options={(['omnivore', 'vegetarian', 'vegan'] as const).map((value) => ({ value, label: t(`nutrition.diets.${value}`) }))}
       />
-      <TextField label={t('nutrition.allergies')} hint={t('nutrition.allergiesHelp')} optional value={allergies} onChange={(e) => setAllergies(e.target.value)} maxLength={600} />
-      <TextField label={t('nutrition.excluded')} hint={t('nutrition.excludedHelp')} optional value={excluded} onChange={(e) => setExcluded(e.target.value)} maxLength={600} />
-      <TextField label={t('nutrition.pantry')} hint={t('nutrition.pantryHelp')} optional value={pantry} onChange={(e) => setPantry(e.target.value)} maxLength={800} />
+      <TextField
+        label={t('nutrition.allergies')}
+        hint={t('nutrition.allergiesHelp')}
+        optional
+        value={allergies}
+        onChange={(e) => setAllergies(e.target.value)}
+        maxLength={600}
+      />
+      <TextField
+        label={t('nutrition.excluded')}
+        hint={t('nutrition.excludedHelp')}
+        optional
+        value={excluded}
+        onChange={(e) => setExcluded(e.target.value)}
+        maxLength={600}
+      />
+      <TextField
+        label={t('nutrition.pantry')}
+        hint={t('nutrition.pantryHelp')}
+        optional
+        value={pantry}
+        onChange={(e) => setPantry(e.target.value)}
+        maxLength={800}
+      />
       <SelectField label={t('nutrition.mealsPerDay')} value={meals} onChange={(e) => setMeals(e.target.value)}>
         {[3, 4, 5, 6].map((n) => (
           <option key={n} value={n}>
@@ -377,7 +409,8 @@ function MenuView({
         <div className="row-between">
           <h3 className="capitalize-first">{t('nutrition.menuOfDay', { date: longDay(day.date) })}</h3>
           <span className="pill-kcal num">
-            <Icon name="flame" /> {t('nutrition.dayTotalShort', { kcal: formatNumber(day.meals.reduce((a, m) => a + m.kcal, 0)), target: formatNumber(targets.get(day.date) ?? 0) })}
+            <Icon name="flame" />{' '}
+            {t('nutrition.dayTotalShort', { kcal: formatNumber(day.meals.reduce((a, m) => a + m.kcal, 0)), target: formatNumber(targets.get(day.date) ?? 0) })}
           </span>
         </div>
         {day.note && (

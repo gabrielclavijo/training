@@ -60,9 +60,21 @@ export function SessionDetailPage() {
           {t('plan.whatToDo')}
         </h2>
         <p>{t(`plan.kindHelp.${s.kind}`)}</p>
-        <ol>
+        <div className="session-profile" aria-hidden="true">
+          {s.blocks.map((b, i) => (
+            <span key={i} className={`zone-seg z${b.zone}`} style={{ flex: b.minutes * (b.repeat ?? 1) }}>
+              Z{b.zone}
+            </span>
+          ))}
+        </div>
+        <ol className="block-list">
           {describe(s.blocks, derived.zones, s.sport).map((l, i) => (
-            <li key={i}>{l}</li>
+            <li key={i} style={{ animationDelay: `${i * 60}ms` }}>
+              <span className={`zone-pill z${s.blocks[i]?.zone}`} aria-hidden="true">
+                Z{s.blocks[i]?.zone}
+              </span>
+              <span>{l}</span>
+            </li>
           ))}
         </ol>
       </section>

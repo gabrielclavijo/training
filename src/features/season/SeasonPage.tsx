@@ -1,9 +1,9 @@
-import { TitleIcon } from '../../components/ui/Icon'
+import { Icon, TitleIcon, type IconName } from '../../components/ui/Icon'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../components/ui/EmptyState'
-import { NumberField, SelectField, parseNum } from '../../components/ui/Field'
+import { NumberField, parseNum } from '../../components/ui/Field'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
 import { daysBetween, formatDate, localDayKey } from '../../core/dates'
 import { buildSeason, type BlockKind } from '../../core/season'
@@ -67,9 +67,11 @@ export function SeasonPage() {
             : t('season.warningTight', { goal: byId.get(w.goalId)?.name, previous: byId.get(w.previousGoalId)?.name })}
           <br />
           <strong>{t('season.suggestionsTitle')}</strong>
-          <ul>
+          <ul className="step-chips season-sugg">
             {w.suggestions.map((s) => (
-              <li key={s}>{t(`season.suggestions.${s}`)}</li>
+              <li key={s}>
+                <Icon name="bulb" /> {t(`season.suggestions.${s}`)}
+              </li>
             ))}
           </ul>
         </Alert>
@@ -108,7 +110,10 @@ export function SeasonPage() {
         </li>
       </ul>
 
-      <h2>{t('season.listView')}</h2>
+      <h2 className="card-title-icon">
+        <TitleIcon name="calendar" tone="sky" />
+        {t('season.listView')}
+      </h2>
       <ol className="season-list">
         {season.goals.map((g) => (
           <li key={g.id} className="card">
@@ -151,6 +156,9 @@ export function SeasonPage() {
     </Page>
   )
 }
+
+const PAUSE_ICON: Record<PauseKind, IconName> = { illness: 'heart', injury: 'alert', travel: 'route', vacation: 'sun', other: 'moon' }
+const AVAIL_ICON: Record<string, IconName> = { bike: 'bike', run: 'run', gym: 'dumbbell', pool: 'swim', none: 'moon' }
 
 const KINDS: PauseKind[] = ['illness', 'injury', 'travel', 'vacation', 'other']
 const AVAILABLE: PauseAvailability[] = ['bike', 'run', 'gym', 'pool']
@@ -199,35 +207,83 @@ function PausesSection() {
         {t('season.pauses')}
       </h2>
       <p className="muted">{t('season.pausePhase2')}</p>
-      <ul className="plain-list">
-        {(pauses.data ?? []).map((p) => (
-          <li key={p.id} className="row-between">
-            <span>
-              <strong>{t(`season.pauseKinds.${p.kind}`)}</strong>: {t('season.from', { from: fmt(p.startsOn), to: p.endsOn ? fmt(p.endsOn) : '…' })}
-              <br />
-              <span className="muted">
-                {p.canTrain && p.available.length && !p.available.includes('none')
-                  ? `${t('season.pauseAvailable', { list: p.available.map((a) => t(`season.available.${a}`)).join(', ') })}${p.minutesPerDay ? ` · ${p.minutesPerDay} min/día` : ''}`
-                  : t('season.pauseNone')}
+      <ul className="pause-list">
+        {(pauses.data ?? []).map((p, i) => {
+          const today = localDayKey(new Date())
+          const state = p.startsOn > today ? 'upcoming' : !p.endsOn || p.endsOn >= today ? 'active' : 'past'
+          const days = p.endsOn ? daysBetween(p.startsOn, p.endsOn) + 1 : null
+          const trains = p.canTrain && p.available.length > 0 && !p.available.includes('none')
+          return (
+            <li key={p.id} className={`pause-card pause-${state}`} style={{ animationDelay: `${i * 60}ms` }}>
+              <span className={`icon-tile pause-tile pause-tile-${p.kind}`} aria-hidden="true">
+                <Icon name={PAUSE_ICON[p.kind]} />
               </span>
-            </span>
-            <button type="button" className="btn-link" onClick={() => del.mutate(p.id)}>
-              {t('season.deletePause')}
-            </button>
-          </li>
-        ))}
+              <div className="pause-body">
+                <div className="pause-top">
+                  <strong>{t(`season.pauseKinds.${p.kind}`)}</strong>
+                  <span className={`badge pause-state-${state}`}>{t(`season.pauseState.${state}`)}</span>
+                  <button
+                    type="button"
+                    className="btn-icon"
+                    onClick={() => del.mutate(p.id)}
+                    aria-label={`${t('season.deletePause')}: ${t(`season.pauseKinds.${p.kind}`)} ${fmt(p.startsOn)}`}
+                  >
+                    <Icon name="trash" />
+                  </button>
+                </div>
+                <span className="pause-dates">{t('season.from', { from: fmt(p.startsOn), to: p.endsOn ? fmt(p.endsOn) : '…' })}</span>
+                <ul className="chips pause-chips">
+                  {days && (
+                    <li className="chip">
+                      <Icon name="calendar" /> {t('season.days', { count: days })}
+                    </li>
+                  )}
+                  {trains ? (
+                    <>
+                      {p.available.map((a) => (
+                        <li key={a} className="chip">
+                          <Icon name={AVAIL_ICON[a] ?? 'activity'} /> {t(`season.available.${a}`)}
+                        </li>
+                      ))}
+                      {p.minutesPerDay ? (
+                        <li className="chip chip-strong">
+                          <Icon name="clock" /> {p.minutesPerDay} min/día
+                        </li>
+                      ) : null}
+                    </>
+                  ) : (
+                    <li className="chip">
+                      <Icon name="moon" /> {t('season.pauseNone')}
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </li>
+          )
+        })}
       </ul>
-      <details className="table-toggle">
-        <summary>{t('season.addPause')}</summary>
-        <form onSubmit={onSubmit} noValidate style={{ marginTop: 'var(--space-3)' }}>
+      <details className="add-toggle">
+        <summary className="btn btn-primary">
+          <Icon name="moon" /> {t('season.addPause')}
+        </summary>
+        <form onSubmit={onSubmit} noValidate className="pause-form">
           {error && <Alert kind="error">{error}</Alert>}
-          <SelectField label={t('season.pauseKind')} value={kind} onChange={(e) => setKind(e.target.value as PauseKind)}>
-            {KINDS.map((k) => (
-              <option key={k} value={k}>
-                {t(`season.pauseKinds.${k}`)}
-              </option>
-            ))}
-          </SelectField>
+          <fieldset>
+            <legend className="legend">{t('season.pauseKind')}</legend>
+            <div className="kind-grid">
+              {KINDS.map((k) => (
+                <label key={k} className="kind-option">
+                  <input type="radio" name="pkind" checked={kind === k} onChange={() => setKind(k)} />
+                  <span>
+                    <span className={`icon-tile pause-tile pause-tile-${k}`} aria-hidden="true">
+                      <Icon name={PAUSE_ICON[k]} />
+                    </span>
+                    {t(`season.pauseKinds.${k}`)}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <div className="grid-2">
             <div className="field">
               <label htmlFor="p-from">{t('season.pauseStart')}</label>
@@ -242,14 +298,16 @@ function PausesSection() {
           </div>
           {!isIllness && (
             <>
-              <fieldset>
+              <fieldset className="toolbar-item">
                 <legend className="legend">{t('season.pauseCanTrain')}</legend>
-                <div className="row">
-                  <label className="choice">
-                    <input type="radio" name="can" checked={canTrain === true} onChange={() => setCanTrain(true)} /> {t('season.yes')}
+                <div className="pill-toggle">
+                  <label>
+                    <input type="radio" name="can" checked={canTrain === true} onChange={() => setCanTrain(true)} />
+                    <span>{t('season.yes')}</span>
                   </label>
-                  <label className="choice">
-                    <input type="radio" name="can" checked={canTrain === false} onChange={() => setCanTrain(false)} /> {t('season.no')}
+                  <label>
+                    <input type="radio" name="can" checked={canTrain === false} onChange={() => setCanTrain(false)} />
+                    <span>{t('season.no')}</span>
                   </label>
                 </div>
               </fieldset>
@@ -257,15 +315,20 @@ function PausesSection() {
                 <>
                   <fieldset>
                     <legend className="legend">{t('season.pauseWith')}</legend>
-                    <div className="row">
+                    <div className="kind-grid kind-grid-4">
                       {AVAILABLE.map((a) => (
-                        <label key={a} className="choice">
+                        <label key={a} className="kind-option">
                           <input
                             type="checkbox"
                             checked={available.includes(a)}
                             onChange={(e) => setAvailable(e.target.checked ? [...available, a] : available.filter((x) => x !== a))}
                           />
-                          {t(`season.available.${a}`)}
+                          <span>
+                            <span className="icon-tile icon-tile-soft" aria-hidden="true">
+                              <Icon name={AVAIL_ICON[a]} />
+                            </span>
+                            {t(`season.available.${a}`)}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -276,7 +339,7 @@ function PausesSection() {
             </>
           )}
           <button type="submit" className="btn btn-primary" disabled={save.isPending}>
-            {t('season.savePause')}
+            <Icon name="check" /> {t('season.savePause')}
           </button>
         </form>
       </details>

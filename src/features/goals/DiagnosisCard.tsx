@@ -1,10 +1,11 @@
-import { TitleIcon } from '../../components/ui/Icon'
+import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { useTranslation } from 'react-i18next'
+import { Progress, Semaphore } from '../../components/ui/Status'
 import { formatClock, formatNumber } from '../../core/units'
 import { usePlan } from '../plan/usePlan'
 import { LegalNotice } from '../plan/SessionView'
 
-const ICON = { on_track: '✓', tight: '◐', behind: '⚠', past: '–' } as const
+const LEVEL = { on_track: 'good', tight: 'caution', behind: 'alert', past: 'good' } as const
 
 export function DiagnosisCard({ goalId }: { goalId: string }) {
   const { t } = useTranslation()
@@ -19,9 +20,8 @@ export function DiagnosisCard({ goalId }: { goalId: string }) {
         <TitleIcon name="gauge" />
         {t('diagnosis.title')}
       </h2>
-      <p className="big-text">
-        <span aria-hidden="true">{ICON[x.status]} </span>
-        <strong>{t(`diagnosis.status.${x.status}`)}</strong>
+      <p>
+        <Semaphore level={LEVEL[x.status]} label={t(`diagnosis.status.${x.status}`)} />
       </p>
       <p>{t(`diagnosis.statusHelp.${x.status}`)}</p>
       <dl className="stat-grid">
@@ -38,6 +38,17 @@ export function DiagnosisCard({ goalId }: { goalId: string }) {
           <dd>{formatNumber(x.targetCtl)}</dd>
         </div>
       </dl>
+      <Progress
+        pct={x.targetCtl > 0 ? (x.currentCtl / x.targetCtl) * 100 : 0}
+        level={LEVEL[x.status]}
+        label={t('fitness.goalProgress', {
+          current: formatNumber(x.currentCtl),
+          target: formatNumber(x.targetCtl),
+          pct: x.targetCtl > 0 ? Math.round((x.currentCtl / x.targetCtl) * 100) : 0,
+          projected: formatNumber(x.projectedCtl),
+        })}
+        marks={[{ pct: x.targetCtl > 0 ? (x.projectedCtl / x.targetCtl) * 100 : 0, label: t('fitness.goalFormProjected') }]}
+      />
       <p className="muted">{t('diagnosis.explain')}</p>
       {x.limitedBy && <p>{t(`diagnosis.limitedBy.${x.limitedBy}`)}</p>}
       {x.lowHistory && <p className="notice-estimate">{t('diagnosis.lowHistory')}</p>}
@@ -64,9 +75,11 @@ export function DiagnosisCard({ goalId }: { goalId: string }) {
           )}
         </div>
       )}
-      <ul>
+      <ul className="step-chips">
         {x.suggestions.map((s) => (
-          <li key={s}>{t(`diagnosis.suggestions.${s}`)}</li>
+          <li key={s}>
+            <Icon name="bulb" /> {t(`diagnosis.suggestions.${s}`)}
+          </li>
         ))}
       </ul>
       <LegalNotice />

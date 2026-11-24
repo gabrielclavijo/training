@@ -50,7 +50,10 @@ export function ProfilePage() {
         <HealthSection />
       </section>
       <section className="card" aria-labelledby="nutrition-h">
-        <h2 id="nutrition-h">{t('profile.nutrition')}</h2>
+        <h2 id="nutrition-h" className="card-title-icon">
+          <TitleIcon name="food" tone="coral" />
+          {t('profile.nutrition')}
+        </h2>
         <p>{t('nutrition.profileHelp')}</p>
         <Link to="/nutricion">{t('nutrition.editProfile')} →</Link>
       </section>

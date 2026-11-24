@@ -115,6 +115,11 @@
     "deletePause": "Borrar pausa",
     "pausePhase2": "Al registrar una pausa, el plan de toda la temporada se reajusta: la app te pregunta si podrás entrenar, con qué y cuánto tiempo.",
     "listView": "Calendario",
-    "today": "Hoy"
+    "today": "Hoy",
+    "pauseState": {
+      "active": "En curso",
+      "upcoming": "Próxima",
+      "past": "Terminada"
+    }
   }
 }

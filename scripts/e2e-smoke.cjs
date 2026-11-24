@@ -52,7 +52,7 @@ async function makeUploadFiles() {
   await p.getByRole('button', { name: 'Continuar' }).click();
   await p.getByRole('button', { name: 'Hacerlo después' }).click();
   await p.waitForURL(u => u.hash === '#/' );
-  const routes = ['/', '/plan', '/plan/disponibilidad', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/ayuda', '/ayuda?tema=pausa', '/ayuda?tema=meta', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva', '/nutricion', '/laboratorio'];
+  const routes = ['/', '/plan', '/plan/disponibilidad', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/ayuda', '/ayuda?tema=pausa', '/ayuda?tema=meta', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva', '/nutricion', '/laboratorio', '/privacidad'];
   for (const scheme of ['light']) {
     await p.emulateMedia({ colorScheme: scheme });
     for (const r of routes) {
@@ -169,6 +169,11 @@ async function makeUploadFiles() {
   if (after.some(r => /examen está fuera del rango/.test(r))) throw new Error('«Entendido» no ocultó la recomendación');
   console.log('recomendaciones tras «Entendido»:', after.join(' | ') || '(ninguna)');
   await p.screenshot({ path: out + 'e2e_inicio_recs.png', fullPage: true });
+
+  // Privacidad con sesión: dentro de la app, con su menú
+  await p.goto(base + '#/privacidad'); await p.waitForTimeout(500);
+  if (!(await p.locator('.bottom-nav').count())) throw new Error('La política de privacidad debe mostrarse con el menú');
+  console.log('privacidad: dentro de la app, con menú');
 
   // detalle de la actividad fusionada
   await p.goto(base + '#/actividades'); await p.waitForTimeout(400);

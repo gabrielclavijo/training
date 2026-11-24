@@ -117,6 +117,28 @@ export function PlanPage() {
 }
 
 const LETTER = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+const PHASE_ICON: Record<string, IconName> = {
+  base: 'trend',
+  build: 'bolt',
+  recovery_week: 'leaf',
+  taper: 'gauge',
+  event: 'flag',
+  recovery: 'moon',
+  return: 'refresh',
+  pause: 'moon',
+  maintenance: 'activity',
+}
+const REASON_ICON: Record<string, IconName> = {
+  initial: 'sparkles',
+  goals_changed: 'flag',
+  pause: 'moon',
+  availability: 'clock',
+  overreached: 'alert',
+  missed_sessions: 'calendar',
+  harder_than_planned: 'bolt',
+  weekly: 'refresh',
+  adaptation: 'refresh',
+}
 
 /** Tira de la semana: un botón por día con su estado (lleva al detalle del día). */
 function WeekStrip({
@@ -190,35 +212,32 @@ function UpcomingWeeks() {
   const goals = new Map(derived.ctx.goals.map((g) => [g.id, g.name]))
   const future = derived.plan.weeks.filter((w) => w.weekStart > weekStart(derived.today))
   if (!future.length) return null
+  const maxLoad = Math.max(1, ...future.map((w) => w.targetLoad))
   return (
     <section className="card" aria-labelledby="up-h">
       <h2 id="up-h" className="card-title-icon">
         <TitleIcon name="calendar" tone="sky" />
         {t('plan.nextWeeks')}
       </h2>
-      <div className="table-wrap" tabIndex={0} role="region" aria-label={t('fitness.seeTable')}>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">{t('plan.week', { date: '' }).trim()}</th>
-              <th scope="col">{t('season.title')}</th>
-              <th scope="col">{t('fitness.load')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {future.map((w) => (
-              <tr key={w.weekStart}>
-                <th scope="row">{fmt(w.weekStart)}</th>
-                <td>
-                  {t(`plan.phase.${w.phase}`)}
-                  {w.goalId && goals.get(w.goalId) ? ` · ${goals.get(w.goalId)}` : ''}
-                </td>
-                <td>{formatNumber(w.targetLoad)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ul className="week-cards">
+        {future.map((w, i) => (
+          <li key={w.weekStart} className={`week-card phase-${w.phase}`} style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}>
+            <span className="week-card-date">{fmt(w.weekStart).slice(0, 5)}</span>
+            <span className={`phase-pill phase-pill-${w.phase}`}>
+              <Icon name={PHASE_ICON[w.phase] ?? 'activity'} /> {t(`plan.phase.${w.phase}`)}
+            </span>
+            {w.goalId && goals.get(w.goalId) && <span className="week-card-goal">{goals.get(w.goalId)}</span>}
+            <span className="week-card-load">
+              <span className="macro-track" aria-hidden="true">
+                <span className="phase-fill" style={{ width: `${(w.targetLoad / maxLoad) * 100}%` }} />
+              </span>
+              <span className="num">
+                {t('fitness.load')} {formatNumber(w.targetLoad)}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }
@@ -233,13 +252,19 @@ function ChangesList() {
         {t('plan.changesTitle')}
       </h2>
       {changes.data?.length === 0 && <p className="muted">{t('plan.noChanges')}</p>}
-      <ul className="plain-list">
-        {(changes.data ?? []).slice(0, 10).map((c) => (
-          <li key={c.id}>
-            <span className="muted">{formatDate(c.createdAt)}</span> — {t(`plan.changes.${c.reason}`, { ...c.params, defaultValue: t('plan.changes.weekly') })}
+      <ol className="change-line">
+        {(changes.data ?? []).slice(0, 10).map((c, i) => (
+          <li key={c.id} style={{ animationDelay: `${i * 50}ms` }}>
+            <span className={`change-dot reason-${c.reason}`} aria-hidden="true">
+              <Icon name={REASON_ICON[c.reason] ?? 'refresh'} />
+            </span>
+            <div>
+              <span className="chip change-date">{formatDate(c.createdAt)}</span>
+              <p>{t(`plan.changes.${c.reason}`, { ...c.params, defaultValue: t('plan.changes.weekly') })}</p>
+            </div>
           </li>
         ))}
-      </ul>
+      </ol>
     </section>
   )
 }

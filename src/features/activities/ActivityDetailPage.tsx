@@ -1,4 +1,4 @@
-import { TitleIcon } from '../../components/ui/Icon'
+import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -124,16 +124,20 @@ function Detail({ activity: a, merges }: { activity: Activity; merges: MergeReco
           <TitleIcon name="bolt" tone="coral" />
           {t('activities.loadTitle')}
         </h2>
-        <p className="big-number">{load.load !== null ? t('load.points', { value: formatNumber(load.load) }) : t('load.noLoad')}</p>
+        <p className="big-number">
+          <Icon name="bolt" /> {load.load !== null ? t('load.points', { value: formatNumber(load.load) }) : t('load.noLoad')}
+        </p>
         <p>
           {t('activities.loadMethod')}: <LoadBadge method={load.method} confidence={load.confidence} />
         </p>
         {load.hints.length > 0 && (
           <>
             <h3>{t('activities.howToImprove')}</h3>
-            <ul>
+            <ul className="step-chips">
               {load.hints.map((h) => (
-                <li key={h}>{t(`load.hints.${h}`)}</li>
+                <li key={h}>
+                  <Icon name="bulb" /> {t(`load.hints.${h}`)}
+                </li>
               ))}
             </ul>
           </>

@@ -1,4 +1,4 @@
-import { TitleIcon } from '../../components/ui/Icon'
+import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -106,38 +106,46 @@ export function GoalDetailPage() {
             <TitleIcon name="route" tone="sky" />
             {t('goals.stages')}
           </h2>
-          <div className="table-wrap" tabIndex={0} role="region" aria-label={t('fitness.seeTable')}>
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">{t('goals.stages')}</th>
-                  <th scope="col">{t('goals.date')}</th>
-                  <th scope="col">{t('activities.distance')}</th>
-                  <th scope="col">{t('activities.elevation')}</th>
-                  <th scope="col">{t('goals.terrain')}</th>
-                  {g.objective === 'time' && <th scope="col">{t('goals.objective')}</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {g.stages.map((s) => (
-                  <tr key={s.stageNumber}>
-                    <th scope="row">{t('goals.stageN', { n: s.stageNumber })}</th>
-                    <td>{formatDate(`${addDays(g.eventDate, s.dayOffset)}T12:00:00Z`)}</td>
-                    <td>{formatDistance(s.distanceM)}</td>
-                    <td>{formatElevation(s.elevationGainM)}</td>
-                    <td>{s.terrain ? t(`terrain.${s.terrain}`) : '—'}</td>
-                    {g.objective === 'time' && <td>{s.targetTimeS ? formatClock(s.targetTimeS) : '—'}</td>}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ol className="stage-cards">
+            {g.stages.map((st, i) => (
+              <li key={st.stageNumber} style={{ animationDelay: `${i * 60}ms` }}>
+                <span className="stage-num" aria-hidden="true">
+                  {st.stageNumber}
+                </span>
+                <div className="stage-body">
+                  <strong>{t('goals.stageN', { n: st.stageNumber })}</strong>
+                  <span className="muted">{formatDate(`${addDays(g.eventDate, st.dayOffset)}T12:00:00Z`)}</span>
+                  <ul className="chips">
+                    <li className="chip">
+                      <Icon name="route" /> {formatDistance(st.distanceM)}
+                    </li>
+                    <li className="chip">
+                      <Icon name="mountain" /> {formatElevation(st.elevationGainM)}
+                    </li>
+                    {st.terrain && (
+                      <li className="chip">
+                        <Icon name="leaf" /> {t(`terrain.${st.terrain}`)}
+                      </li>
+                    )}
+                    {g.objective === 'time' && st.targetTimeS ? (
+                      <li className="chip chip-strong">
+                        <Icon name="timer" /> {formatClock(st.targetTimeS)}
+                      </li>
+                    ) : null}
+                  </ul>
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
       )}
 
       {g.notes && (
         <section className="card">
-          <h2>{t('goals.notes')}</h2>
+          <h2 className="card-title-icon">
+            <TitleIcon name="book" tone="soft" />
+            {t('goals.notes')}
+          </h2>
           <p>{g.notes}</p>
         </section>
       )}

@@ -75,7 +75,10 @@ export function HomePage() {
           {overview && overview.series.length > 1 && <Trend />}
           {overview && overview.weeks.length > 0 && <WeeklyLoad />}
           <section className="card" aria-labelledby="recent-h">
-            <h2 id="recent-h">{t('fitness.recent')}</h2>
+            <h2 id="recent-h" className="card-title-icon">
+              <TitleIcon name="activity" tone="sky" />
+              {t('fitness.recent')}
+            </h2>
             <ul className="activity-list">
               {loaded.slice(0, 5).map((l) => (
                 <ActivityRow key={l.activity.id} item={l} />

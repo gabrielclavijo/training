@@ -80,7 +80,10 @@ function LabCard({ group, sex }: { group: LabGroup; sex: 'female' | 'male' | nul
   return (
     <section className="card" aria-labelledby={headingId}>
       <div className="row-between">
-        <h2 id={headingId}>{group.name}</h2>
+        <h2 id={headingId} className="card-title-icon">
+          <TitleIcon name="lab" tone="sky" />
+          {group.name}
+        </h2>
         <span className={`badge ${status === 'in_range' ? 'badge-info' : status === 'unknown' ? '' : 'badge-warning'}`}>
           {STATUS_ICON[status]} {t(`labs.status.${status}`)}
         </span>
