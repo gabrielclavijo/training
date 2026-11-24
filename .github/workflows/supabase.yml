@@ -58,9 +58,9 @@ jobs:
         run: |
           if ! supabase secrets list --project-ref "$PROJECT_REF" | grep -q HEALTH_ENCRYPTION_KEY; then
             echo "Generando la clave de cifrado de datos de salud (solo esta vez)"
-            supabase secrets set --project-ref "$PROJECT_REF" HEALTH_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+            supabase secrets set --project-ref "$PROJECT_REF" --yes HEALTH_ENCRYPTION_KEY="$(openssl rand -base64 32)"
           fi
-          supabase secrets set --project-ref "$PROJECT_REF" APP_ORIGIN="https://${{ github.repository_owner }}.github.io"
+          supabase secrets set --project-ref "$PROJECT_REF" --yes APP_ORIGIN="https://${{ github.repository_owner }}.github.io"
       - name: Publicar Edge Functions
         run: |
           supabase functions deploy health-crypto --project-ref "$PROJECT_REF" --yes
