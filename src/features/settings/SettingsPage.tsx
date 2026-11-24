@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useTheme, type ThemePreference } from '../../app/theme'
 import { Alert, Page } from '../../components/ui/Page'
 import { localDayKey } from '../../core/dates'
 import { useRepo } from '../../data/RepoProvider'
@@ -9,42 +8,12 @@ import { useAuth } from '../auth/AuthProvider'
 import { DemoDataButton } from './DemoData'
 import { buildExport } from './exportData'
 
-const THEMES: ThemePreference[] = ['light', 'dark', 'system']
-
 export function SettingsPage() {
   const { t } = useTranslation()
-  const { preference, setPreference } = useTheme()
   const { user, signOut, mode } = useAuth()
-  const repo = useRepo()
-
-  function changeTheme(th: ThemePreference) {
-    setPreference(th)
-    void repo.updateProfile({ theme: th }).catch(() => undefined)
-  }
 
   return (
     <Page title={t('settings.title')}>
-      <section className="card" aria-labelledby="theme-h">
-        <fieldset>
-          <legend>
-            <h2 id="theme-h" style={{ margin: 0 }}>
-              {t('theme.label')}
-            </h2>
-          </legend>
-          <p className="hint muted" id="theme-help">
-            {t('theme.help')}
-          </p>
-          <div className="choice-list" aria-describedby="theme-help">
-            {THEMES.map((th) => (
-              <label key={th} className="choice">
-                <input type="radio" name="theme" value={th} checked={preference === th} onChange={() => changeTheme(th)} />
-                {t(`theme.${th}`)}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      </section>
-
       <section className="card" aria-labelledby="locale-h">
         <h2 id="locale-h">
           {t('settings.language')} y {t('settings.units').toLowerCase()}

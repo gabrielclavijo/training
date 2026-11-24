@@ -6,6 +6,9 @@ import { Alert, Page, Spinner } from '../../components/ui/Page'
 import { addDays, formatDate, formatLongDate, weekStart } from '../../core/dates'
 import { formatNumber } from '../../core/units'
 import { usePlanChanges } from './usePlanChanges'
+import { Icon, type IconName } from '../../components/ui/Icon'
+import type { StoredSession } from '../../data/types'
+import type { MatchResult } from '../../core/planner/adapt'
 import { LegalNotice, SessionCard, ZonesNotice } from './SessionView'
 import { usePlan } from './usePlan'
 import { PausesSection } from '../season/SeasonPage'
@@ -70,12 +73,13 @@ export function PlanPage() {
             {t(`plan.notes.${n}`)}
           </p>
         ))}
+        <WeekStrip days={days} today={today} sessions={weekSessions} matches={matches} pct={week && week.targetLoad > 0 && ws <= today ? Math.round((doneLoad / week.targetLoad) * 100) : null} />
         <ol className="day-list">
           {days.map((d) => {
             const list = weekSessions.filter((s) => s.date === d)
             const isToday = d === today
             return (
-              <li key={d} className={isToday ? 'day day-today' : 'day'} aria-current={isToday ? 'date' : undefined}>
+              <li key={d} id={`dia-${d}`} tabIndex={-1} className={isToday ? 'day day-today' : 'day'} aria-current={isToday ? 'date' : undefined}>
                 <h3 className="day-title capitalize-first">
                   {formatLongDate(`${d}T12:00:00Z`)}
                   {isToday && <span className="badge badge-info"> {t('plan.today')}</span>}
@@ -95,6 +99,71 @@ export function PlanPage() {
       <PausesSection />
       <ChangesList />
     </Page>
+  )
+}
+
+const LETTER = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+
+/** Tira de la semana: un botón por día con su estado (lleva al detalle del día). */
+function WeekStrip({
+  days,
+  today,
+  sessions,
+  matches,
+  pct,
+}: {
+  days: string[]
+  today: string
+  sessions: StoredSession[]
+  matches: Map<string, MatchResult>
+  pct: number | null
+}) {
+  const { t } = useTranslation()
+  return (
+    <div className="week-strip-wrap">
+      {pct !== null && (
+        <p className="week-pct">
+          <span className="badge badge-soft num">{pct}%</span> <span className="muted">{t('fitness.heroWeek')}</span>
+        </p>
+      )}
+      <ul className="week-strip">
+        {days.map((d, i) => {
+          const list = sessions.filter((s) => s.date === d && s.kind !== 'rest')
+          const statuses = list.map((s) => matches.get(s.id)?.status ?? 'pending')
+          const done = statuses.some((x) => x === 'done' || x === 'partial' || x === 'harder')
+          const missed = !done && statuses.includes('missed')
+          const event = list.some((s) => s.kind === 'event')
+          const long = list.some((s) => s.kind === 'long')
+          const icon: IconName = list.length === 0 ? 'moon' : done ? 'check' : event ? 'flag' : long ? 'mountain' : 'activity'
+          const label = [
+            formatLongDate(`${d}T12:00:00Z`),
+            list.length === 0 ? t('plan.kind.rest') : list.map((s) => t(`plan.kind.${s.kind}`)).join(', '),
+            done ? t('plan.status.done') : missed ? t('plan.status.missed') : list.length ? t('plan.status.pending') : '',
+          ]
+            .filter(Boolean)
+            .join(' · ')
+          const cls = ['day-chip', done && 'day-chip-done', missed && 'day-chip-missed', event && 'day-chip-event', d === today && 'day-chip-today'].filter(Boolean).join(' ')
+          return (
+            <li key={d}>
+              <button
+                type="button"
+                className={cls}
+                aria-label={label}
+                aria-current={d === today ? 'date' : undefined}
+                onClick={() => {
+                  const el = document.getElementById(`dia-${d}`)
+                  el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  el?.focus({ preventScroll: true })
+                }}
+              >
+                <span aria-hidden="true">{LETTER[i]}</span>
+                <Icon name={icon} />
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
 

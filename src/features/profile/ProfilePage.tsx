@@ -1,9 +1,10 @@
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Page } from '../../components/ui/Page'
-import { formatDate } from '../../core/dates'
-import { formatPower } from '../../core/units'
-import { keys, usePhysiology, useRepoMutation } from '../../data/hooks'
+import { ageOn, formatDate, localDayKey } from '../../core/dates'
+import { formatPower, formatWeight } from '../../core/units'
+import { keys, usePhysiology, useProfile, useRepoMutation, useWeights } from '../../data/hooks'
+import { latestWeight, physiologyOn } from '../../data/analysis'
 import { useRepo } from '../../data/RepoProvider'
 import { HealthSection } from './HealthSection'
 import { BasicsForm, PhysiologyForm, WeightSection } from './forms'
@@ -12,6 +13,7 @@ export function ProfilePage() {
   const { t } = useTranslation()
   return (
     <Page title={t('profile.title')}>
+      <ProfileHeader />
       <section className="card" aria-labelledby="basics-h">
         <h2 id="basics-h">{t('profile.basics')}</h2>
         <BasicsForm />
@@ -35,6 +37,56 @@ export function ProfilePage() {
         <Link to="/nutricion">{t('nutrition.editProfile')} →</Link>
       </section>
     </Page>
+  )
+}
+
+/** Encabezado: iniciales, nombre, edad, estatura y peso; y el espectro de zonas si hay pulso. */
+function ProfileHeader() {
+  const { t } = useTranslation()
+  const profile = useProfile()
+  const weights = useWeights()
+  const phys = usePhysiology()
+  const p = profile.data
+  if (!p) return null
+  const today = localDayKey(new Date())
+  const kg = weights.data ? latestWeight(weights.data) : null
+  const ph = phys.data ? physiologyOn(phys.data, today) : null
+  const facts = [
+    p.birthDate && t('profile.ageYears', { count: ageOn(p.birthDate, today) }),
+    p.heightCm && `${p.heightCm} cm`,
+    kg && formatWeight(kg),
+  ].filter(Boolean)
+  const initials = (p.displayName ?? '?')
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join('')
+  return (
+    <section className="card profile-head" aria-label={p.displayName ?? t('profile.title')}>
+      <div className="row" style={{ flexWrap: 'nowrap' }}>
+        <span className="avatar" aria-hidden="true">
+          {initials}
+        </span>
+        <div>
+          <p className="profile-name">{p.displayName}</p>
+          {facts.length > 0 && <p className="muted">{facts.join(' · ')}</p>}
+        </div>
+      </div>
+      {ph?.hrMax && (
+        <div className="zone-spectrum">
+          <div className="zone-bar" aria-hidden="true">
+            <span className="z1" />
+            <span className="z2" />
+            <span className="z3" />
+            <span className="z4" />
+            <span className="z5" />
+          </div>
+          <p className="mono">
+            {ph.hrRest ? t('profile.hrSpectrumRest', { max: ph.hrMax, rest: ph.hrRest }) : t('profile.hrSpectrum', { max: ph.hrMax })}
+          </p>
+        </div>
+      )}
+    </section>
   )
 }
 

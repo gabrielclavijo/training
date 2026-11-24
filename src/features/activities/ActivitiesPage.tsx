@@ -1,3 +1,4 @@
+import { Icon, type IconName } from '../../components/ui/Icon'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -64,6 +65,8 @@ export function ActivitiesPage() {
   )
 }
 
+const SPORT_ICON: Record<string, IconName> = { cycling: 'bike', running: 'run', swimming: 'swim', strength: 'dumbbell', other: 'activity' }
+
 export function ActivityRow({ item }: { item: ActivityWithLoad }) {
   const { t } = useTranslation()
   const a = item.activity
@@ -72,6 +75,9 @@ export function ActivityRow({ item }: { item: ActivityWithLoad }) {
   return (
     <li className="activity-item">
       <Link to={`/actividades/${a.id}`} className="activity-link">
+        <span className={`icon-tile activity-tile${a.sport === 'running' ? ' icon-tile-coral' : a.sport === 'swimming' ? ' icon-tile-sky' : a.sport === 'strength' ? ' icon-tile-soft' : ''}`} aria-hidden="true">
+          <Icon name={SPORT_ICON[a.sport] ?? 'activity'} />
+        </span>
         <span className="activity-sport">
           {t(`sports.${a.sport}`)}
           {sub}

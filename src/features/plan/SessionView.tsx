@@ -4,7 +4,9 @@ import type { MatchResult } from '../../core/planner/adapt'
 import type { Block } from '../../core/planner/plan'
 import { zoneTarget, type ZoneSet } from '../../core/planner/zones'
 import type { StoredSession } from '../../data/types'
+import { Icon, type IconName } from '../../components/ui/Icon'
 
+const SESSION_ICON: Record<string, IconName> = { cycling: 'bike', running: 'run', swimming: 'swim', strength: 'dumbbell', other: 'activity' }
 const STATUS_ICON: Record<string, string> = { done: '✓', partial: '◐', harder: '▲', missed: '✗', pending: '○', rest: '–' }
 
 export function StatusBadge({ status }: { status: MatchResult['status'] }) {
@@ -49,6 +51,9 @@ export function SessionCard({
   const lines = describe(s.blocks, zones, s.sport)
   return (
     <Link to={`/plan/sesion/${s.id}`} className="session-card">
+      <span className={`icon-tile session-tile${s.kind === 'event' ? ' icon-tile-coral' : s.kind === 'rest' || s.kind === 'recovery' ? ' icon-tile-soft' : ''}`} aria-hidden="true">
+        <Icon name={SESSION_ICON[s.sport] ?? 'activity'} />
+      </span>
       <span className="row-between">
         <strong>
           {t(`plan.kind.${s.kind}`)} · {t(`sports.${s.sport}`)}

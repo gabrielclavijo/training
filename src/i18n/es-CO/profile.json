@@ -62,7 +62,11 @@
     "dietVegan": "Vegana",
     "excluded": "Alimentos que no comes",
     "excludedHelp": "Sepáralos con comas. Ej.: hígado, coco",
-    "saveNutrition": "Guardar alimentación"
+    "saveNutrition": "Guardar alimentación",
+    "ageYears_one": "{{count}} año",
+    "ageYears_other": "{{count}} años",
+    "hrSpectrum": "Pulso máx. {{max}} ppm",
+    "hrSpectrumRest": "Pulso máx. {{max}} ppm · reposo {{rest}} ppm"
   },
   "onboarding": {
     "title": "Primeros pasos",

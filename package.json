@@ -14,6 +14,9 @@
     "test:e2e": "node scripts/e2e-smoke.cjs"
   },
   "dependencies": {
+    "@fontsource/commissioner": "^5.3.0",
+    "@fontsource/mona-sans": "^5.3.0",
+    "@fontsource/reddit-mono": "^5.3.0",
     "@garmin/fitsdk": "^21.222.0",
     "@supabase/supabase-js": "^2.119.2",
     "@tanstack/react-query": "^5.108.4",

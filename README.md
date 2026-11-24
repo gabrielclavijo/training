@@ -236,7 +236,7 @@ No hace falta volver a publicar la app. Límite por persona: 3 menús y 15 cambi
 | Indicadores con y sin sensores, indicando el método | Potencia (TSS) → pulso (hrTSS o TRIMP) → esfuerzo percibido; con nivel de confianza; si falta el dato, lo dice | `src/core/load/load.test.ts` |
 | Datos de salud cifrados y con consentimiento | AES-256-GCM en la Edge Function `health-crypto`; la base de datos rechaza guardarlos sin consentimiento vigente | `npm run test:db` |
 | Exportar todo y borrar la cuenta | Ajustes → «Exportar mis datos» (.zip con JSON, CSV y series) y «Borrar mi cuenta» (Edge Function `account-delete`) | `npm run test:db` (borrado en cascada) |
-| Accesibilidad y 360 px | WCAG 2.2 AA: contraste, etiquetas, teclado, foco visible, gráficas con tabla, estados con texto | `npm run test:e2e`: 0 problemas de axe en 14 pantallas, tema claro y oscuro, sin desbordes a 360 px |
+| Accesibilidad y 360 px | WCAG 2.2 AA: contraste, etiquetas, teclado, foco visible, gráficas con tabla, estados con texto | `npm run test:e2e`: 0 problemas de axe en 18 pantallas, sin desbordes a 360 px |
 
 **Cambios frente al pedido original (acordados):** sin conexión directa a Strava (ver sección 6); el criterio «llega sola desde Garmin» se reemplazó por «subir una actividad nueva toma menos de 1 minuto desde el celular».
 
@@ -278,7 +278,7 @@ Para usar un Supabase real en local, copia `.env.example` como `.env.local` y ll
 
 ```
 src/
-  app/          enrutador, diseño general (navegación), tema claro/oscuro/sistema
+  app/          enrutador y diseño general (navegación); solo tema claro
   features/     una carpeta por pantalla o funcionalidad (auth, onboarding, activities, upload,
                 import, dashboard, metrics, goals, season, guides, glossary, profile, settings, legal)
   core/         lógica pura y probada, sin React:
