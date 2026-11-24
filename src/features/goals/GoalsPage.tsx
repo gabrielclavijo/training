@@ -7,6 +7,7 @@ import { formatClock, formatDistance, formatElevation } from '../../core/units'
 import { useGoals } from '../../data/hooks'
 import type { Goal } from '../../data/types'
 import { goalTotals } from './goalUtils'
+import { Icon } from '../../components/ui/Icon'
 
 export function GoalsPage() {
   const { t } = useTranslation()
@@ -46,7 +47,10 @@ export function GoalCard({ goal: g }: { goal: Goal }) {
   const tot = goalTotals(g)
   return (
     <li className="activity-item">
-      <Link to={`/metas/${g.id}`} className="activity-link">
+      <Link to={`/metas/${g.id}`} className={`activity-link${g.priority === 'primary' && days >= 0 ? ' goal-hero' : ''}`}>
+        <span className={`icon-tile activity-tile${g.priority === 'primary' ? '' : ' icon-tile-soft'}`} aria-hidden="true">
+          <Icon name="flag" />
+        </span>
         <span className="activity-sport">
           {t(`sports.${g.sport}`)}
           {g.subSport && ` · ${t(`subSports.${g.subSport}`)}`} · {g.goalType === 'stage' ? t('goals.stagesCount', { count: g.stages.length }) : t('goals.single')}
@@ -55,7 +59,7 @@ export function GoalCard({ goal: g }: { goal: Goal }) {
         <span>
           {formatDate(`${g.eventDate}T12:00:00Z`)} · {days >= 0 ? t('goals.inDays', { count: days }) : t('goals.past')}
         </span>
-        <span>
+        <span className="num">
           {tot.distanceM > 0 && formatDistance(tot.distanceM)}
           {tot.elevationGainM > 0 && ` · ↑ ${formatElevation(tot.elevationGainM)}`}
         </span>

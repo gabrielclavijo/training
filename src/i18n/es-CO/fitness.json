@@ -35,7 +35,12 @@
     "nextGoal": "Próxima meta",
     "daysLeft": "Faltan {{count}} día",
     "daysLeft_other": "Faltan {{count}} días",
-    "recent": "Últimas actividades"
+    "recent": "Últimas actividades",
+    "heroEyebrow": "Estado físico",
+    "heroSummary": "Forma {{ctl}} · fatiga {{atl}} · estado {{tsb}}",
+    "heroWeek": "de la carga planeada esta semana",
+    "heroWeekShort": "Semana",
+    "heroRingLabel": "Llevas {{pct}} % de la carga planeada esta semana ({{done}} de {{planned}})"
   },
   "metrics": {
     "title": "Métricas por deporte",

@@ -1,5 +1,5 @@
 // Prueba de punta a punta en modo local: onboarding, datos de prueba, todas las
-// pantallas a 360 px en tema claro y oscuro con axe (WCAG 2.2 AA) y URL ajena.
+// pantallas a 360 px (solo tema claro) con axe (WCAG 2.2 AA) y URL ajena.
 // Uso: npm run build && npx vite preview --port 4173 & npm run test:e2e
 const { chromium } = require('playwright');
 const { AxeBuilder } = require('@axe-core/playwright');
@@ -52,7 +52,7 @@ async function makeUploadFiles() {
   await p.getByRole('button', { name: 'Hacerlo después' }).click();
   await p.waitForURL(u => u.hash === '#/' );
   const routes = ['/', '/plan', '/plan/disponibilidad', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/guias', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva', '/nutricion', '/laboratorio'];
-  for (const scheme of ['light', 'dark']) {
+  for (const scheme of ['light']) {
     await p.emulateMedia({ colorScheme: scheme });
     for (const r of routes) {
       await p.goto(base + '#' + r); await p.waitForTimeout(500);

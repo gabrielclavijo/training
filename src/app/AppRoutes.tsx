@@ -9,7 +9,6 @@ import { NotFoundPage } from '../features/common/Placeholder'
 import { HomePage } from '../features/dashboard/HomePage'
 import { PrivacyPage } from '../features/legal/PrivacyPage'
 import { Layout } from './Layout'
-import { useSyncThemeFromProfile } from './theme'
 
 // Pantallas cargadas bajo demanda para que la primera carga en celular sea liviana
 const lazyPage = <T extends Record<string, unknown>>(loader: () => Promise<T>, name: keyof T) =>
@@ -43,7 +42,6 @@ const UpdatePasswordPage = lazyPage(() => import('../features/auth/UpdatePasswor
 function OnboardingGate({ children }: { children: ReactNode }) {
   const profile = useProfile()
   const location = useLocation()
-  useSyncThemeFromProfile(profile.data?.theme)
   if (profile.isLoading) return <Spinner />
   const free = ['/bienvenida', '/guias', '/privacidad', '/subir', '/metas/nueva', '/cambiar-clave', '/ajustes', '/strava']
   if (profile.data && !profile.data.onboardingDone && !free.includes(location.pathname)) {
