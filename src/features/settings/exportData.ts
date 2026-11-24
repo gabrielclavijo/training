@@ -37,6 +37,13 @@ export async function buildExport(repo: Repo): Promise<Blob> {
     'datos.json': strToU8(JSON.stringify(data, null, 2)),
     'actividades.csv': strToU8(toCsv(activities)),
   }
+  // Foto de perfil, si hay
+  try {
+    const url = await repo.getAvatarUrl()
+    if (url) files['foto-de-perfil.jpg'] = new Uint8Array(await (await fetch(url)).arrayBuffer())
+  } catch {
+    /* sin foto o sin conexión: el resto de la exportación sigue */
+  }
   for (const a of activities) {
     for (const s of a.sources) {
       if (!s.streamsPath) continue

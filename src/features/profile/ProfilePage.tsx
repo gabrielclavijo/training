@@ -1,9 +1,13 @@
+import { useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Page } from '../../components/ui/Page'
+import { Alert, Page } from '../../components/ui/Page'
 import { ageOn, formatDate, localDayKey } from '../../core/dates'
 import { formatPower, formatWeight } from '../../core/units'
-import { keys, usePhysiology, useProfile, useRepoMutation, useWeights } from '../../data/hooks'
+import { keys, useAvatar, usePhysiology, useProfile, useRepoMutation, useWeights } from '../../data/hooks'
+import { Avatar } from '../../components/ui/Avatar'
+import { Icon } from '../../components/ui/Icon'
+import { AvatarError, prepareAvatar } from './avatarImage'
 import { latestWeight, physiologyOn } from '../../data/analysis'
 import { useRepo } from '../../data/RepoProvider'
 import { HealthSection } from './HealthSection'
@@ -40,7 +44,67 @@ export function ProfilePage() {
   )
 }
 
-/** Encabezado: iniciales, nombre, edad, estatura y peso; y el espectro de zonas si hay pulso. */
+/** Subir, cambiar o quitar la foto de perfil. */
+function PhotoControls() {
+  const { t } = useTranslation()
+  const repo = useRepo()
+  const avatar = useAvatar()
+  const input = useRef<HTMLInputElement>(null)
+  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
+  const save = useRepoMutation(async (file: File) => repo.saveAvatar(await prepareAvatar(file)), [keys.avatar])
+  const remove = useRepoMutation(() => repo.deleteAvatar(), [keys.avatar])
+  const busy = save.isPending || remove.isPending
+  const hasPhoto = Boolean(avatar.data)
+
+  async function onFile(file: File | undefined) {
+    if (!file) return
+    setMessage(null)
+    try {
+      await save.mutateAsync(file)
+      setMessage({ kind: 'success', text: t('profile.photoSaved') })
+    } catch (e) {
+      const code = e instanceof AvatarError ? e.message : 'generic'
+      setMessage({ kind: 'error', text: t(`profile.photoErrors.${code}`) })
+    } finally {
+      if (input.current) input.current.value = ''
+    }
+  }
+
+  return (
+    <div className="photo-controls">
+      {message && <Alert kind={message.kind}>{message.text}</Alert>}
+      <div className="row">
+        <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => input.current?.click()} aria-describedby="photo-help">
+          <Icon name="camera" /> {save.isPending ? t('profile.photoSaving') : hasPhoto ? t('profile.photoChange') : t('profile.photoUpload')}
+        </button>
+        {hasPhoto && (
+          <button
+            type="button"
+            className="btn-link"
+            disabled={busy}
+            onClick={async () => {
+              if (!window.confirm(t('profile.photoRemoveConfirm'))) return
+              try {
+                await remove.mutateAsync(undefined)
+                setMessage({ kind: 'success', text: t('profile.photoRemoved') })
+              } catch {
+                setMessage({ kind: 'error', text: t('profile.photoErrors.generic') })
+              }
+            }}
+          >
+            {t('profile.photoRemove')}
+          </button>
+        )}
+      </div>
+      <p id="photo-help" className="hint muted">
+        {t('profile.photoHelp')}
+      </p>
+      <input ref={input} type="file" accept="image/*" className="visually-hidden" tabIndex={-1} aria-hidden="true" onChange={(e) => onFile(e.target.files?.[0])} />
+    </div>
+  )
+}
+
+/** Encabezado: foto o avatar estándar, nombre, edad, estatura y peso; y el espectro de zonas si hay pulso. */
 function ProfileHeader() {
   const { t } = useTranslation()
   const profile = useProfile()
@@ -56,22 +120,16 @@ function ProfileHeader() {
     p.heightCm && `${p.heightCm} cm`,
     kg && formatWeight(kg),
   ].filter(Boolean)
-  const initials = (p.displayName ?? '?')
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase())
-    .join('')
   return (
     <section className="card profile-head" aria-label={p.displayName ?? t('profile.title')}>
       <div className="row" style={{ flexWrap: 'nowrap' }}>
-        <span className="avatar" aria-hidden="true">
-          {initials}
-        </span>
+        <Avatar size={64} className="avatar-lg" />
         <div>
           <p className="profile-name">{p.displayName}</p>
           {facts.length > 0 && <p className="muted">{facts.join(' · ')}</p>}
         </div>
       </div>
+      <PhotoControls />
       {ph?.hrMax && (
         <div className="zone-spectrum">
           <div className="zone-bar" aria-hidden="true">

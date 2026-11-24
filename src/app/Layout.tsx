@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Icon, type IconName } from '../components/ui/Icon'
+import { Avatar } from '../components/ui/Avatar'
 import { useAuth } from '../features/auth/AuthProvider'
 import { useStravaAutoSync } from '../features/strava/useStravaAutoSync'
 
@@ -56,6 +57,10 @@ export function Layout() {
         <Link to="/" className="brand">
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={28} height={28} />
           {t('app.name')}
+        </Link>
+        <Link to="/perfil" className="topbar-avatar">
+          <Avatar size={40} />
+          <span className="visually-hidden">{t('nav.profile')}</span>
         </Link>
       </header>
 

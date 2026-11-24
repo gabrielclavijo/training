@@ -1610,19 +1610,42 @@ textarea {
   gap: var(--space-4);
 }
 .avatar {
-  width: 56px;
-  height: 56px;
   border-radius: 999px;
-  border: 2px solid var(--primary);
-  background: var(--surface-variant);
-  color: var(--primary);
+  overflow: hidden;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.25rem;
   flex: none;
+  background: var(--surface-variant);
+}
+.avatar img,
+.avatar svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.avatar-lg {
+  border: 2px solid var(--primary);
+}
+.topbar-avatar {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.topbar-avatar:hover {
+  border-color: var(--primary);
+}
+.photo-controls {
+  margin-top: var(--space-4);
+}
+.photo-controls .btn svg {
+  width: 20px;
+  height: 20px;
+}
+.photo-controls .hint {
+  margin: var(--space-1) 0 0;
+  font-size: 0.875rem;
 }
 .profile-name {
   font-family: var(--font-display);

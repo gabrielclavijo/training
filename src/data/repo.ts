@@ -49,6 +49,11 @@ export interface Repo {
   listPhysiology(): Promise<PhysiologyEntry[]>
   savePhysiology(entry: Omit<PhysiologyEntry, 'id'>): Promise<void>
   deletePhysiology(id: string): Promise<void>
+  /** Foto de perfil: dirección temporal para mostrarla, o null si no hay foto */
+  getAvatarUrl(): Promise<string | null>
+  /** Guarda la foto (JPEG ya recortado a 256×256 en el navegador) */
+  saveAvatar(jpeg: Blob): Promise<void>
+  deleteAvatar(): Promise<void>
   getNutrition(): Promise<NutritionPrefs | null>
   saveNutrition(prefs: NutritionPrefs): Promise<void>
 

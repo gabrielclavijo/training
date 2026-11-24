@@ -121,6 +121,20 @@ async function makeUploadFiles() {
   await p.screenshot({ path: out + 'e2e_nutricion.png', fullPage: true });
 
   await p.goto(base + '#/perfil'); await p.waitForTimeout(500);
+  // Foto de perfil: sin foto se ve el avatar estándar; al subir una, aparece arriba y en el perfil
+  if (await p.locator('.topbar-avatar img').count()) throw new Error('Sin foto debería verse el avatar estándar');
+  const png = await p.screenshot({ clip: { x: 0, y: 0, width: 300, height: 200 } });
+  await p.locator('.photo-controls input[type=file]').setInputFiles({ name: 'yo.png', mimeType: 'image/png', buffer: png });
+  await p.getByText('Foto de perfil guardada.').waitFor();
+  await p.locator('.topbar-avatar img').waitFor();
+  await p.getByRole('button', { name: 'Cambiar foto' }).waitFor();
+  console.log('foto de perfil: subida, recortada y visible en la barra superior');
+  await axe('perfil con foto');
+  await p.screenshot({ path: out + 'e2e_perfil_foto.png' });
+  p.once('dialog', d => d.accept());
+  await p.getByRole('button', { name: 'Quitar foto' }).click();
+  await p.getByText('ahora ves el avatar estándar').waitFor();
+  if (await p.locator('.topbar-avatar img').count()) throw new Error('Al quitar la foto debe volver el avatar estándar');
   await p.getByRole('button', { name: 'Acepto que se guarden mis datos de salud' }).click(); await p.waitForTimeout(300);
   await p.goto(base + '#/laboratorio'); await p.waitForTimeout(500);
   await p.getByLabel('Examen', { exact: true }).selectOption('ferritin');

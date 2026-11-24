@@ -281,6 +281,28 @@ export class SupabaseRepo implements Repo {
   async deletePhysiology(id: string) {
     check(await this.sb.from('physiology_settings').delete().eq('id', id))
   }
+  // ---- Foto de perfil (bucket privado avatars/{user_id}/avatar.jpg)
+  private get avatarPath() {
+    return `${this.userId}/avatar.jpg`
+  }
+  async getAvatarUrl(): Promise<string | null> {
+    const { data } = await this.sb.storage.from('avatars').list(this.userId, { search: 'avatar.jpg', limit: 1 })
+    const file = data?.find((f) => f.name === 'avatar.jpg')
+    if (!file) return null
+    const { data: signed, error } = await this.sb.storage.from('avatars').createSignedUrl(this.avatarPath, 3600)
+    if (error || !signed) return null
+    // El parámetro evita ver la foto anterior guardada en caché
+    return `${signed.signedUrl}&v=${encodeURIComponent(file.updated_at ?? '')}`
+  }
+  async saveAvatar(jpeg: Blob) {
+    const { error } = await this.sb.storage.from('avatars').upload(this.avatarPath, jpeg, { upsert: true, contentType: 'image/jpeg', cacheControl: '3600' })
+    if (error) throw new Error(error.message)
+  }
+  async deleteAvatar() {
+    const { error } = await this.sb.storage.from('avatars').remove([this.avatarPath])
+    if (error) throw new Error(error.message)
+  }
+
   async getNutrition(): Promise<NutritionPrefs | null> {
     const r = check(await this.sb.from('nutrition_preferences').select('*').maybeSingle()) as Row | null
     return r

@@ -66,7 +66,21 @@
     "ageYears_one": "{{count}} año",
     "ageYears_other": "{{count}} años",
     "hrSpectrum": "Pulso máx. {{max}} ppm",
-    "hrSpectrumRest": "Pulso máx. {{max}} ppm · reposo {{rest}} ppm"
+    "hrSpectrumRest": "Pulso máx. {{max}} ppm · reposo {{rest}} ppm",
+    "photoUpload": "Subir foto",
+    "photoChange": "Cambiar foto",
+    "photoRemove": "Quitar foto",
+    "photoRemoveConfirm": "¿Quitar tu foto de perfil?",
+    "photoSaving": "Guardando foto…",
+    "photoSaved": "Foto de perfil guardada.",
+    "photoRemoved": "Quitamos tu foto: ahora ves el avatar estándar.",
+    "photoHelp": "Se recorta en cuadrado. Solo tú la ves.",
+    "photoErrors": {
+      "not_image": "Ese archivo no es una imagen. Elige una foto (JPG, PNG o HEIC).",
+      "too_big": "La foto pesa más de 15 MB. Elige una más liviana.",
+      "unreadable": "No pudimos leer esa imagen. Prueba con otra foto o con formato JPG.",
+      "generic": "No pudimos guardar la foto. Revisa tu conexión e intenta de nuevo."
+    }
   },
   "onboarding": {
     "title": "Primeros pasos",

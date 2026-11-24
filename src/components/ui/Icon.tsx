@@ -30,6 +30,7 @@ const paths = {
   flag: 'M5 21V4m0 0h11l-2 4 2 4H5',
   check: 'M5 12l5 5 9-10',
   moon: 'M20 15A8 8 0 1 1 9 4a6 6 0 0 0 11 11z',
+  camera: 'M4 8h3l2-3h6l2 3h3v11H4zm8 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
   empty: 'M4 7h16l-2 13H6zM8 7V5a4 4 0 0 1 8 0v2',
 } as const
 

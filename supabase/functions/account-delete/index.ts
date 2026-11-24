@@ -6,7 +6,7 @@
 import { admin, requireUser } from '../_shared/clients.ts'
 import { corsHeaders, json } from '../_shared/cors.ts'
 
-const BUCKETS = ['activity-streams', 'goal-gpx']
+const BUCKETS = ['activity-streams', 'goal-gpx', 'avatars']
 
 async function removeFolder(bucket: string, folder: string) {
   for (;;) {

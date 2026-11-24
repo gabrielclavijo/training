@@ -72,6 +72,8 @@ interface State {
   inbox: InboxItem[]
   mealPlans: MealPlan[]
   recState: RecommendationState[]
+  /** Foto de perfil como data URL (solo modo local) */
+  avatar?: string | null
 }
 
 const now = () => new Date().toISOString()
@@ -188,6 +190,22 @@ export class MemoryRepo implements Repo {
   }
   async deletePhysiology(id: string) {
     this.s.physiology = this.s.physiology.filter((p) => p.id !== id)
+    await this.done(null)
+  }
+  async getAvatarUrl() {
+    return this.s.avatar ?? null
+  }
+  async saveAvatar(jpeg: Blob) {
+    this.s.avatar = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader()
+      r.onload = () => resolve(String(r.result))
+      r.onerror = () => reject(r.error)
+      r.readAsDataURL(jpeg)
+    })
+    await this.done(null)
+  }
+  async deleteAvatar() {
+    this.s.avatar = null
     await this.done(null)
   }
   async getNutrition() {

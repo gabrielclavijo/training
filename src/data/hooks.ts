@@ -7,6 +7,7 @@ import { fitnessOverview, loadsFor } from './analysis'
 
 export const keys = {
   profile: ['profile'] as const,
+  avatar: ['avatar'] as const,
   weights: ['weights'] as const,
   physiology: ['physiology'] as const,
   consents: ['consents'] as const,
@@ -24,6 +25,10 @@ export const keys = {
 export function useProfile() {
   const repo = useRepo()
   return useQuery({ queryKey: keys.profile, queryFn: () => repo.getProfile() })
+}
+export function useAvatar() {
+  const repo = useRepo()
+  return useQuery({ queryKey: keys.avatar, queryFn: () => repo.getAvatarUrl(), staleTime: 30 * 60_000 })
 }
 export function useWeights() {
   const repo = useRepo()
