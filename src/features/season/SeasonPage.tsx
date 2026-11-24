@@ -14,6 +14,8 @@ import { toSeasonGoal } from '../goals/goalUtils'
 const fmt = (d: string) => formatDate(`${d}T12:00:00Z`)
 const BLOCK_ICON: Record<BlockKind, string> = { build: '▲', taper: '▽', event: '★', recovery: '◌' }
 
+export { PausesSection }
+
 export function SeasonPage() {
   const { t } = useTranslation()
   const goals = useGoals()
@@ -135,9 +137,9 @@ function PausesSection() {
         minutesPerDay: canTrain ? parseNum(minutes) : 0,
         notes: null,
       }),
-    [keys.pauses],
+    [keys.pauses, ['plan']],
   )
-  const del = useRepoMutation((id: string) => repo.deletePause(id), [keys.pauses])
+  const del = useRepoMutation((id: string) => repo.deletePause(id), [keys.pauses, ['plan']])
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()

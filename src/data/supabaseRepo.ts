@@ -44,7 +44,7 @@ function check<T>(res: { data: T; error: { message: string } | null }): T {
 }
 
 const SOURCE_COLUMNS =
-  'id, activity_id, provider, source_format, origin_hint, external_id, device_serial, file_sha256, original_filename, sport, sub_sport, raw_sport, title, start_time, timezone, elapsed_s, moving_s, distance_m, elevation_gain_m, avg_hr, max_hr, avg_power_w, normalized_power_w, avg_cadence, has_power, has_hr, has_gps, has_cadence, hr_samples, power_samples, gps_points, hr_histogram, power_histogram, power_curve, streams_path, retention_class, imported_at'
+  'id, activity_id, provider, source_format, origin_hint, external_id, device_serial, file_sha256, streams_expire_at, original_filename, sport, sub_sport, raw_sport, title, start_time, timezone, elapsed_s, moving_s, distance_m, elevation_gain_m, avg_hr, max_hr, avg_power_w, normalized_power_w, avg_cadence, has_power, has_hr, has_gps, has_cadence, hr_samples, power_samples, gps_points, hr_histogram, power_histogram, power_curve, streams_path, retention_class, imported_at'
 
 const n = (v: unknown) => (v === null || v === undefined ? null : Number(v))
 
@@ -81,6 +81,7 @@ function toSource(r: Row): StoredSource {
     deviceSerial: r.device_serial,
     externalId: r.external_id,
     fileSha256: r.file_sha256,
+    streamsExpireAt: r.streams_expire_at,
     rpe: null,
     originalFilename: r.original_filename,
     importedAt: r.imported_at,
@@ -449,6 +450,7 @@ export class SupabaseRepo implements Repo {
           power_histogram: s.powerHistogram,
           power_curve: s.powerCurve,
           retention_class: s.retentionClass ?? 'owned',
+          streams_expire_at: s.streamsExpireAt ?? null,
           ai_allowed: (s.retentionClass ?? 'owned') === 'owned',
           import_job_id: s.importJobId,
           is_demo: s.isDemo,

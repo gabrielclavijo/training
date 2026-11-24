@@ -6,6 +6,7 @@ import { Alert, Page, Spinner } from '../../components/ui/Page'
 import { addDays, daysBetween, formatDate, localDayKey } from '../../core/dates'
 import { formatClock, formatDistance, formatElevation } from '../../core/units'
 import { useRepo } from '../../data/RepoProvider'
+import { DiagnosisCard } from './DiagnosisCard'
 import { goalEstimatedHours, goalTotals } from './goalUtils'
 
 export function GoalDetailPage() {
@@ -84,14 +85,14 @@ export function GoalDetailPage() {
           </div>
         </dl>
         <p className="muted" style={{ marginTop: 'var(--space-3)' }}>
-          {t('goals.estimated', { time: formatClock(est * 3600) })}. {t('goals.estimatedHelp')}
+          {g.objective === 'time' ? t('goals.estimatedHelp') : `${t('goals.estimated', { time: formatClock(est * 3600) })}. ${t('goals.estimatedHelp')}`}
         </p>
       </section>
 
       {g.goalType === 'stage' && (
         <section className="card" aria-labelledby="stages-h">
           <h2 id="stages-h">{t('goals.stages')}</h2>
-          <div className="table-wrap">
+          <div className="table-wrap" tabIndex={0} role="region" aria-label={t('fitness.seeTable')}>
             <table>
               <thead>
                 <tr>
@@ -127,7 +128,7 @@ export function GoalDetailPage() {
         </section>
       )}
 
-      <Alert kind="info">{t('goals.diagnosisSoon')}</Alert>
+      <DiagnosisCard goalId={g.id} />
 
       <div className="row">
         <Link className="btn btn-primary" to={`/metas/${g.id}/editar`}>

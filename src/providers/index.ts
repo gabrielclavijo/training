@@ -1,4 +1,5 @@
 import type { Provider } from '../core/activity/types'
+import { stravaAvailable } from '../features/strava/strava'
 
 /**
  * Proveedores de datos. Cada uno declara si está activo y su política de
@@ -22,6 +23,6 @@ export const PROVIDERS: ProviderInfo[] = [
   { id: 'manual', enabled: true, retention: 'owned', aiAllowed: true, maxRetentionDays: null },
   // Política de la API de Strava (vigente desde el 1/06/2026): caché de máximo 7 días
   // y prohibido usar sus datos (ni derivados) en aplicaciones de IA.
-  { id: 'strava', enabled: false, retention: 'strava_cache', aiAllowed: false, maxRetentionDays: 7 },
+  { id: 'strava', enabled: stravaAvailable(), retention: 'strava_cache', aiAllowed: false, maxRetentionDays: 7 },
   { id: 'garmin_api', enabled: false, retention: 'owned', aiAllowed: false, maxRetentionDays: null },
 ]

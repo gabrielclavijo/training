@@ -51,7 +51,7 @@ async function makeUploadFiles() {
   await p.getByRole('button', { name: 'Continuar' }).click();
   await p.getByRole('button', { name: 'Hacerlo después' }).click();
   await p.waitForURL(u => u.hash === '#/' );
-  const routes = ['/', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/guias', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva'];
+  const routes = ['/', '/plan', '/plan/disponibilidad', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/guias', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva'];
   for (const scheme of ['light', 'dark']) {
     await p.emulateMedia({ colorScheme: scheme });
     for (const r of routes) {
@@ -75,6 +75,23 @@ async function makeUploadFiles() {
   await p.getByRole('link', { name: 'Ver mis actividades' }).click();
   await p.getByRole('link', { name: /Prueba de subida/ }).first().waitFor();
   console.log('subida: la actividad aparece en la lista');
+
+  // Fase 2: plan, sesión y diagnóstico
+  await p.goto(base + '#/plan'); await p.waitForTimeout(800);
+  const planText = await p.locator('main').innerText();
+  if (!/orientativo y no reemplaza/.test(planText)) throw new Error('Falta el aviso legal en el plan');
+  await p.locator('.session-card').first().click(); await p.waitForTimeout(500);
+  const sres = await new AxeBuilder({ page: p }).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
+  console.log('sesión', sres.violations.map(v => v.id).join(',') || 'ok', '|', (await p.locator('h1').innerText()));
+  await p.goto(base + '#/metas'); await p.waitForTimeout(500);
+  await p.getByRole('link', { name: /Vuelta de 3 días/ }).first().click(); await p.waitForTimeout(800);
+  const gtxt = await p.locator('main').innerText();
+  const dres = await new AxeBuilder({ page: p }).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
+  console.log('diagnóstico', dres.violations.map(v => v.id).join(',') || 'ok', '|', (gtxt.match(/Vas (bien|justo|atrasado)/) || ['SIN DIAGNÓSTICO'])[0], '|', (gtxt.match(/Tiempo estimado[\s\S]{0,80}/) || [''])[0].replace(/\n/g, ' '));
+  if (!/Vas (bien|justo|atrasado)/.test(gtxt)) throw new Error('Falta el diagnóstico de la meta');
+  await p.screenshot({ path: out + 'e2e_diagnostico.png', fullPage: true });
+  await p.goto(base + '#/plan'); await p.waitForTimeout(500);
+  await p.screenshot({ path: out + 'e2e_plan.png', fullPage: true });
 
   // detalle de la actividad fusionada
   await p.goto(base + '#/actividades'); await p.waitForTimeout(400);

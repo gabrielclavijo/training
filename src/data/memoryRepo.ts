@@ -64,6 +64,7 @@ interface State {
   weeks: (StoredWeek & { isDemo: boolean })[]
   sessions: (StoredSession & { isDemo: boolean })[]
   changes: (PlanChangeRecord & { isDemo: boolean })[]
+  inbox: InboxItem[]
 }
 
 const now = () => new Date().toISOString()
@@ -109,6 +110,7 @@ function initial(): State {
     weeks: [],
     sessions: [],
     changes: [],
+    inbox: [],
   }
 }
 
@@ -438,9 +440,16 @@ export class MemoryRepo implements Repo {
 
   // ---- Strava (no disponible en modo local)
   async listInbox(): Promise<InboxItem[]> {
-    return []
+    return clone(this.s.inbox)
   }
-  async deleteInbox() {}
+  async deleteInbox(ids: string[]) {
+    this.s.inbox = this.s.inbox.filter((i) => !ids.includes(i.id))
+    await this.done(null)
+  }
+  /** Solo para pruebas: simula lo que escribe el webhook de Strava. */
+  pushInbox(item: Omit<InboxItem, 'id' | 'receivedAt'> & { receivedAt?: string }) {
+    this.s.inbox.push({ id: uid(), receivedAt: item.receivedAt ?? now(), ...item })
+  }
   async deleteSourceByExternalId(externalId: string) {
     const src = this.s.sources.find((x) => x.externalId === externalId)
     if (!src) return

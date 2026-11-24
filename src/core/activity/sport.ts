@@ -63,6 +63,15 @@ export function fromStravaType(type?: string | null): SportMapping {
     workout: { sport: 'strength', subSport: null },
     entrenamiento: { sport: 'strength', subSport: null },
     crossfit: { sport: 'strength', subSport: null },
+    // sport_type de la API de Strava (sin espacios)
+    gravelride: { sport: 'cycling', subSport: 'gravel' },
+    mountainbikeride: { sport: 'cycling', subSport: 'mtb' },
+    emountainbikeride: { sport: 'cycling', subSport: 'mtb' },
+    ebikeride: { sport: 'cycling', subSport: null },
+    virtualride: { sport: 'cycling', subSport: 'indoor' },
+    trailrun: { sport: 'running', subSport: 'trail' },
+    virtualrun: { sport: 'running', subSport: 'treadmill' },
+    weighttraining: { sport: 'strength', subSport: null },
     hiit: { sport: 'strength', subSport: null },
   }
   return map[t] ?? { sport: 'other', subSport: null }

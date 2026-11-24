@@ -254,7 +254,11 @@ export interface GoalDiagnosis {
   diagnosis: Diagnosis
   estimate: TimeEstimate | null
   targetTimeS: number | null
+  /** Solo con objetivo de tiempo: cómo va el tiempo estimado frente al objetivo */
+  timeStatus: 'on_track' | 'tight' | 'behind' | null
 }
+
+const ORDER = { on_track: 0, tight: 1, behind: 2, past: 3 } as const
 
 export function diagnoseGoals(ctx: PlanContext): GoalDiagnosis[] {
   const today = ctx.today
@@ -282,7 +286,10 @@ export function diagnoseGoals(ctx: PlanContext): GoalDiagnosis[] {
           const to = end > g.eventDate ? g.eventDate : end
           return s + Math.max(0, daysBetween(from, to) + 1)
         }, 0)
-      const diagnosis = diagnose({ goal: pg, today, currentCtl: fit.ctl, historyDays: fit.historyDays, maxWeeklyLoad: maxWeekly, pauseDaysBeforeEvent: pauseDays })
+      // La forma recomendada se mide con el criterio de «terminar» (aguantar el
+      // evento); si hay objetivo de tiempo, eso se evalúa con el tiempo estimado.
+      const base = { today, currentCtl: fit.ctl, historyDays: fit.historyDays, maxWeeklyLoad: maxWeekly, pauseDaysBeforeEvent: pauseDays }
+      let diagnosis = diagnose({ ...base, goal: { ...pg, objective: 'finish' } })
       const stages =
         g.goalType === 'stage' && g.stages.length
           ? g.stages.map((s) => ({ distanceM: s.distanceM, elevationM: s.elevationGainM, terrain: s.terrain ?? g.terrain }))
@@ -291,7 +298,21 @@ export function diagnoseGoals(ctx: PlanContext): GoalDiagnosis[] {
         g.objective === 'time' && stages.every((s) => s.distanceM > 0)
           ? estimateTime({ sport: g.sport, stages, efforts, today, ctlNow: fit.ctl, ctlAtEvent: diagnosis.projectedCtl })
           : null
-      return { goalId: g.id, diagnosis, estimate, targetTimeS: g.targetTimeS }
+      let timeStatus: GoalDiagnosis['timeStatus'] = null
+      if (g.objective === 'time' && g.targetTimeS) {
+        if (estimate) {
+          const r = estimate.seconds / g.targetTimeS
+          timeStatus = r <= 1 ? 'on_track' : r <= 1.05 ? 'tight' : 'behind'
+          if (diagnosis.status !== 'past' && ORDER[timeStatus] > ORDER[diagnosis.status]) {
+            const suggestions = [...new Set<Diagnosis['suggestions'][number]>(['finish_only', ...diagnosis.suggestions.filter((x) => x !== 'keep_going'), 'lower_demand'])]
+            diagnosis = { ...diagnosis, status: timeStatus, suggestions }
+          }
+        } else {
+          // Sin salidas parecidas no se puede estimar el tiempo: se usa el criterio más exigente
+          diagnosis = diagnose({ ...base, goal: pg })
+        }
+      }
+      return { goalId: g.id, diagnosis, estimate, targetTimeS: g.targetTimeS, timeStatus }
     })
 }
 

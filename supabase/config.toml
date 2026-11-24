@@ -1,4 +1,4 @@
-# Configuración para la CLI de Supabase (opcional; ver README).
+# Configuración para la CLI de Supabase (la usa el workflow «Configurar Supabase»).
 project_id = "training"
 
 [functions.health-crypto]
@@ -7,6 +7,15 @@ verify_jwt = true
 [functions.account-delete]
 verify_jwt = true
 
-# El webhook de Strava no manda sesión de usuario (apagado por defecto)
-[functions.provider-strava]
+[functions.strava-connect]
+verify_jwt = true
+
+[functions.strava-sync]
+verify_jwt = true
+
+[functions.strava-disconnect]
+verify_jwt = true
+
+# Strava llama al webhook directamente (sin sesión de usuario)
+[functions.strava-webhook]
 verify_jwt = false

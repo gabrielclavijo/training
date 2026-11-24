@@ -144,7 +144,7 @@ export function DataTable({ headers, rows, caption }: { headers: string[]; rows:
   return (
     <details className="table-toggle" open={open} onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}>
       <summary>{t('fitness.seeTable')}</summary>
-      <div className="table-wrap">
+      <div className="table-wrap" tabIndex={0} role="region" aria-label={t('fitness.seeTable')}>
         <table>
           {caption && <caption>{caption}</caption>}
           <thead>

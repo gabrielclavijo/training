@@ -88,6 +88,7 @@ export interface StoredSource extends SourceLike {
   streamsPath: string | null
   rawSport: string | null
   fileSha256?: string | null
+  streamsExpireAt?: string | null
 }
 
 export interface Activity extends Omit<MergedActivity, 'rpe'> {
@@ -191,6 +192,8 @@ export interface NewSource extends Omit<SourceLike, 'id'> {
   format: SourceFormat
   isDemo: boolean
   importJobId: string | null
+  /** Solo datos de Strava: fecha en que se deben borrar */
+  streamsExpireAt?: string | null
 }
 
 export type { Streams }

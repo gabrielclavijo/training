@@ -4,6 +4,7 @@
 # Necesita en GitHub (Settings → Secrets and variables → Actions):
 #   Secrets:   SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD
 #   Variables: SUPABASE_PROJECT_REF
+# Para Strava (opcional, ver README): variable STRAVA_CLIENT_ID y secreto STRAVA_CLIENT_SECRET
 name: Configurar Supabase
 
 on:
@@ -18,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      STRAVA_CLIENT_ID: ${{ vars.STRAVA_CLIENT_ID }}
+      STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -65,3 +68,44 @@ jobs:
         run: |
           supabase functions deploy health-crypto --project-ref "$PROJECT_REF" --yes
           supabase functions deploy account-delete --project-ref "$PROJECT_REF" --yes
+      - name: Strava (si está configurado)
+        if: ${{ vars.STRAVA_CLIENT_ID != '' }}
+        run: |
+          set -e
+          if [ -z "$STRAVA_CLIENT_SECRET" ]; then echo "::error::Falta el secreto STRAVA_CLIENT_SECRET."; exit 1; fi
+          echo "::add-mask::$STRAVA_CLIENT_SECRET"
+          existing="$(supabase secrets list --project-ref "$PROJECT_REF")"
+          if ! grep -q STRAVA_VERIFY_TOKEN <<<"$existing"; then
+            VERIFY="$(openssl rand -hex 16)"
+            supabase secrets set --project-ref "$PROJECT_REF" --yes STRAVA_VERIFY_TOKEN="$VERIFY"
+          fi
+          supabase secrets set --project-ref "$PROJECT_REF" --yes STRAVA_CLIENT_ID="$STRAVA_CLIENT_ID" STRAVA_CLIENT_SECRET="$STRAVA_CLIENT_SECRET"
+          supabase functions deploy strava-connect --project-ref "$PROJECT_REF" --yes
+          supabase functions deploy strava-sync --project-ref "$PROJECT_REF" --yes
+          supabase functions deploy strava-disconnect --project-ref "$PROJECT_REF" --yes
+          supabase functions deploy strava-webhook --project-ref "$PROJECT_REF" --no-verify-jwt --yes
+
+      - name: Strava - registrar el webhook (una vez por app)
+        if: ${{ vars.STRAVA_CLIENT_ID != '' }}
+        run: |
+          set -e
+          CALLBACK="https://${PROJECT_REF}.supabase.co/functions/v1/strava-webhook"
+          subs="$(curl -s "https://www.strava.com/api/v3/push_subscriptions?client_id=${STRAVA_CLIENT_ID}&client_secret=${STRAVA_CLIENT_SECRET}")"
+          echo "Suscripciones actuales: $(echo "$subs" | jq -c '[.[] | {id, callback_url}]' 2>/dev/null || echo "$subs")"
+          id="$(echo "$subs" | jq -r --arg cb "$CALLBACK" '.[]? | select(.callback_url == $cb) | .id' | head -1)"
+          if [ -z "$id" ]; then
+            # Si hay otra suscripción (con otra dirección) se reemplaza: Strava permite una por app
+            old="$(echo "$subs" | jq -r '.[]?.id' | head -1)"
+            if [ -n "$old" ]; then curl -s -X DELETE "https://www.strava.com/api/v3/push_subscriptions/${old}?client_id=${STRAVA_CLIENT_ID}&client_secret=${STRAVA_CLIENT_SECRET}"; fi
+            # El token de verificación vive solo en Supabase: se genera uno nuevo para esta suscripción
+            VERIFY="$(openssl rand -hex 16)"
+            supabase secrets set --project-ref "$PROJECT_REF" --yes STRAVA_VERIFY_TOKEN="$VERIFY"
+            sleep 20  # que la función tome el secreto nuevo
+            res="$(curl -s -X POST https://www.strava.com/api/v3/push_subscriptions \
+              --form-string client_id="$STRAVA_CLIENT_ID" --form-string client_secret="$STRAVA_CLIENT_SECRET" \
+              --form-string callback_url="$CALLBACK" --form-string verify_token="$VERIFY")"
+            id="$(echo "$res" | jq -r '.id // empty')"
+            if [ -z "$id" ]; then echo "::error::Strava no aceptó el webhook: $res"; exit 1; fi
+          fi
+          supabase secrets set --project-ref "$PROJECT_REF" --yes STRAVA_SUBSCRIPTION_ID="$id"
+          echo "Webhook de Strava activo (suscripción $id)."

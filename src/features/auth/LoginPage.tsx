@@ -9,6 +9,8 @@ import { useAuth } from './AuthProvider'
 type Mode = 'signIn' | 'signUp' | 'forgot'
 
 const emailSchema = z.email()
+// El botón de Google solo aparece cuando se activa (variable VITE_GOOGLE_LOGIN=true)
+const GOOGLE_ENABLED = import.meta.env.VITE_GOOGLE_LOGIN === 'true'
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -115,7 +117,7 @@ export function LoginPage() {
       {errors.form && <Alert kind="error">{errors.form}</Alert>}
       {notice && <Alert kind="success">{notice}</Alert>}
 
-      {mode !== 'forgot' && (
+      {mode !== 'forgot' && GOOGLE_ENABLED && (
         <>
           <button type="button" className="btn btn-secondary btn-block" onClick={google} disabled={busy}>
             <GoogleMark /> {t('auth.google')}

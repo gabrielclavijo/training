@@ -2,6 +2,7 @@ import { NavLink, Outlet, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Icon, type IconName } from '../components/ui/Icon'
 import { useAuth } from '../features/auth/AuthProvider'
+import { useStravaAutoSync } from '../features/strava/useStravaAutoSync'
 
 interface NavItem {
   to: string
@@ -12,13 +13,14 @@ interface NavItem {
 // Celular: 5 botones grandes abajo. Escritorio: todas las secciones a la izquierda.
 const BOTTOM: NavItem[] = [
   { to: '/', label: 'nav.home', icon: 'home' },
-  { to: '/actividades', label: 'nav.activities', icon: 'activity' },
+  { to: '/plan', label: 'nav.plan', icon: 'plan' },
   { to: '/subir', label: 'nav.upload', icon: 'upload' },
-  { to: '/metas', label: 'nav.goals', icon: 'goal' },
+  { to: '/actividades', label: 'nav.activities', icon: 'activity' },
   { to: '/mas', label: 'nav.more', icon: 'more' },
 ]
 
 export const SECONDARY: NavItem[] = [
+  { to: '/metas', label: 'nav.goals', icon: 'goal' },
   { to: '/metricas', label: 'nav.metrics', icon: 'chart' },
   { to: '/temporada', label: 'nav.season', icon: 'calendar' },
   { to: '/importacion', label: 'nav.import', icon: 'import' },
@@ -34,6 +36,7 @@ const SIDEBAR: NavItem[] = [...BOTTOM.filter((i) => i.to !== '/mas'), ...SECONDA
 export function Layout() {
   const { t } = useTranslation()
   const { mode } = useAuth()
+  useStravaAutoSync()
   return (
     <div className="layout">
       {/* Con HashRouter un enlace "#ancla" cambiaría de página: movemos el foco a mano */}

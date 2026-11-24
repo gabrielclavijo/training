@@ -31,6 +31,10 @@ const ProfilePage = lazyPage(() => import('../features/profile/ProfilePage'), 'P
 const SettingsPage = lazyPage(() => import('../features/settings/SettingsPage'), 'SettingsPage')
 const MorePage = lazyPage(() => import('../features/settings/MorePage'), 'MorePage')
 const OnboardingPage = lazyPage(() => import('../features/onboarding/OnboardingPage'), 'OnboardingPage')
+const PlanPage = lazyPage(() => import('../features/plan/PlanPage'), 'PlanPage')
+const SessionDetailPage = lazyPage(() => import('../features/plan/SessionDetailPage'), 'SessionDetailPage')
+const AvailabilityPage = lazyPage(() => import('../features/plan/AvailabilityPage'), 'AvailabilityPage')
+const StravaCallbackPage = lazyPage(() => import('../features/strava/StravaCallbackPage'), 'StravaCallbackPage')
 const UpdatePasswordPage = lazyPage(() => import('../features/auth/UpdatePasswordPage'), 'UpdatePasswordPage')
 
 /** Si la persona no terminó el onboarding, la lleva ahí (salvo a páginas de ayuda). */
@@ -39,7 +43,7 @@ function OnboardingGate({ children }: { children: ReactNode }) {
   const location = useLocation()
   useSyncThemeFromProfile(profile.data?.theme)
   if (profile.isLoading) return <Spinner />
-  const free = ['/bienvenida', '/guias', '/privacidad', '/subir', '/metas/nueva', '/cambiar-clave', '/ajustes']
+  const free = ['/bienvenida', '/guias', '/privacidad', '/subir', '/metas/nueva', '/cambiar-clave', '/ajustes', '/strava']
   if (profile.data && !profile.data.onboardingDone && !free.includes(location.pathname)) {
     return <Navigate to="/bienvenida" replace />
   }
@@ -67,6 +71,10 @@ export function AppRoutes() {
         <Route path="actividades/nueva" element={<S><ManualActivityPage /></S>} />
         <Route path="actividades/:id" element={<S><ActivityDetailPage /></S>} />
         <Route path="subir" element={<S><UploadPage /></S>} />
+        <Route path="plan" element={<S><PlanPage /></S>} />
+        <Route path="plan/sesion/:id" element={<S><SessionDetailPage /></S>} />
+        <Route path="plan/disponibilidad" element={<S><AvailabilityPage /></S>} />
+        <Route path="strava" element={<S><StravaCallbackPage /></S>} />
         <Route path="metas" element={<S><GoalsPage /></S>} />
         <Route path="metas/nueva" element={<S><GoalFormPage /></S>} />
         <Route path="metas/:id" element={<S><GoalDetailPage /></S>} />

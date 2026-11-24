@@ -1,0 +1,216 @@
+{
+  "plan": {
+    "title": "Plan",
+    "legal": "Este plan es orientativo y no reemplaza a un entrenador ni a una valoración médica. Si sientes dolor, mareo o algo fuera de lo normal, para y consulta.",
+    "estimatedZones": "Tus zonas de pulso son estimaciones (calculadas con {{source}}). Para que sean tuyas, registra tu umbral de pulso en el perfil.",
+    "estimatedSource": {
+      "reserve": "tu pulso máximo y en reposo",
+      "max": "tu pulso máximo",
+      "age": "tu edad"
+    },
+    "noZones": "Sin datos de pulso: las intensidades se indican por esfuerzo percibido (de 1 a 10).",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "todayRest": "Hoy toca descanso. Descansar también es entrenar.",
+    "noPlan": "Todavía no hay plan.",
+    "noPlanBody": "Crea una meta para tener un plan hasta tu evento. Sin metas, la app arma un plan de mantenimiento.",
+    "createGoal": "Crear una meta",
+    "thisWeek": "Esta semana",
+    "week": "Semana del {{date}}",
+    "weekLoad": "Carga planeada: {{planned}} · hecha: {{done}}",
+    "weekLoadPlannedOnly": "Carga planeada: {{planned}}",
+    "nextWeeks": "Próximas semanas",
+    "prevWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "seeAll": "Ver toda la temporada",
+    "phase": {
+      "base": "Base",
+      "build": "Desarrollo",
+      "recovery_week": "Descarga",
+      "taper": "Disminución previa",
+      "event": "Evento",
+      "recovery": "Recuperación",
+      "return": "Regreso gradual",
+      "pause": "Pausa",
+      "maintenance": "Mantenimiento"
+    },
+    "notes": {
+      "recovery_week": "Semana de descarga: menos carga para asimilar lo entrenado.",
+      "taper": "Bajamos la carga para que llegues fresco al evento, manteniendo algo de intensidad.",
+      "event_week": "¡Semana de evento! Lo importante es llegar descansado.",
+      "recovery_after_event": "Recuperación después del evento: solo suave.",
+      "pause_illness": "Pausa por enfermedad o lesión: descanso.",
+      "pause_travel": "Viaje o vacaciones: solo lo que podrás hacer, el tiempo que tendrás.",
+      "return_gradual": "Regreso gradual después de la pausa: subimos poco a poco.",
+      "back_to_back": "Días seguidos de salida larga para preparar la carrera por etapas.",
+      "secondary_as_training": "Meta secundaria: úsala como entrenamiento para la principal, sin ir a fondo.",
+      "capacity_limited": "Tu tiempo disponible limita la carga de esta semana.",
+      "adjusted_down": "Ajustamos la semana según lo que entrenaste.",
+      "no_goals": "Sin metas activas: plan de mantenimiento."
+    },
+    "kind": {
+      "easy": "Suave",
+      "long": "Salida larga",
+      "tempo": "Ritmo sostenido",
+      "threshold": "Umbral",
+      "vo2": "Intervalos cortos",
+      "climb": "Subidas",
+      "recovery": "Recuperación",
+      "strength": "Fuerza",
+      "openers": "Activación",
+      "event": "Evento",
+      "rest": "Descanso"
+    },
+    "kindHelp": {
+      "easy": "Ritmo cómodo, puedes conversar. Construye la base aeróbica.",
+      "long": "Larga y suave: acostumbra al cuerpo a muchas horas. Come y toma líquido cada 20–30 minutos.",
+      "tempo": "Ritmo sostenido, algo exigente: puedes decir frases cortas.",
+      "threshold": "Cerca de tu máximo sostenible: mejora el ritmo que aguantas por mucho tiempo.",
+      "vo2": "Esfuerzos cortos y muy duros: suben tu techo aeróbico.",
+      "climb": "Repeticiones en subida a ritmo sostenido: prepara el desnivel de tu meta.",
+      "recovery": "Muy suave, para recuperar. Menos es más.",
+      "strength": "Gimnasio: fuerza general, piernas y tronco. Termina con algo de movilidad.",
+      "openers": "Suave con unos arranques cortos para llegar «despierto» al evento.",
+      "event": "¡Tu meta! Sal tranquilo, come y toma líquido desde el principio.",
+      "rest": "Descanso."
+    },
+    "sessionNote": {
+      "hotel_gym": "Gimnasio del hotel",
+      "travel": "Durante el viaje",
+      "return": "Regreso gradual",
+      "stage_day": "Día de etapa",
+      "back_to_back": "Segundo día seguido",
+      "openers": "Dos días antes del evento",
+      "day_before": "Víspera del evento"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "done": "Hecha",
+      "partial": "Parcial",
+      "harder": "Más dura de lo previsto",
+      "missed": "No hecha",
+      "rest": "Descanso"
+    },
+    "minutes": "{{count}} min",
+    "load": "Carga {{value}}",
+    "zone": "Zona {{zone}}",
+    "rpe": "esfuerzo {{from}}–{{to}}/10",
+    "hr": "pulso {{from}}–{{to}} ppm",
+    "power": "potencia {{from}}–{{to}} W",
+    "estimatedMark": "(estimado)",
+    "repeat": "{{repeat}} × {{minutes}} min",
+    "restBetween": "con {{minutes}} min suaves entre cada uno",
+    "block": "{{minutes}} min",
+    "session": "Sesión",
+    "whatToDo": "Qué hacer",
+    "why": "Por qué",
+    "doneWith": "Cumplida con: {{title}}",
+    "sessionNotFound": "No encontramos esta sesión.",
+    "changesTitle": "Cambios del plan",
+    "noChanges": "Aún no hay cambios.",
+    "changes": {
+      "initial": "Creamos tu plan.",
+      "goals_changed": "Rehicimos el plan porque cambiaron tus metas.",
+      "pause": "Reajustamos toda la temporada por una pausa.",
+      "availability": "Ajustamos el plan a tu nuevo tiempo disponible.",
+      "overreached": "Bajamos la carga y pusimos días suaves: la última semana fue más dura de lo previsto (estado de forma {{tsb}}).",
+      "missed_sessions": "Quedaron {{missed}} sesiones sin hacer: no las recuperamos doblando, la semana sube con calma.",
+      "harder_than_planned": "Hubo {{harder}} sesiones más duras de lo previsto: el próximo día será suave.",
+      "weekly": "Actualizamos el plan de la semana."
+    },
+    "availability": {
+      "title": "Tu tiempo disponible",
+      "help": "¿Cuántos minutos puedes entrenar cada día? Pon 0 los días que no entrenas. El plan nunca te pedirá más que esto.",
+      "suggested": "Lo propusimos a partir de tus últimas 8 semanas. Revísalo y guárdalo.",
+      "day": {
+        "1": "Lunes",
+        "2": "Martes",
+        "3": "Miércoles",
+        "4": "Jueves",
+        "5": "Viernes",
+        "6": "Sábado",
+        "7": "Domingo"
+      },
+      "minutesLabel": "{{day}} (minutos)",
+      "longDay": "Día de la salida larga",
+      "save": "Guardar disponibilidad",
+      "saved": "Listo: el plan se ajustó a tu tiempo.",
+      "weekly": "Total: {{hours}} por semana"
+    }
+  },
+  "diagnosis": {
+    "title": "Diagnóstico",
+    "status": {
+      "on_track": "Vas bien",
+      "tight": "Vas justo",
+      "behind": "Vas atrasado",
+      "past": "La meta ya pasó"
+    },
+    "statusHelp": {
+      "on_track": "Con el plan llegas a la forma que pide esta meta.",
+      "tight": "Llegas cerca de lo recomendado: sigue el plan y cuida el descanso.",
+      "behind": "Con el tiempo y la disponibilidad que hay, no alcanzas la forma recomendada.",
+      "past": ""
+    },
+    "target": "Forma recomendada",
+    "current": "Forma actual",
+    "projected": "Forma proyectada al evento",
+    "explain": "La «forma» es tu forma crónica (CTL): el promedio de tu carga de unas 6 semanas. Lo recomendado sale de la duración, el desnivel y el objetivo de la meta.",
+    "limitedBy": {
+      "time_to_event": "Lo que limita: el tiempo hasta el evento.",
+      "availability": "Lo que limita: tu tiempo disponible para entrenar.",
+      "pauses": "Lo que limita: las pausas antes del evento."
+    },
+    "lowHistory": "Tienes menos de 6 semanas de historial: el diagnóstico es menos confiable.",
+    "estimate": "Tiempo estimado",
+    "estimateValue": "{{time}} (entre {{from}} y {{to}})",
+    "targetTime": "Tu objetivo: {{time}}",
+    "estimateBasis": "Estimado con tus {{count}} salidas largas más recientes y la forma que ganarás. Es orientativo.",
+    "timeStatus": {
+      "on_track": "Por tiempo: el estimado está dentro de tu objetivo.",
+      "tight": "Por tiempo: el estimado está muy cerca de tu objetivo.",
+      "behind": "Por tiempo: el estimado está por encima de tu objetivo."
+    },
+    "noEstimate": "Para estimar el tiempo necesitamos al menos 2 salidas de más de 1 hora en los últimos 4 meses.",
+    "suggestions": {
+      "lower_demand": "Baja la exigencia: por ejemplo, un recorrido más corto o menos desnivel.",
+      "finish_only": "Cambia el objetivo a «solo terminar».",
+      "more_time": "Si puedes, suma tiempo de entrenamiento en la semana.",
+      "use_as_training": "Úsala como entrenamiento, sin ir a fondo.",
+      "keep_going": "Sigue el plan como va."
+    }
+  },
+  "strava": {
+    "title": "Strava",
+    "connect": "Conectar con Strava",
+    "connecting": "Conectando con Strava…",
+    "connected": "Strava quedó conectado. Trajimos {{count}} actividades de los últimos 7 días; desde ahora las nuevas llegan solas.",
+    "denied": "No se autorizó la conexión. Puedes intentarlo de nuevo cuando quieras.",
+    "scopeMissing": "Para traer tus actividades, deja marcada la casilla «Ver datos de tus actividades» al autorizar.",
+    "inUse": "Esa cuenta de Strava ya está conectada a otra persona de la app.",
+    "error": "No pudimos conectar con Strava. Intenta de nuevo en un momento.",
+    "backToConnections": "Volver a conexiones",
+    "notConfigured": "La conexión con Strava todavía no está configurada en esta app (ver README).",
+    "statusConnected": "Conectada: las actividades nuevas llegan solas.",
+    "lastSync": "Última actividad recibida: {{date}}",
+    "syncNow": "Revisar ahora",
+    "syncing": "Revisando…",
+    "syncDone": "Listo: {{count}} actividades nuevas.",
+    "reconnect": "Reconectar",
+    "disconnect": "Desconectar Strava",
+    "disconnectConfirm": "Se desconectará Strava y se borrarán las actividades que solo llegaron desde allá. Las que subiste como archivo se conservan. ¿Continuar?",
+    "disconnected": "Strava quedó desconectado.",
+    "rules": "Por reglas de Strava, lo que llega desde allá se guarda solo 7 días y nunca se usa con inteligencia artificial. Para conservar una actividad en tu historial, sube también su archivo (la app no la duplica).",
+    "errors": {
+      "rate_limited": "Strava está recibiendo muchas solicitudes; lo intentamos de nuevo más tarde.",
+      "backfill_failed": "No pudimos traer las actividades recientes. Toca «Revisar ahora».",
+      "webhook_failed": "Falló la recepción de una actividad. Toca «Revisar ahora».",
+      "sync_failed": "Falló la última revisión. Intenta de nuevo."
+    },
+    "expires": "Este dato de Strava se borrará el {{date}}. Sube el archivo de la actividad para conservarla.",
+    "expiresMerged": "La parte que vino de Strava se borrará el {{date}}; el resto se conserva."
+  },
+  "google": {
+    "notEnabled": "Entrar con Google aún no está activado."
+  }
+}

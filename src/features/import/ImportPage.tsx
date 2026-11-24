@@ -8,6 +8,7 @@ import { useConnections, useJobs } from '../../data/hooks'
 import { useRepo } from '../../data/RepoProvider'
 import type { ImportJob } from '../../data/types'
 import { PROVIDERS } from '../../providers'
+import { StravaConnection } from '../strava/StravaConnection'
 
 export function ImportPage() {
   const { t } = useTranslation()
@@ -33,7 +34,7 @@ export function ImportPage() {
                     {t(`import.status.${status}`)}
                   </span>
                 </div>
-                <p className="muted">{t(`import.providerHelp.${p.id}`)}</p>
+                {p.id === 'strava' && p.enabled ? <StravaConnection connection={c} /> : <p className="muted">{t(`import.providerHelp.${p.id}`)}</p>}
                 {p.id === 'file' && <p className="muted">{c?.lastSyncAt ? t('import.lastSync', { date: formatDateTime(c.lastSyncAt) }) : t('import.never')}</p>}
                 {c?.lastError && <Alert kind="error">{c.lastError}</Alert>}
               </li>

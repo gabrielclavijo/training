@@ -26,6 +26,8 @@ import { useRepo } from '../../data/RepoProvider'
 import type { Activity, MergeRecord, StoredSource } from '../../data/types'
 import { RpeSelect } from './RpeSelect'
 import { SPORTS, SUBSPORTS } from './sports'
+import { PoweredByStrava, ViewOnStrava } from '../strava/Brand'
+import { stravaActivityUrl } from '../strava/strava'
 
 export function ActivityDetailPage() {
   const { id = '' } = useParams()
@@ -125,6 +127,7 @@ function Detail({ activity: a, merges }: { activity: Activity; merges: MergeReco
         <RpeForm activity={a} />
       </section>
 
+      <StravaNotice activity={a} />
       <SourcesSection activity={a} merges={merges} />
       <EditSection activity={a} />
     </Page>
@@ -299,6 +302,29 @@ function EditSection({ activity: a }: { activity: Activity }) {
           </button>
         </div>
       </form>
+    </section>
+  )
+}
+
+/** Datos de Strava: enlace «View on Strava», marca y fecha en que se borran (7 días). */
+function StravaNotice({ activity: a }: { activity: Activity }) {
+  const { t } = useTranslation()
+  const strava = a.sources.filter((s) => s.provider === 'strava')
+  if (strava.length === 0) return null
+  const url = stravaActivityUrl(strava[0].externalId)
+  const expires = strava[0].streamsExpireAt
+  const onlyStrava = strava.length === a.sources.length
+  return (
+    <section className="card" aria-label="Strava">
+      {expires && (
+        <p className="notice-estimate">
+          {onlyStrava ? t('strava.expires', { date: formatDate(expires) }) : t('strava.expiresMerged', { date: formatDate(expires) })}
+        </p>
+      )}
+      <div className="row-between">
+        {url && <ViewOnStrava href={url} />}
+        <PoweredByStrava />
+      </div>
     </section>
   )
 }

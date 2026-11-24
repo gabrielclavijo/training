@@ -35,6 +35,8 @@ jobs:
           VITE_BASE: /${{ github.event.repository.name }}/
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_STRAVA_CLIENT_ID: ${{ vars.STRAVA_CLIENT_ID }}
+          VITE_GOOGLE_LOGIN: ${{ vars.VITE_GOOGLE_LOGIN }}
       - name: Publicar en la rama gh-pages
         run: |
           cd dist

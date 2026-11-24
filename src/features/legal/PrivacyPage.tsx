@@ -9,7 +9,7 @@ export function PrivacyPage() {
   return (
     <Page title={t('privacy.title')}>
       <article className="card prose">
-        <p className="muted">Última actualización: 23/11/2026 · Versión 1</p>
+        <p className="muted">Última actualización: 24/11/2026 · Versión 2</p>
 
         <h2>En pocas palabras</h2>
         <ul>
@@ -46,6 +46,13 @@ export function PrivacyPage() {
           En esta versión no se usa inteligencia artificial. Si más adelante se activan menús sugeridos por IA, solo
           se enviará lo que tú escribas a mano para ese fin (tipo de alimentación, alergias, alimentos que no comes,
           meta de peso y un rango de calorías). Nunca se enviarán tus entrenamientos ni datos de Strava.
+        </p>
+
+        <h2>Conexión con Strava (opcional)</h2>
+        <p>
+          Si conectas tu cuenta de Strava, la app recibe tus actividades nuevas. Por las reglas de Strava, esos datos se
+          guardan como máximo 7 días, solo tú los ves y nunca se usan con inteligencia artificial. Al desconectar Strava
+          se borra todo lo que llegó desde allá.
         </p>
 
         <h2>Dónde se guardan</h2>

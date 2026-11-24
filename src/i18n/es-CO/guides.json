@@ -56,7 +56,7 @@
         "Si nada de esto funciona, escríbele a la persona que administra el grupo de prueba."
       ]
     },
-    "strava_api_note": "¿Por qué no hay botón «Conectar con Strava»? Strava exige una suscripción paga a quien crea la app y no permite guardar sus datos más de 7 días. Por eso usamos la exportación de tu cuenta, que es tuya y gratuita."
+    "strava_api_note": "Si la app tiene activada la conexión con Strava, ve a Más → Importación → «Connect with Strava». Las actividades nuevas llegan solas, pero por reglas de Strava se guardan solo 7 días: para conservarlas en tu historial, sube también su archivo o la exportación de tu cuenta (la app no las duplica)."
   },
   "settingsExtra": {
     "demo": "Datos de prueba",

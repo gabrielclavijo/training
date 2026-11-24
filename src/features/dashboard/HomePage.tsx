@@ -9,6 +9,7 @@ import type { LoadMethod } from '../../core/load'
 import { formatNumber } from '../../core/units'
 import { useFitness, useGoals } from '../../data/hooks'
 import { ActivityRow } from '../activities/ActivitiesPage'
+import { TodayCard } from '../plan/TodayCard'
 
 const dayLabel = (d: string) => formatDate(`${d}T12:00:00Z`).slice(0, 5)
 
@@ -33,6 +34,8 @@ export function HomePage() {
   return (
     <Page title={t('nav.home')}>
       <p className="muted capitalize-first">{formatLongDate(new Date())}</p>
+
+      <TodayCard />
 
       {nextGoal && (
         <Link to={`/metas/${nextGoal.id}`} className="card card-link">

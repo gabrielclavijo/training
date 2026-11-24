@@ -4,6 +4,7 @@ Aplicación web para centralizar los entrenamientos de un grupo pequeño (hasta 
 
 - Deportes: ciclismo (ruta, MTB, gravel), running, natación y gimnasio.
 - Funciona con y sin sensores (potenciómetro, banda o pulso de muñeca, o solo tiempo y distancia). Siempre dice con qué método calculó cada cosa.
+- **Plan de entrenamiento adaptativo (fase 2):** diagnóstico por meta (vas bien, justo o atrasado, con tiempo estimado), plan semana a semana hasta cada meta, ajuste automático según lo que de verdad entrenaste y pausas (enfermedad, lesión, viajes) que reajustan toda la temporada. Todo con reglas de entrenamiento conocidas, sin IA, y con el aviso de que no reemplaza a un entrenador.
 - Español de Colombia, sistema métrico, fechas día/mes/año y hora de Colombia.
 - Hecha para el celular primero; también se ve bien en tablet y computador.
 
@@ -18,8 +19,8 @@ Aplicación web para centralizar los entrenamientos de un grupo pequeño (hasta 
 3. [Conectarla a Supabase (cuentas reales)](#3-conectarla-a-supabase-cuentas-reales)
 4. [Activar el inicio de sesión con Google](#4-activar-el-inicio-de-sesión-con-google)
 5. [Invitar a las demás personas](#5-invitar-a-las-demás-personas)
-6. [¿Y Strava? ¿Y Garmin?](#6-y-strava-y-garmin)
-7. [Cómo se cumplen los requisitos de la fase 1](#7-cómo-se-cumplen-los-requisitos-de-la-fase-1)
+6. [Conectar Strava (opcional)](#6-conectar-strava-opcional)
+7. [Cómo se cumplen los requisitos](#7-cómo-se-cumplen-los-requisitos-de-la-fase-1)
 8. [Para desarrolladores](#8-para-desarrolladores)
 
 ---
@@ -122,13 +123,22 @@ Con esto ya funciona **crear cuenta con correo y contraseña**. Supabase envía 
 
 ## 4. Activar el inicio de sesión con Google
 
-1. Entra a **https://console.cloud.google.com** → crea un proyecto (ej. `entreno`).
-2. **APIs y servicios → Pantalla de consentimiento de OAuth**: tipo **Externo**, nombre de la app y tu correo. En **Usuarios de prueba** agrega los correos de las personas del grupo (mientras la app esté «en prueba», solo ellas pueden entrar con Google).
-3. **APIs y servicios → Credenciales → Crear credenciales → ID de cliente de OAuth**:
-   - Tipo: **Aplicación web**.
-   - **URI de redireccionamiento autorizados:** `https://abcdefghijklmnop.supabase.co/auth/v1/callback` (con tu Project ref).
-   - Copia el **ID de cliente** y el **Secreto del cliente**.
-4. En Supabase → **Authentication → Sign In / Providers → Google**: actívalo y pega el ID y el secreto. Guarda.
+Solo necesitas **tu cuenta de Google** (no hace falta pagar ni poner tarjeta). El botón «Continuar con Google» aparece en la app únicamente cuando terminas estos pasos.
+
+1. Entra a **https://console.cloud.google.com** con tu cuenta de Google y acepta los términos si es la primera vez.
+2. Arriba, en el selector de proyectos → **Proyecto nuevo** → nombre `entreno` → **Crear**. Asegúrate de que quede seleccionado.
+3. Menú ☰ → **APIs y servicios → Pantalla de consentimiento de OAuth** (o **Google Auth Platform → Branding**):
+   - Nombre de la app: `Entreno`. Correo de asistencia: el tuyo.
+   - Tipo de usuario / Público: **Externo**.
+   - Correo de contacto del desarrollador: el tuyo → **Guardar**.
+   - En **Usuarios de prueba** (o **Público → Test users**) agrega los correos de Gmail de las personas del grupo, incluido el tuyo. Mientras la app esté «en prueba», solo ellas pueden entrar con Google (hasta 100).
+4. **APIs y servicios → Credenciales** (o **Clientes**) → **Crear credenciales → ID de cliente de OAuth**:
+   - Tipo de aplicación: **Aplicación web**. Nombre: `Entreno web`.
+   - **URI de redireccionamiento autorizados → Agregar URI:** `https://TU-PROJECT-ID.supabase.co/auth/v1/callback` (cambia `TU-PROJECT-ID` por tu Project ID de Supabase).
+   - **Crear** y copia el **ID de cliente** y el **Secreto del cliente**.
+5. En Supabase → **Authentication → Sign In / Providers → Google**: actívalo, pega el ID de cliente y el secreto → **Save**.
+6. En GitHub → **Settings → Secrets and variables → Actions → Variables → New repository variable**: nombre `VITE_GOOGLE_LOGIN`, valor `true`.
+7. **Actions → «Publicar en GitHub Pages» → Run workflow.** Al terminar, aparece el botón de Google.
 
 El secreto de Google queda solo en Supabase; nunca en la app ni en GitHub.
 
@@ -149,16 +159,53 @@ El secreto de Google queda solo en Supabase; nunca en la app ni en GitHub.
 
 ---
 
-## 6. ¿Y Strava? ¿Y Garmin?
+## 6. Conectar Strava (opcional)
 
-Verificado el **23/11/2026**:
+Con esto, cada persona toca «Connect with Strava» una vez y **sus actividades nuevas llegan solas** (Garmin → Strava → app). Requisitos de Strava (verificados el 23/11/2026):
 
-- **Strava:** su API exige, desde el 1/06/2026, una **suscripción paga** para quien crea la app; las apps nuevas empiezan con 1 atleta y se suben a 10 sin revisión desde el panel. Su política **no permite guardar sus datos más de 7 días** ni usarlos (ni nada derivado) en IA. Por eso la app **no se conecta directamente a Strava**: usa la **exportación de la cuenta** de cada persona, que es suya, gratuita y no tiene esas restricciones.
-  - La conexión directa quedó **preparada y apagada** (`supabase/functions/provider-strava`, `src/providers/index.ts`): la base de datos ya marca esos datos como caché de 7 días, no aptos para IA, y tiene la función de borrado automático.
-  - Para activarla algún día: suscripción de Strava → crear la app en **https://www.strava.com/settings/api** (dominio de callback: `abcdefghijklmnop.supabase.co`) → en ese mismo panel subir la capacidad a 10 atletas → poner `STRAVA_ENABLED=true`, `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET` y `STRAVA_VERIFY_TOKEN` en los secretos de Supabase → completar los pasos marcados `TODO`. Respetar las guías de marca (botón oficial «Connect with Strava», «Powered by Strava» y «Ver en Strava»).
-- **Garmin:** el Garmin Connect Developer Program reabrió el 21/10/2026 con niveles *Personal* (solo tus datos), *Starter* (organizaciones, con aprobación, sin historial) y *Enterprise* (pago). La interfaz de proveedor está lista para conectar *Starter* cuando haya aprobación. Mientras tanto: exportación de Garmin Connect y archivos .FIT.
+- Quien crea la app (tú) debe tener **suscripción de Strava**.
+- Las apps nuevas arrancan con capacidad para 1 atleta; se sube a **10 sin revisión** desde el panel.
+- Lo que llega de Strava se guarda **solo 7 días** y **nunca se usa con IA** (la app lo cumple sola: se borra automáticamente y la base de datos impide marcarlo para IA). Para conservar una actividad en el historial, la persona sube también su archivo o la exportación de su cuenta; la app no la duplica.
 
-Fuentes: [Política de API de Strava](https://www.strava.com/legal/api_policy) · [Anuncio del programa de desarrolladores de Strava](https://communityhub.strava.com/insider-journal-9/an-update-to-our-developer-program-13428) · [Límites de Strava](https://developers.strava.com/docs/rate-limits/) · [Garmin Connect Developer Program](https://developer.garmin.com/gc-developer-program/overview/)
+### 6.1 Crear la app en Strava
+
+1. Con tu cuenta (la de suscripción), entra a **https://www.strava.com/settings/api**.
+2. Llena el formulario:
+   - **Application Name:** `Entreno`
+   - **Category:** `Training`
+   - **Website:** `https://gabrielclavijo.github.io/training/`
+   - **Authorization Callback Domain:** `gabrielclavijo.github.io` (solo el dominio, sin `https://` ni rutas)
+   - Sube un ícono (cualquier imagen cuadrada) y acepta los términos → **Create**.
+3. Copia el **Client ID** (un número) y el **Client Secret** (toca *show*).
+4. En esa misma página, busca **Athlete Capacity** y súbela a **10**.
+
+### 6.2 Darle los datos a GitHub
+
+En **Settings → Secrets and variables → Actions**:
+
+| Pestaña | Nombre | Valor |
+|---|---|---|
+| Variables | `STRAVA_CLIENT_ID` | el Client ID |
+| Secrets | `STRAVA_CLIENT_SECRET` | el Client Secret |
+
+### 6.3 Activarlo
+
+1. **Actions → «Configurar Supabase» → Run workflow.** Publica las funciones de Strava y registra el **webhook** (el aviso automático de actividades nuevas). Debe terminar con «Webhook de Strava activo».
+2. **Actions → «Publicar en GitHub Pages» → Run workflow.**
+3. Logos oficiales (las guías de marca de Strava lo exigen): descarga el paquete de **https://developers.strava.com/guidelines**, y en GitHub → carpeta `public/brand/strava/` → **Add file → Upload files** sube estos dos archivos con **exactamente** estos nombres:
+   - `btn_strava_connect_with_orange.svg` (botón «Connect with Strava» naranja)
+   - `api_logo_pwrdBy_strava_horiz_orange.svg` (logo «Powered by Strava» horizontal naranja)
+
+   Mientras no estén, la app muestra una versión en texto.
+4. Prueba: en la app, **Más → Importación → Connect with Strava** → autoriza (deja marcada «Ver datos de tus actividades»). Vuelves a la app y trae las actividades de los últimos 7 días.
+
+Cada persona del grupo hace solo el paso 4. Si alguien con cuenta gratuita de Strava no logra conectar, avísame: la política de Strava no es del todo clara sobre si la suscripción del creador basta.
+
+### Garmin
+
+El Garmin Connect Developer Program reabrió el 21/10/2026 (niveles *Personal*, *Starter* y *Enterprise*). La interfaz de proveedor está lista para conectar *Starter* cuando Garmin lo apruebe. Mientras tanto: Garmin → Strava (automático) o la exportación de Garmin Connect.
+
+Fuentes: [Política de API de Strava](https://www.strava.com/legal/api_policy) · [Anuncio del programa de desarrolladores de Strava](https://communityhub.strava.com/insider-journal-9/an-update-to-our-developer-program-13428) · [Límites de Strava](https://developers.strava.com/docs/rate-limits/) · [Guías de marca de Strava](https://developers.strava.com/guidelines/) · [Garmin Connect Developer Program](https://developer.garmin.com/gc-developer-program/overview/)
 
 ---
 
@@ -175,7 +222,17 @@ Fuentes: [Política de API de Strava](https://www.strava.com/legal/api_policy) �
 
 **Cambios frente al pedido original (acordados):** sin conexión directa a Strava (ver sección 6); el criterio «llega sola desde Garmin» se reemplazó por «subir una actividad nueva toma menos de 1 minuto desde el celular».
 
-**Fases siguientes:** el modelo de datos ya incluye pausas, bloques de temporada, enlace actividad–sesión planeada, laboratorio cifrado y preferencias de alimentación (lo único que en la fase 3 podrá recibir la IA, nunca datos de Strava).
+### Fase 2
+
+| Requisito | Cómo | Prueba automática |
+|---|---|---|
+| Diagnóstico por meta | Forma recomendada según duración, desnivel y objetivo vs. forma proyectada con un aumento seguro, la disponibilidad y las pausas; tiempo estimado con tus salidas largas | `src/core/planner/planner.test.ts`, `src/data/planService.test.ts` |
+| Plan semana a semana | Base → desarrollo → disminución → evento → recuperación; 3 semanas subiendo y 1 de descarga; subida ≤ 10 %; ≥ 1 descanso por semana; combina tus deportes; días seguidos para carreras por etapas | Caso de prueba completo (Gravel + Vuelta + viaje de la semana 7) |
+| Ajuste automático | Planeado vs. hecho (hecha, parcial, más dura, no hecha); exceso de fatiga → días suaves; sesiones falladas no se recuperan doblando; cada cambio queda explicado | `planner.test.ts` |
+| Pausas | Enfermedad/lesión: descanso y regreso gradual según los días parados. Viajes: solo lo disponible, el tiempo disponible. Reajustan toda la temporada | `planService.test.ts` |
+| Strava | Conexión con OAuth en Edge Function, webhook (crear/editar/borrar/revocar), sincronización de respaldo, caché de 7 días, nunca para IA | `src/data/stravaInbox.test.ts`, `npm run test:db` |
+
+**Fase 3 (siguiente):** el modelo de datos ya incluye pausas, bloques de temporada, enlace actividad–sesión planeada, laboratorio cifrado y preferencias de alimentación (lo único que en la fase 3 podrá recibir la IA, nunca datos de Strava).
 
 ---
 
@@ -206,6 +263,7 @@ src/
     load/         carga por entrenamiento (TSS, hrTSS, TRIMP, esfuerzo percibido)
     fitness/      forma crónica, fatiga, estado de forma, carga semanal
     season/       bloques de temporada y avisos entre metas
+    planner/      zonas, diagnóstico, generador del plan y ajuste automático (fase 2)
     units/ dates/ conversión de unidades y fechas (único lugar donde se formatea)
   data/         acceso a datos: Supabase o memoria (modo local/pruebas), importador, análisis
   providers/    proveedores de datos (archivos y manual activos; Strava y Garmin apagados)
@@ -214,7 +272,8 @@ src/
   i18n/es-CO/   todos los textos (para otro idioma: copiar la carpeta y traducir)
 supabase/
   migrations/   esquema SQL con RLS
-  functions/    Edge Functions (health-crypto, account-delete, provider-strava apagada)
+  functions/    Edge Functions (health-crypto, account-delete, strava-connect, strava-webhook,
+                strava-sync, strava-disconnect)
   tests/        pruebas de aislamiento entre usuarios
 scripts/        test-db.sh, e2e-smoke.cjs
 .github/workflows/  pruebas, publicación en Pages y configuración de Supabase

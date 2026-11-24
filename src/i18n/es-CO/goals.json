@@ -60,8 +60,8 @@
     "requiredDate": "Elige la fecha del evento.",
     "requiredDistance": "Escribe la distancia.",
     "estimated": "Duración estimada: {{time}}",
-    "estimatedHelp": "Estimación simple por distancia, desnivel y terreno. En la fase 2 se calculará con tu forma real.",
-    "diagnosisSoon": "El diagnóstico de si vas bien, justo o atrasado llega en la siguiente fase."
+    "estimatedHelp": "Estimación general por distancia, desnivel y terreno (sirve para planear la recuperación). El tiempo calculado con tus salidas y tu forma está en el diagnóstico.",
+    "diagnosisSoon": ""
   },
   "season": {
     "title": "Temporada",
@@ -113,7 +113,7 @@
     "pauseMinutes": "Minutos por día",
     "savePause": "Guardar pausa",
     "deletePause": "Borrar pausa",
-    "pausePhase2": "En la siguiente fase, las pausas reajustarán el plan de toda la temporada.",
+    "pausePhase2": "Al registrar una pausa, el plan de toda la temporada se reajusta: la app te pregunta si podrás entrenar, con qué y cuánto tiempo.",
     "listView": "Calendario",
     "today": "Hoy"
   }

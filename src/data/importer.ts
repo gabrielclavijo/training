@@ -86,7 +86,14 @@ const STREAMS_MAX_AGE_DAYS = 365
 export async function importOne(
   repo: Repo,
   c: ImportCandidate,
-  opts: { jobId: string | null; isDemo?: boolean; notDuplicatePairs?: Set<string>; index?: ImportIndex } = { jobId: null },
+  opts: {
+    jobId: string | null
+    isDemo?: boolean
+    notDuplicatePairs?: Set<string>
+    index?: ImportIndex
+    /** Datos de la API de Strava: caché de 7 días, nunca para IA, sin series guardadas */
+    stravaCacheUntil?: string
+  } = { jobId: null },
 ): Promise<ImportResult> {
   const { summary, streams, format, originHint } = c.parsed
   const index = opts.index
@@ -96,10 +103,11 @@ export async function importOne(
   if (same) return { status: 'duplicate', activityId: same.activityId }
 
   const newSource: NewSource = {
-    provider: opts.isDemo ? 'demo' : format === 'manual' && originHint !== 'strava_export' ? 'manual' : 'file',
+    provider: opts.stravaCacheUntil ? 'strava' : opts.isDemo ? 'demo' : format === 'manual' && originHint !== 'strava_export' ? 'manual' : 'file',
     format,
     originHint,
-    retentionClass: 'owned',
+    retentionClass: opts.stravaCacheUntil ? 'strava_cache' : 'owned',
+    streamsExpireAt: opts.stravaCacheUntil ?? null,
     sport: summary.sport,
     subSport: summary.subSport,
     title: summary.title,
@@ -140,7 +148,7 @@ export async function importOne(
   const pairs = opts.notDuplicatePairs ?? (await repo.listNotDuplicatePairs())
   const match = findDuplicate(candidate, near, pairs)
 
-  const keepStreams = streams && Date.now() - Date.parse(summary.startTime) < STREAMS_MAX_AGE_DAYS * 86_400_000
+  const keepStreams = !opts.stravaCacheUntil && streams && Date.now() - Date.parse(summary.startTime) < STREAMS_MAX_AGE_DAYS * 86_400_000
 
   if (match) {
     const activity = near.find((a) => a.id === match.activityId)!

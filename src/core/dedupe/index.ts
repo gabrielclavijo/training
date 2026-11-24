@@ -195,8 +195,15 @@ export function mergeSources(sources: SourceLike[]): MergedActivity {
 
   // Modalidad y nombre: la exportación de Strava suele traer lo que la persona
   // eligió a mano (ej. "Gravel Ride" y un título propio).
-  const labeled = sources.find((s) => s.originHint === 'strava_export' && s.subSport) ?? sources.find((s) => s.subSport)
-  const titled = sources.find((s) => s.originHint === 'strava_export' && s.title) ?? sources.find((s) => s.title)
+  // Se prefiere lo propio: lo que viene de la API de Strava se borra a los 7 días
+  const labeled =
+    sources.find((s) => owned(s) && s.originHint === 'strava_export' && s.subSport) ??
+    sources.find((s) => owned(s) && s.subSport) ??
+    sources.find((s) => s.subSport)
+  const titled =
+    sources.find((s) => owned(s) && s.originHint === 'strava_export' && s.title) ??
+    sources.find((s) => owned(s) && s.title) ??
+    sources.find((s) => s.title)
   const distanceM = primary.distanceM ?? sources.find((s) => hasDistance(s.distanceM))?.distanceM ?? null
   const movingS = primary.movingS ?? sources.find((s) => s.movingS)?.movingS ?? null
   const dur = movingS || primary.elapsedS

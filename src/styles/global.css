@@ -1034,3 +1034,140 @@ textarea {
 .metric-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
 }
+
+/* ---------- Fase 2: plan ---------- */
+/* Aviso legal destacado (pedido explícitamente) */
+.notice-legal {
+  border: 2px solid var(--warning);
+  background: var(--warning-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  margin: var(--space-3) 0 var(--space-4);
+  font-size: 0.95rem;
+}
+/* Aviso de estimaciones destacado */
+.notice-estimate {
+  border-left: 6px solid var(--focus);
+  background: var(--info-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.95rem;
+}
+.session-card {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  margin: var(--space-2) 0;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+.session-card:hover {
+  border-color: var(--primary);
+}
+.session-blocks {
+  margin: var(--space-1) 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.92rem;
+}
+.day-list {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+}
+.day {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+.day:last-child {
+  border-bottom: none;
+}
+.day-today {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  box-shadow: inset 4px 0 0 var(--primary);
+}
+.day-title {
+  font-size: 1rem;
+  margin: 0 0 var(--space-1);
+}
+.phase-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.badge-session-done {
+  background: var(--success-bg);
+}
+.badge-session-partial,
+.badge-session-harder {
+  background: var(--warning-bg);
+}
+.badge-session-missed {
+  background: var(--danger-bg);
+}
+.diagnosis-on_track {
+  border-left: 6px solid var(--success);
+}
+.diagnosis-tight {
+  border-left: 6px solid var(--warning);
+}
+.diagnosis-behind {
+  border-left: 6px solid var(--danger);
+}
+
+/* ---------- Strava (marca) ---------- */
+.strava-connect {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  min-height: var(--tap);
+  justify-self: start;
+}
+.strava-connect img {
+  display: block;
+  height: 48px;
+  width: auto;
+}
+.strava-connect-fallback {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 var(--space-5);
+  border-radius: 4px;
+  color: #fff;
+  font-weight: 700;
+}
+.powered-by-strava {
+  height: 24px;
+  width: auto;
+}
+.powered-by-strava-text,
+.view-on-strava {
+  font-weight: 700;
+}
+:root[data-theme='dark'] .powered-by-strava-text,
+:root[data-theme='dark'] .view-on-strava {
+  color: #ff7a3d !important;
+}
+/* Texto en naranja Strava: tamaño «grande» para cumplir contraste AA (3:1) */
+.strava-connect-fallback,
+.powered-by-strava-text,
+.view-on-strava {
+  font-size: 1.2rem;
+}
+.week-nav {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+.week-title {
+  margin: 0;
+  text-align: center;
+  font-size: 1.1rem;
+}
