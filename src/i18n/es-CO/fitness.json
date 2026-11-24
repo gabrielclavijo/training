@@ -40,7 +40,15 @@
     "heroSummary": "Forma {{ctl}} · fatiga {{atl}} · estado {{tsb}}",
     "heroWeek": "de la carga planeada esta semana",
     "heroWeekShort": "Semana",
-    "heroRingLabel": "Llevas {{pct}} % de la carga planeada esta semana ({{done}} de {{planned}})"
+    "heroRingLabel": "Llevas {{pct}} % de la carga planeada esta semana ({{done}} de {{planned}})",
+    "barLegendWeek": "Semana",
+    "barLegendLast": "Última semana completa",
+    "barLegendPartial": "Semana en curso (aún no termina)",
+    "barLegendJump": "Subió más de 30 % frente a la anterior",
+    "barLegendAvg": "Promedio",
+    "avgLine": "Promedio {{value}}",
+    "weeklyLoadNote": "Cada barra suma los puntos de carga de esa semana. Referencia: 1 hora al máximo esfuerzo que puedes sostener ≈ 100 puntos.",
+    "weeklySummary": "Última semana completa ({{date}}): {{load}} puntos{{change}}. Promedio de las semanas mostradas: {{avg}}."
   },
   "metrics": {
     "title": "Métricas por deporte",
@@ -75,7 +83,11 @@
       "frequency": "Frecuencia: cuántas veces por semana practicas este deporte.",
       "speed": "La velocidad depende mucho del terreno y el desnivel: compárala solo entre salidas parecidas.",
       "pace": "Ritmo: minutos que tardas en cada kilómetro (o cada 100 m en natación). Menos es más rápido."
-    }
+    },
+    "avgLine": "Promedio {{value}}",
+    "barLegendLast": "Periodo más reciente",
+    "barLegendPartial": "Periodo en curso (aún no termina)",
+    "volumeNote": "Cada barra son las horas de {{sport}} en ese periodo; encima, el total en horas."
   },
   "glossary": {
     "title": "¿Qué significa cada indicador?",

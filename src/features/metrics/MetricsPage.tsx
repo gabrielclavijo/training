@@ -23,6 +23,8 @@ import { SUBSPORTS } from '../activities/sports'
 
 const TABS: Sport[] = ['cycling', 'running', 'swimming', 'strength']
 
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1)
+
 export function MetricsPage() {
   const { t } = useTranslation()
   const { loaded, isLoading, error } = useFitness()
@@ -172,12 +174,24 @@ function SportPanel({ sport }: { sport: Sport }) {
           summary={t('metrics.summaryText', { sessions: summary.count, hours: formatDuration(summary.durationS), distance: formatDistance(summary.distanceM) })}
           periodHeader={t('metrics.period')}
           valueHeader={t('metrics.hours')}
+          average={(() => {
+            const done = filled.slice(0, -1)
+            const avg = done.length ? done.reduce((a, p) => a + p.durationS, 0) / done.length / 3600 : 0
+            return avg > 0 ? { value: avg, label: t('metrics.avgLine', { value: `${formatNumber(avg, 1)} h` }) } : undefined
+          })()}
+          legend={[
+            { kind: 'normal', label: cap(t(`metrics.${unit}`)) },
+            { kind: 'partial', label: t('metrics.barLegendPartial') },
+            { kind: 'average', label: t('fitness.barLegendAvg') },
+          ]}
+          note={t('metrics.volumeNote', { sport: t(`sports.${sport}`).toLowerCase() })}
           data={filled.map((p, i) => ({
             label: label(p.period),
+            short: p.durationS > 0 ? formatNumber(p.durationS / 3600, 1) : '0',
+            partial: i === filled.length - 1,
             fullLabel: `${label(p.period)} · ${p.count} ${t('metrics.sessions').toLowerCase()}${p.distanceM ? ` · ${formatDistance(p.distanceM)}` : ''}${p.elevationM ? ` · ↑ ${formatElevation(p.elevationM)}` : ''}`,
             value: p.durationS / 3600,
             display: formatDuration(p.durationS),
-            highlight: i === filled.length - 1,
           }))}
         />
       </section>

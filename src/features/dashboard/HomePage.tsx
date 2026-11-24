@@ -261,10 +261,16 @@ function Trend() {
 
 function WeeklyLoad() {
   const { t } = useTranslation()
-  const { overview } = useFitness()
+  const { overview, today } = useFitness()
   const weeks = overview!.weeks.slice(-12)
-  const last = weeks[weeks.length - 1]
-  const jump = weeks.find((w, i) => i > 0 && w.changePct !== null && w.changePct > 30 && i >= weeks.length - 2)
+  const current = weekStart(today)
+  const complete = weeks.filter((w) => w.week < current)
+  const lastComplete = complete[complete.length - 1] ?? weeks[weeks.length - 1]
+  const avg = complete.length ? complete.reduce((a, w) => a + w.load, 0) / complete.length : 0
+  const jump = complete.slice(-2).find((w) => w.changePct !== null && w.changePct > 30)
+  const isJump = (w: (typeof weeks)[number]) => w.week < current && w.changePct !== null && w.changePct > 30
+  const hasPartial = weeks.some((w) => w.week === current)
+  const change = lastComplete.changePct !== null ? ` (${lastComplete.changePct > 0 ? '+' : ''}${formatNumber(lastComplete.changePct)} %)` : ''
   return (
     <section className="card" aria-labelledby="weekly-h">
       <h2 id="weekly-h">{t('fitness.weeklyLoad')}</h2>
@@ -276,15 +282,26 @@ function WeeklyLoad() {
       )}
       <BarChart
         title={t('fitness.weeklyLoad')}
-        summary={`${t('fitness.weekOf', { date: dayLabel(last.week) })}: ${formatNumber(last.load)} ${t('fitness.load').toLowerCase()}${last.changePct !== null ? ` (${last.changePct > 0 ? '+' : ''}${formatNumber(last.changePct)} %)` : ''}`}
+        summary={t('fitness.weeklySummary', { date: dayLabel(lastComplete.week), load: formatNumber(lastComplete.load), change, avg: formatNumber(avg) })}
         periodHeader={t('fitness.date')}
         valueHeader={t('fitness.load')}
-        data={weeks.map((w, i) => ({
+        average={avg > 0 ? { value: avg, label: t('fitness.avgLine', { value: formatNumber(avg) }) } : undefined}
+        legend={[
+          { kind: 'normal', label: t('fitness.barLegendWeek') },
+          { kind: 'highlight', label: t('fitness.barLegendLast') },
+          ...(weeks.some(isJump) ? [{ kind: 'warn' as const, label: t('fitness.barLegendJump') }] : []),
+          ...(hasPartial ? [{ kind: 'partial' as const, label: t('fitness.barLegendPartial') }] : []),
+          { kind: 'average', label: t('fitness.barLegendAvg') },
+        ]}
+        note={t('fitness.weeklyLoadNote')}
+        data={weeks.map((w) => ({
           label: dayLabel(w.week),
           fullLabel: `${t('fitness.weekOf', { date: dayLabel(w.week) })}${w.changePct !== null ? ` (${t('fitness.change')}: ${w.changePct > 0 ? '+' : ''}${formatNumber(w.changePct)} %)` : ''}`,
           value: w.load,
           display: formatNumber(w.load),
-          highlight: i === weeks.length - 1,
+          highlight: w.week === lastComplete.week,
+          warn: isJump(w),
+          partial: w.week === current,
         }))}
       />
     </section>

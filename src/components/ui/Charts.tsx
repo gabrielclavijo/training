@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -12,8 +12,42 @@ export interface BarDatum {
   label: string // etiqueta corta para el eje
   fullLabel?: string // etiqueta completa para la tabla
   value: number
-  display: string // valor formateado
+  display: string // valor formateado (tabla)
+  /** Valor corto encima de la barra (si falta, se usa `display`) */
+  short?: string
   highlight?: boolean
+  /** Barra con aviso (p. ej. subida brusca): color distinto y ▲ */
+  warn?: boolean
+  /** Periodo en curso (incompleto): barra rayada */
+  partial?: boolean
+}
+
+export interface BarLegendItem {
+  kind: 'normal' | 'highlight' | 'warn' | 'partial' | 'average'
+  label: string
+}
+
+/** Marca un elemento como visible la primera vez que entra en pantalla (para animarlo entonces). */
+function useInView<T extends Element>() {
+  const ref = useRef<T>(null)
+  const [seen, setSeen] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || seen) return
+    if (typeof IntersectionObserver === 'undefined') return setSeen(true)
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setSeen(true)
+          io.disconnect()
+        }
+      },
+      { threshold: 0.25 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [seen])
+  return { ref, seen }
 }
 
 export function BarChart({
@@ -22,47 +56,67 @@ export function BarChart({
   data,
   valueHeader,
   periodHeader,
+  average,
+  legend,
+  note,
 }: {
   title: string
   summary: string
   data: BarDatum[]
   valueHeader: string
   periodHeader: string
+  /** Línea de referencia (p. ej. promedio) con su texto */
+  average?: { value: number; label: string }
+  legend?: BarLegendItem[]
+  /** Explicación corta debajo de la gráfica */
+  note?: string
 }) {
-  const max = Math.max(1, ...data.map((d) => d.value))
-  const w = 100 / Math.max(1, data.length)
+  const max = Math.max(1, ...data.map((d) => d.value), average?.value ?? 0) * 1.12
   const titleId = useId()
+  const { ref, seen } = useInView<HTMLDivElement>()
+  const dense = data.length > 8
   return (
     <figure className="chart" aria-labelledby={titleId}>
       <figcaption id={titleId} className="chart-title">
         {title}
       </figcaption>
       <p className="muted chart-summary">{summary}</p>
-      <svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label={summary} className="chart-svg">
-        <line x1="0" y1="50" x2="100" y2="50" className="axis" />
-        {data.map((d, i) => {
-          const h = (d.value / max) * 46
-          return (
-            <rect
-              key={d.label + i}
-              x={i * w + w * 0.15}
-              y={50 - h}
-              width={w * 0.7}
-              height={h}
-              className={d.highlight ? 'bar bar-highlight' : 'bar'}
-              style={{ animationDelay: `${Math.min(i, 16) * 30}ms` }}
+      {legend && legend.length > 0 && (
+        <ul className="bar-legend">
+          {legend.map((l) => (
+            <li key={l.kind}>
+              <span className={`swatch swatch-${l.kind}`} aria-hidden="true" />
+              {l.kind === 'average' && average ? average.label : l.label}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div ref={ref} className={`bars${seen ? ' bars-in' : ''}${dense ? ' bars-dense' : ''}`} role="img" aria-label={summary}>
+        {average && average.value > 0 && (
+          <div className="bars-avg" style={{ bottom: `${(average.value / max) * 100}%` }} aria-hidden="true" />
+        )}
+        {data.map((d, i) => (
+          <div key={d.label + i} className="bar-col" aria-hidden="true">
+            <span className={`bar-value${d.highlight ? ' bar-value-strong' : ''}`} style={{ animationDelay: `${300 + i * 40}ms` }}>
+              {d.warn && <span className="bar-flag">▲</span>}
+              {d.short ?? d.display}
+            </span>
+            <div
+              className={['bar-rect', d.highlight && 'bar-rect-highlight', d.warn && 'bar-rect-warn', d.partial && 'bar-rect-partial'].filter(Boolean).join(' ')}
+              style={{ height: `${(d.value / max) * 100}%`, animationDelay: `${i * 40}ms` }}
             />
-          )
-        })}
-      </svg>
-      <div className="chart-xlabels" aria-hidden="true">
-        <span>{data[0]?.label}</span>
-        <span>{data[data.length - 1]?.label}</span>
+          </div>
+        ))}
       </div>
-      <DataTable
-        headers={[periodHeader, valueHeader]}
-        rows={data.map((d) => [d.fullLabel ?? d.label, d.display])}
-      />
+      <div className={`bar-xlabels${dense ? ' bar-xlabels-dense' : ''}`} aria-hidden="true">
+        {data.map((d, i) => (
+          <span key={d.label + i} className={d.highlight ? 'strong' : undefined}>
+            {d.label}
+          </span>
+        ))}
+      </div>
+      {note && <p className="chart-note">{note}</p>}
+      <DataTable headers={[periodHeader, valueHeader]} rows={data.map((d) => [d.fullLabel ?? d.label, d.display])} />
     </figure>
   )
 }
