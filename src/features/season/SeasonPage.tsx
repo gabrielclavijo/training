@@ -22,7 +22,7 @@ export function SeasonPage() {
   const pauses = usePauses()
   const today = localDayKey(new Date())
 
-  if (goals.isLoading) return <Page title={t('season.title')}><Spinner /></Page>
+  if (goals.isLoading) return <Page title={t('season.title')}><Spinner full /></Page>
   if (goals.error) return <Page title={t('season.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
 
   const active = (goals.data ?? []).filter((g) => g.status === 'active')

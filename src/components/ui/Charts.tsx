@@ -50,6 +50,7 @@ export function BarChart({
               width={w * 0.7}
               height={h}
               className={d.highlight ? 'bar bar-highlight' : 'bar'}
+              style={{ animationDelay: `${Math.min(i, 16) * 30}ms` }}
             />
           )
         })}

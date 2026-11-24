@@ -17,7 +17,7 @@ export function GoalDetailPage() {
   const navigate = useNavigate()
   const q = useQuery({ queryKey: ['goal', id], queryFn: () => repo.getGoal(id) })
 
-  if (q.isLoading) return <Page title={t('goals.title')}><Spinner /></Page>
+  if (q.isLoading) return <Page title={t('goals.title')}><Spinner full /></Page>
   if (q.error) return <Page title={t('goals.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
   const g = q.data
   if (!g) {

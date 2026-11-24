@@ -9,7 +9,32 @@
     <title>Entreno</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Pantalla de carga: se ve mientras llega la app; React la reemplaza al iniciar -->
+    <div id="root">
+      <div class="boot" role="status" aria-live="polite">
+        <svg class="boot-logo" viewBox="0 0 32 32" width="72" height="72" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#007F66"/><path d="M17.6 5.5 9.5 17.6h6l-1.2 8.9 8.2-12.1h-6z" fill="#D0FFED"/></svg>
+        <span class="boot-name">Entreno</span>
+        <span class="boot-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="boot-text">Cargando tus entrenamientos…</span>
+      </div>
+    </div>
+    <style>
+      html, body { margin: 0; background: #f6faf6; }
+      .boot { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; font-family: system-ui, sans-serif; color: #181d1b; }
+      .boot-logo { animation: boot-pop 900ms cubic-bezier(0.2, 0, 0, 1) both, boot-breathe 1.6s 900ms ease-in-out infinite; border-radius: 20px; }
+      .boot-name { font-weight: 700; font-size: 26px; letter-spacing: -0.3px; animation: boot-fade 600ms 200ms both; }
+      .boot-text { color: #3e4945; font-size: 15px; animation: boot-fade 600ms 400ms both; }
+      .boot-bars { display: flex; align-items: flex-end; gap: 5px; height: 26px; }
+      .boot-bars i { width: 7px; border-radius: 4px; background: #007f66; animation: boot-bar 1s ease-in-out infinite; }
+      .boot-bars i:nth-child(2) { animation-delay: 120ms; background: #b02e00; }
+      .boot-bars i:nth-child(3) { animation-delay: 240ms; background: #005c8e; }
+      .boot-bars i:nth-child(4) { animation-delay: 360ms; }
+      @keyframes boot-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+      @keyframes boot-breathe { 50% { transform: scale(1.06); } }
+      @keyframes boot-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      @keyframes boot-bar { 0%, 100% { height: 8px; } 50% { height: 26px; } }
+      @media (prefers-reduced-motion: reduce) { .boot * { animation: none !important; } .boot-bars i { height: 16px; } }
+    </style>
     <noscript>Esta aplicación necesita JavaScript para funcionar.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -28,7 +28,7 @@ export function MetricsPage() {
   const { loaded, isLoading, error } = useFitness()
   const [sport, setSport] = useState<Sport>('cycling')
 
-  if (isLoading) return <Page title={t('metrics.title')}><Spinner /></Page>
+  if (isLoading) return <Page title={t('metrics.title')}><Spinner full /></Page>
   if (error) return <Page title={t('metrics.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
   if (!loaded || loaded.length === 0) {
     return (
@@ -124,18 +124,22 @@ function SportPanel({ sport }: { sport: Sport }) {
 
   return (
     <div className="stack">
-      <div className="row">
-        <fieldset className="segmented">
-          <legend className="visually-hidden">{t('metrics.period')}</legend>
-          <label className="choice">
-            <input type="radio" name="unit" checked={unit === 'week'} onChange={() => setUnit('week')} /> {t('metrics.weekly')}
-          </label>
-          <label className="choice">
-            <input type="radio" name="unit" checked={unit === 'month'} onChange={() => setUnit('month')} /> {t('metrics.monthly')}
-          </label>
+      <div className="toolbar">
+        <fieldset className="toolbar-item">
+          <legend className="toolbar-label">{t('metrics.period')}</legend>
+          <div className="pill-toggle">
+            <label>
+              <input type="radio" name="unit" checked={unit === 'week'} onChange={() => setUnit('week')} />
+              <span>{t('metrics.weekly')}</span>
+            </label>
+            <label>
+              <input type="radio" name="unit" checked={unit === 'month'} onChange={() => setUnit('month')} />
+              <span>{t('metrics.monthly')}</span>
+            </label>
+          </div>
         </fieldset>
         {SUBSPORTS[sport].length > 0 && sport === 'cycling' && (
-          <div className="field" style={{ margin: 0, minWidth: 180 }}>
+          <div className="field toolbar-item" style={{ margin: 0 }}>
             <label htmlFor="sub-filter">{t('metrics.byModality')}</label>
             <select id="sub-filter" value={sub} onChange={(e) => setSub(e.target.value as SubSport | 'all')}>
               <option value="all">{t('metrics.allModalities')}</option>

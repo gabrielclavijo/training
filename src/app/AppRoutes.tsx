@@ -42,7 +42,7 @@ const UpdatePasswordPage = lazyPage(() => import('../features/auth/UpdatePasswor
 function OnboardingGate({ children }: { children: ReactNode }) {
   const profile = useProfile()
   const location = useLocation()
-  if (profile.isLoading) return <Spinner />
+  if (profile.isLoading) return <main className="main"><Spinner full /></main>
   const free = ['/bienvenida', '/guias', '/privacidad', '/subir', '/metas/nueva', '/cambiar-clave', '/ajustes', '/strava']
   if (profile.data && !profile.data.onboardingDone && !free.includes(location.pathname)) {
     return <Navigate to="/bienvenida" replace />
@@ -99,7 +99,7 @@ export function AppRoutes() {
 }
 
 function S({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<Spinner />}>{children}</Suspense>
+  return <Suspense fallback={<Spinner full />}>{children}</Suspense>
 }
 
 function PublicShell() {

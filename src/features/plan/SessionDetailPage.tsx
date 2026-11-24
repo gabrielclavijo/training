@@ -11,7 +11,7 @@ export function SessionDetailPage() {
   const { t } = useTranslation()
   const { derived, isLoading, error } = usePlan()
   const describe = useDescribeBlocks()
-  if (isLoading) return <Page title={t('plan.session')}><Spinner /></Page>
+  if (isLoading) return <Page title={t('plan.session')}><Spinner full /></Page>
   if (error || !derived) return <Page title={t('plan.session')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
   const s = derived.plan.sessions.find((x) => x.id === id)
   if (!s) {

@@ -28,7 +28,7 @@ export function GoalFormPage() {
   const repo = useRepo()
   const { t } = useTranslation()
   const q = useQuery({ queryKey: ['goal', id], queryFn: () => repo.getGoal(id!), enabled: Boolean(id) })
-  if (id && q.isLoading) return <Page title={t('goals.edit')}><Spinner /></Page>
+  if (id && q.isLoading) return <Page title={t('goals.edit')}><Spinner full /></Page>
   return <GoalForm initial={q.data ?? null} />
 }
 
@@ -187,6 +187,7 @@ function GoalForm({ initial }: { initial: Goal | null }) {
         {step === 1 && (
           <RadioGroup
             legend={t('goals.typeStep')}
+            hideLegend
             name="goalType"
             value={goalType}
             onChange={setGoalType}

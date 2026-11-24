@@ -35,7 +35,7 @@ export function ActivityDetailPage() {
   const repo = useRepo()
   const q = useQuery({ queryKey: ['activity', id], queryFn: () => repo.getActivity(id) })
 
-  if (q.isLoading) return <Page title={t('activities.detail')}><Spinner /></Page>
+  if (q.isLoading) return <Page title={t('activities.detail')}><Spinner full /></Page>
   if (q.error) return <Page title={t('activities.detail')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
   if (!q.data) {
     // También es lo que ve alguien que intenta abrir la actividad de otra persona

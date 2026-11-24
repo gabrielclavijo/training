@@ -32,7 +32,8 @@ async function makeUploadFiles() {
 
 (async () => {
   const b = await chromium.launch();
-  const ctx = await b.newContext({ viewport: { width: 360, height: 740 } });
+  // Sin animaciones: axe mide los colores finales, no los de la transición de entrada
+  const ctx = await b.newContext({ viewport: { width: 360, height: 740 }, reducedMotion: 'reduce' });
   const p = await ctx.newPage();
   const errors = [];
   p.on('pageerror', e => errors.push('pageerror: ' + e.message));

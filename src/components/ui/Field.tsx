@@ -91,7 +91,9 @@ export function RadioGroup<T extends string>({
   options,
   onChange,
   hint,
+  hideLegend = false,
 }: {
+  hideLegend?: boolean
   legend: ReactNode
   name: string
   value: T | null
@@ -102,7 +104,7 @@ export function RadioGroup<T extends string>({
   const id = useId()
   return (
     <fieldset aria-describedby={hint ? `${id}-hint` : undefined}>
-      <legend className="legend">{legend}</legend>
+      <legend className={hideLegend ? 'visually-hidden' : 'legend'}>{legend}</legend>
       {hint && (
         <p id={`${id}-hint`} className="hint muted">
           {hint}

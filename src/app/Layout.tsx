@@ -1,4 +1,4 @@
-import { NavLink, Outlet, Link } from 'react-router'
+import { NavLink, Outlet, Link, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Icon, type IconName } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
@@ -39,6 +39,7 @@ const SIDEBAR: NavItem[] = [...BOTTOM.filter((i) => i.to !== '/mas'), ...SECONDA
 export function Layout() {
   const { t } = useTranslation()
   const { mode } = useAuth()
+  const location = useLocation()
   useStravaAutoSync()
   return (
     <div className="layout">
@@ -79,7 +80,10 @@ export function Layout() {
 
       <main className="main" id="contenido" tabIndex={-1}>
         {mode === 'local' && <p className="local-banner">{t('local.banner')}</p>}
-        <Outlet />
+        {/* Cada pantalla entra con una animación suave (se desactiva con «reducir movimiento») */}
+        <div className="page-enter" key={location.pathname}>
+          <Outlet />
+        </div>
       </main>
 
       <nav className="bottom-nav" aria-label={t('nav.label')}>

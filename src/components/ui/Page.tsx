@@ -27,12 +27,34 @@ export function Page({ title, children, actions }: { title: string; children: Re
   )
 }
 
-export function Spinner({ label }: { label?: string }) {
+/**
+ * Indicador de carga: barras animadas + texto. Con `full`, además, tarjetas
+ * «fantasma» que anticipan el contenido (para cargas de pantalla completa).
+ */
+export function Spinner({ label, full = false }: { label?: string; full?: boolean }) {
   const { t } = useTranslation()
   return (
-    <p role="status" aria-live="polite" className="muted">
-      {label ?? t('common.loading')}
-    </p>
+    <div className="loader" role="status" aria-live="polite">
+      <p className="loader-row">
+        <span className="loader-bars" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className="muted">{label ?? t('common.loading')}</span>
+      </p>
+      {full && (
+        <div className="skeleton-stack" aria-hidden="true">
+          <div className="skeleton skeleton-hero" />
+          <div className="skeleton-grid">
+            <div className="skeleton skeleton-card" />
+            <div className="skeleton skeleton-card" />
+          </div>
+          <div className="skeleton skeleton-card" />
+        </div>
+      )}
+    </div>
   )
 }
 

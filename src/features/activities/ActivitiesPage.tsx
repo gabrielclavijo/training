@@ -25,7 +25,7 @@ export function ActivitiesPage() {
       {t('activities.addManual')}
     </Link>
   )
-  if (isLoading) return <Page title={t('activities.title')}><Spinner /></Page>
+  if (isLoading) return <Page title={t('activities.title')}><Spinner full /></Page>
   if (error) return <Page title={t('activities.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
   if (!loaded || loaded.length === 0) {
     return (

@@ -28,7 +28,7 @@ export function HomePage() {
   const { loaded, overview, isLoading, error, today } = useFitness()
   const goals = useGoals()
 
-  if (isLoading) return <Page title={t('nav.home')}><Spinner /></Page>
+  if (isLoading) return <Page title={t('nav.home')}><Spinner full /></Page>
   if (error) return <Page title={t('nav.home')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
 
   const nextGoal = goals.data?.find((g) => g.status === 'active' && g.eventDate >= today)
@@ -165,13 +165,21 @@ function FitnessHero({ state, ctl, atl, tsb }: { state: string; ctl: number; atl
 
 function Ring({ pct, label, caption }: { pct: number; label: string; caption: string }) {
   const r = 40
-  const c = 2 * Math.PI * r
   const shown = Math.min(100, Math.max(0, pct))
   return (
     <div className="ring" role="img" aria-label={label}>
       <svg viewBox="0 0 100 100" aria-hidden="true">
         <circle cx="50" cy="50" r={r} className="ring-track" />
-        <circle cx="50" cy="50" r={r} className="ring-value" strokeDasharray={`${(shown / 100) * c} ${c}`} transform="rotate(-90 50 50)" />
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          className="ring-value"
+          pathLength={100}
+          strokeDasharray={`${shown} 100`}
+          style={{ '--ring': shown } as React.CSSProperties}
+          transform="rotate(-90 50 50)"
+        />
       </svg>
       <span className="ring-text">
         <strong className="num">{pct}%</strong>

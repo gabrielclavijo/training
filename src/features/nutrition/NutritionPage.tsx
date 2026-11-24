@@ -30,7 +30,7 @@ export function NutritionPage() {
   const [week, setWeek] = useState<'this' | 'next'>('this')
   const start = week === 'this' ? weekOf(today) : addDays(weekOf(today), 7)
 
-  if (nutrition.isLoading) return <Page title={t('nutrition.title')}><Spinner /></Page>
+  if (nutrition.isLoading) return <Page title={t('nutrition.title')}><Spinner full /></Page>
   const prefs = nutrition.data ?? null
 
   return (
@@ -38,14 +38,19 @@ export function NutritionPage() {
       <LegalNotice text={t('nutrition.legal')} />
       <p>{t('nutrition.intro')}</p>
       <ProfileCard prefs={prefs} />
-      <div className="segmented" role="group" aria-label={t('nutrition.weekOf', { date: d(start) })}>
-        <button type="button" className={`btn ${week === 'this' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={week === 'this'} onClick={() => setWeek('this')}>
-          {t('nutrition.thisWeek')}
-        </button>
-        <button type="button" className={`btn ${week === 'next' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={week === 'next'} onClick={() => setWeek('next')}>
-          {t('nutrition.nextWeek')}
-        </button>
-      </div>
+      <fieldset className="toolbar-item week-toggle">
+        <legend className="toolbar-label">{t('nutrition.weekOf', { date: d(start) })}</legend>
+        <div className="pill-toggle">
+          <label>
+            <input type="radio" name="nweek" checked={week === 'this'} onChange={() => setWeek('this')} />
+            <span>{t('nutrition.thisWeek')}</span>
+          </label>
+          <label>
+            <input type="radio" name="nweek" checked={week === 'next'} onChange={() => setWeek('next')} />
+            <span>{t('nutrition.nextWeek')}</span>
+          </label>
+        </div>
+      </fieldset>
       <Week key={start} start={start} prefs={prefs} />
     </Page>
   )

@@ -17,7 +17,7 @@ export function GoalsPage() {
       {t('goals.new')}
     </Link>
   )
-  if (goals.isLoading) return <Page title={t('goals.title')}><Spinner /></Page>
+  if (goals.isLoading) return <Page title={t('goals.title')}><Spinner full /></Page>
   if (goals.error) return <Page title={t('goals.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
   if (!goals.data?.length) {
     return (

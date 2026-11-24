@@ -20,7 +20,7 @@ export function PlanPage() {
   const { derived, isLoading, error } = usePlan()
   const [offset, setOffset] = useState(0)
 
-  if (isLoading) return <Page title={t('plan.title')}><Spinner /></Page>
+  if (isLoading) return <Page title={t('plan.title')}><Spinner full /></Page>
   if (error || !derived) return <Page title={t('plan.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
   const { plan, today, matches, zones, ctx } = derived
 

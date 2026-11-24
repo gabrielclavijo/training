@@ -28,7 +28,7 @@ export function AvailabilityPage() {
     setLongDay(a.longDay)
   }, [derived, mins])
 
-  if (isLoading || !mins) return <Page title={t('plan.availability.title')}><Spinner /></Page>
+  if (isLoading || !mins) return <Page title={t('plan.availability.title')}><Spinner full /></Page>
   const total = DAYS.reduce((s, d) => s + (parseNum(mins[d]) || 0), 0)
 
   async function onSubmit(e: FormEvent) {
