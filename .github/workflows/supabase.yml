@@ -5,6 +5,7 @@
 #   Secrets:   SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD
 #   Variables: SUPABASE_PROJECT_REF
 # Para Strava (opcional, ver README): variable STRAVA_CLIENT_ID y secreto STRAVA_CLIENT_SECRET
+# Para los menús con IA (opcional, ver README paso 7): secreto ANTHROPIC_API_KEY
 name: Configurar Supabase
 
 on:
@@ -21,6 +22,7 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       STRAVA_CLIENT_ID: ${{ vars.STRAVA_CLIENT_ID }}
       STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -68,6 +70,20 @@ jobs:
         run: |
           supabase functions deploy health-crypto --project-ref "$PROJECT_REF" --yes
           supabase functions deploy account-delete --project-ref "$PROJECT_REF" --yes
+          supabase functions deploy nutrition-menu --project-ref "$PROJECT_REF" --yes
+      - name: Menús con IA (si está configurado)
+        run: |
+          key="$(printf '%s' "$ANTHROPIC_API_KEY" | tr -d '[:space:]')"
+          if [ -z "$key" ]; then
+            echo "Sin ANTHROPIC_API_KEY: la app funciona, pero el botón «Generar menú» avisará que falta configurarlo."
+            exit 0
+          fi
+          echo "::add-mask::$key"
+          if [[ "$key" != sk-ant-* ]]; then
+            echo "::error::ANTHROPIC_API_KEY debe empezar por 'sk-ant-' (la clave de console.anthropic.com → API keys)."; exit 1
+          fi
+          supabase secrets set --project-ref "$PROJECT_REF" --yes ANTHROPIC_API_KEY="$key"
+          echo "Clave de la IA guardada en Supabase."
       - name: Strava (si está configurado)
         if: ${{ vars.STRAVA_CLIENT_ID != '' }}
         run: |

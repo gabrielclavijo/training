@@ -3,6 +3,7 @@ import type { MatchDeltas, MatchedBy, MergedActivity, SourceLike } from '../core
 import type { Streams } from '../core/activity/types'
 import type { Availability, Block, Phase, SessionDraft, SessionKind, WeekNote } from '../core/planner/plan'
 import type { ChangeReason } from '../core/planner/adapt'
+import type { AiPayload, Menu } from '../../supabase/functions/_shared/menu.ts'
 
 /** Modelos de dominio (camelCase). La capa de datos convierte desde/hacia las tablas. */
 
@@ -55,6 +56,12 @@ export interface HealthData {
   name: string
   notes?: string
   affectsHeartRate?: boolean // medicamentos como los betabloqueantes
+  // Solo resultados de laboratorio
+  labKey?: string // examen del catálogo (ausente si es un examen propio)
+  value?: number
+  unit?: string
+  refLow?: number | null // rango que trae el laboratorio
+  refHigh?: number | null
 }
 export interface HealthRecord {
   id: string
@@ -64,9 +71,28 @@ export interface HealthRecord {
 }
 
 export type DietType = 'omnivore' | 'vegetarian' | 'vegan'
+export type NutritionGoal = 'maintain' | 'lose' | 'gain' | 'perform'
+export type Budget = 'low' | 'medium' | 'high'
+/** Perfil de alimentación: lo escribe la persona; es lo único personal que llega a la IA. */
 export interface NutritionPrefs {
   dietType: DietType
   excludedFoods: string[]
+  goal: NutritionGoal
+  foodAllergies: string[]
+  mealsPerDay: number
+  cookingMinutes: number
+  budget: Budget
+  pantry: string[]
+}
+export const DEFAULT_NUTRITION: NutritionPrefs = {
+  dietType: 'omnivore',
+  excludedFoods: [],
+  goal: 'perform',
+  foodAllergies: [],
+  mealsPerDay: 4,
+  cookingMinutes: 30,
+  budget: 'medium',
+  pantry: [],
 }
 
 export type ConnectionStatus = 'active' | 'disabled' | 'error' | 'not_available'
@@ -255,4 +281,27 @@ export interface InboxItem {
   event: 'create' | 'update' | 'delete'
   payload: unknown
   receivedAt: string
+}
+
+// ---------------------------------------------------------------------------
+// Fase 3: menús y recomendaciones
+// ---------------------------------------------------------------------------
+
+export type { Menu, MenuDay, MenuMeal, MenuItem, MenuRequest, MenuDayTarget, AiPayload } from '../../supabase/functions/_shared/menu.ts'
+
+export interface MealPlan {
+  id: string
+  weekStart: string
+  /** Exactamente lo que se envió a la IA */
+  inputs: AiPayload
+  menu: Menu
+  model: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RecommendationState {
+  ruleKey: string
+  reaction: 'ok' | 'not_applicable'
+  dismissedUntil: string
 }

@@ -5,6 +5,7 @@ Aplicación web para centralizar los entrenamientos de un grupo pequeño (hasta 
 - Deportes: ciclismo (ruta, MTB, gravel), running, natación y gimnasio.
 - Funciona con y sin sensores (potenciómetro, banda o pulso de muñeca, o solo tiempo y distancia). Siempre dice con qué método calculó cada cosa.
 - **Plan de entrenamiento adaptativo (fase 2):** diagnóstico por meta (vas bien, justo o atrasado, con tiempo estimado), plan semana a semana hasta cada meta, ajuste automático según lo que de verdad entrenaste y pausas (enfermedad, lesión, viajes) que reajustan toda la temporada. Todo con reglas de entrenamiento conocidas, sin IA, y con el aviso de que no reemplaza a un entrenador.
+- **Alimentación, exámenes y recomendaciones (fase 3):** calorías y macronutrientes de cada día según tu plan (fórmulas), menú semanal con lista de mercado hecho por IA (Claude) con solo lo que escribes a mano, evolución de tus exámenes de laboratorio (cifrados, nunca a la IA) y hasta 3 recomendaciones por reglas en Inicio.
 - Español de Colombia, sistema métrico, fechas día/mes/año y hora de Colombia.
 - Hecha para el celular primero; también se ve bien en tablet y computador.
 
@@ -20,8 +21,9 @@ Aplicación web para centralizar los entrenamientos de un grupo pequeño (hasta 
 4. [Activar el inicio de sesión con Google](#4-activar-el-inicio-de-sesión-con-google)
 5. [Invitar a las demás personas](#5-invitar-a-las-demás-personas)
 6. [Conectar Strava (opcional)](#6-conectar-strava-opcional)
-7. [Cómo se cumplen los requisitos](#7-cómo-se-cumplen-los-requisitos-de-la-fase-1)
-8. [Para desarrolladores](#8-para-desarrolladores)
+7. [Activar los menús con IA (opcional)](#7-activar-los-menús-con-ia-opcional)
+8. [Cómo se cumplen los requisitos](#8-cómo-se-cumplen-los-requisitos-de-la-fase-1)
+9. [Para desarrolladores](#9-para-desarrolladores)
 
 ---
 
@@ -209,7 +211,23 @@ Fuentes: [Política de API de Strava](https://www.strava.com/legal/api_policy) �
 
 ---
 
-## 7. Cómo se cumplen los requisitos de la fase 1
+## 7. Activar los menús con IA (opcional)
+
+Los menús de la sección **Alimentación** los arma Claude (Anthropic). Todo lo demás (cálculo de calorías, exámenes, recomendaciones) funciona sin esto.
+
+1. Entra a **https://console.anthropic.com**, crea la cuenta y en **Billing** recarga saldo (el mínimo suele ser 5 USD). Con 10 personas y un menú por semana cada una, el gasto es de unos 4 USD al mes con el modelo Claude Opus 5.5.
+2. Opcional pero recomendado: en **Billing → Limits** pon un límite mensual (por ejemplo, 10 USD).
+3. En **API keys → Create key**, nómbrala `entreno` y cópiala (empieza por `sk-ant-`; solo se muestra una vez).
+4. En GitHub → **Settings → Secrets and variables → Actions → Secrets → New repository secret**: nombre `ANTHROPIC_API_KEY`, valor la clave.
+5. **Actions → «Configurar Supabase» → Run workflow.** El paso «Menús con IA» debe decir «Clave de la IA guardada en Supabase».
+
+No hace falta volver a publicar la app. Límite por persona: 3 menús y 15 cambios de plato al día.
+
+**Qué recibe la IA:** el perfil de alimentación (objetivo, tipo de alimentación, alergias e intolerancias de comida, alimentos que no come o tiene en casa, comidas al día, tiempo de cocina y presupuesto) y, por día, calorías, macronutrientes y tipo/duración de la sesión planeada. Nunca actividades, datos de Strava, exámenes, nombre ni correo. La función lee el perfil de la base de datos y descarta cualquier otro campo (`supabase/functions/_shared/menu.ts`, probado en `src/core/nutrition/menuPayload.test.ts`). En la app, «Lo que se envió a la IA» muestra el contenido exacto.
+
+---
+
+## 8. Cómo se cumplen los requisitos de la fase 1
 
 | Requisito | Cómo | Prueba automática |
 |---|---|---|
@@ -232,11 +250,18 @@ Fuentes: [Política de API de Strava](https://www.strava.com/legal/api_policy) �
 | Pausas | Enfermedad/lesión: descanso y regreso gradual según los días parados. Viajes: solo lo disponible, el tiempo disponible. Reajustan toda la temporada | `planService.test.ts` |
 | Strava | Conexión con OAuth en Edge Function, webhook (crear/editar/borrar/revocar), sincronización de respaldo, caché de 7 días, nunca para IA | `src/data/stravaInbox.test.ts`, `npm run test:db` |
 
-**Fase 3 (siguiente):** el modelo de datos ya incluye pausas, bloques de temporada, enlace actividad–sesión planeada, laboratorio cifrado y preferencias de alimentación (lo único que en la fase 3 podrá recibir la IA, nunca datos de Strava).
+### Fase 3
+
+| Requisito | Cómo | Prueba automática |
+|---|---|---|
+| Recomendaciones por reglas | 12 reglas (fatiga, subida de carga, semanas sin descarga, sesiones no hechas, salida larga y desnivel frente a la meta, pulso en reposo, peso, exámenes fuera de rango, datos que faltan); máximo 3 en Inicio, con el porqué y «Entendido / No aplica» (7 días) | `src/core/recommendations/rules.test.ts` |
+| Calorías y macronutrientes sin IA | Mifflin-St Jeor + MET de la sesión planeada; carbohidratos según el tipo de día; comida e hidratación antes, durante y después | `src/core/nutrition/needs.test.ts` |
+| Menús con IA solo con datos manuales | Edge Function `nutrition-menu` (Claude Opus 5.5, salida estructurada); el perfil se lee en el servidor; lista blanca de campos; límite diario; nunca datos de Strava | `menuPayload.test.ts`, `npm run test:db` (el navegador no puede escribir menús ni su uso de IA) |
+| Evolución de exámenes | Cifrados en `health_records` con consentimiento; rango del laboratorio o general; gráfica y tabla; nunca a la IA | `src/core/labs/catalog.test.ts` |
 
 ---
 
-## 8. Para desarrolladores
+## 9. Para desarrolladores
 
 ```bash
 npm install
@@ -264,6 +289,9 @@ src/
     fitness/      forma crónica, fatiga, estado de forma, carga semanal
     season/       bloques de temporada y avisos entre metas
     planner/      zonas, diagnóstico, generador del plan y ajuste automático (fase 2)
+    nutrition/    calorías, macronutrientes e hidratación por día (fase 3)
+    labs/         catálogo de exámenes y rangos de referencia (fase 3)
+    recommendations/ reglas de recomendación (fase 3)
     units/ dates/ conversión de unidades y fechas (único lugar donde se formatea)
   data/         acceso a datos: Supabase o memoria (modo local/pruebas), importador, análisis
   providers/    proveedores de datos (archivos y manual activos; Strava y Garmin apagados)
@@ -272,8 +300,8 @@ src/
   i18n/es-CO/   todos los textos (para otro idioma: copiar la carpeta y traducir)
 supabase/
   migrations/   esquema SQL con RLS
-  functions/    Edge Functions (health-crypto, account-delete, strava-connect, strava-webhook,
-                strava-sync, strava-disconnect)
+  functions/    Edge Functions (health-crypto, account-delete, nutrition-menu, strava-connect,
+                strava-webhook, strava-sync, strava-disconnect)
   tests/        pruebas de aislamiento entre usuarios
 scripts/        test-db.sh, e2e-smoke.cjs
 .github/workflows/  pruebas, publicación en Pages y configuración de Supabase

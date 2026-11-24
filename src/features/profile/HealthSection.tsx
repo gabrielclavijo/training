@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Alert } from '../../components/ui/Page'
 import { TextField } from '../../components/ui/Field'
@@ -80,6 +81,10 @@ export function HealthSection() {
           ))}
         </ul>
         <AddHealthForm category="allergy" />
+      </section>
+      <section aria-labelledby="labs-link-h">
+        <h3 id="labs-link-h">{t('labs.title')}</h3>
+        <Link to="/laboratorio">{t('labs.add')} →</Link>
       </section>
       <p className="muted">🔒 {t('profile.encrypted')}</p>
       <div>

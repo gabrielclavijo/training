@@ -21,6 +21,8 @@ const BOTTOM: NavItem[] = [
 
 export const SECONDARY: NavItem[] = [
   { to: '/metas', label: 'nav.goals', icon: 'goal' },
+  { to: '/nutricion', label: 'nav.nutrition', icon: 'food' },
+  { to: '/laboratorio', label: 'nav.labs', icon: 'lab' },
   { to: '/metricas', label: 'nav.metrics', icon: 'chart' },
   { to: '/temporada', label: 'nav.season', icon: 'calendar' },
   { to: '/importacion', label: 'nav.import', icon: 'import' },

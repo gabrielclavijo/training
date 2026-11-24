@@ -1,12 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Alert, Page } from '../../components/ui/Page'
-import { RadioGroup, TextField } from '../../components/ui/Field'
+import { Page } from '../../components/ui/Page'
 import { formatDate } from '../../core/dates'
 import { formatPower } from '../../core/units'
-import { keys, useNutrition, usePhysiology, useRepoMutation } from '../../data/hooks'
+import { keys, usePhysiology, useRepoMutation } from '../../data/hooks'
 import { useRepo } from '../../data/RepoProvider'
-import type { DietType } from '../../data/types'
 import { HealthSection } from './HealthSection'
 import { BasicsForm, PhysiologyForm, WeightSection } from './forms'
 
@@ -33,7 +31,8 @@ export function ProfilePage() {
       </section>
       <section className="card" aria-labelledby="nutrition-h">
         <h2 id="nutrition-h">{t('profile.nutrition')}</h2>
-        <NutritionForm />
+        <p>{t('nutrition.profileHelp')}</p>
+        <Link to="/nutricion">{t('nutrition.editProfile')} →</Link>
       </section>
     </Page>
   )
@@ -73,56 +72,5 @@ function PhysiologyHistory() {
         })}
       </ul>
     </>
-  )
-}
-
-function NutritionForm() {
-  const { t } = useTranslation()
-  const repo = useRepo()
-  const nutrition = useNutrition()
-  const [diet, setDiet] = useState<DietType>('omnivore')
-  const [excluded, setExcluded] = useState('')
-  const [saved, setSaved] = useState(false)
-  useEffect(() => {
-    if (nutrition.data) {
-      setDiet(nutrition.data.dietType)
-      setExcluded(nutrition.data.excludedFoods.join(', '))
-    }
-  }, [nutrition.data])
-  const save = useRepoMutation(
-    () =>
-      repo.saveNutrition({
-        dietType: diet,
-        excludedFoods: excluded
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
-      }),
-    [keys.nutrition],
-  )
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault()
-    await save.mutateAsync(undefined)
-    setSaved(true)
-  }
-  return (
-    <form onSubmit={onSubmit} noValidate>
-      {saved && <Alert kind="success">{t('common.saved')}</Alert>}
-      <RadioGroup
-        legend={t('profile.diet')}
-        name="diet"
-        value={diet}
-        onChange={setDiet}
-        options={[
-          { value: 'omnivore', label: t('profile.dietOmnivore') },
-          { value: 'vegetarian', label: t('profile.dietVegetarian') },
-          { value: 'vegan', label: t('profile.dietVegan') },
-        ]}
-      />
-      <TextField label={t('profile.excluded')} hint={t('profile.excludedHelp')} optional value={excluded} onChange={(e) => setExcluded(e.target.value)} />
-      <button className="btn btn-primary" type="submit" disabled={save.isPending}>
-        {t('profile.saveNutrition')}
-      </button>
-    </form>
   )
 }

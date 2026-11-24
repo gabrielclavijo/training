@@ -54,7 +54,15 @@ Deno.serve(async (req) => {
   const user = await requireUser(req)
   if (!user) return json(req, { error: 'unauthorized' }, 401)
 
-  let body: { action?: string; record?: { id?: string; category?: string; recordedOn?: string | null; data?: { name?: string; notes?: string; affectsHeartRate?: boolean } } }
+  let body: {
+    action?: string
+    record?: {
+      id?: string
+      category?: string
+      recordedOn?: string | null
+      data?: { name?: string; notes?: string; affectsHeartRate?: boolean; labKey?: string; value?: number; unit?: string; refLow?: number | null; refHigh?: number | null }
+    }
+  }
   try {
     body = await req.json()
   } catch {
@@ -81,10 +89,22 @@ Deno.serve(async (req) => {
       if (!rec || !CATEGORIES.includes(rec.category as (typeof CATEGORIES)[number])) return json(req, { error: 'bad_category' }, 400)
       const name = String(rec.data?.name ?? '').trim()
       if (!name || name.length > 200) return json(req, { error: 'bad_name' }, 400)
-      const clean = {
+      const clean: Record<string, unknown> = {
         name,
         notes: rec.data?.notes ? String(rec.data.notes).slice(0, 2000) : undefined,
         affectsHeartRate: rec.category === 'medication' ? Boolean(rec.data?.affectsHeartRate) : undefined,
+      }
+      if (rec.category === 'lab_result') {
+        // Resultado de laboratorio: fecha, valor numérico, unidad y rango de referencia
+        const finite = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 1e7 ? v : null)
+        const value = finite(rec.data?.value)
+        if (value === null) return json(req, { error: 'bad_value' }, 400)
+        if (!rec.recordedOn || !/^\d{4}-\d{2}-\d{2}$/.test(rec.recordedOn)) return json(req, { error: 'bad_date' }, 400)
+        clean.value = value
+        clean.unit = String(rec.data?.unit ?? '').slice(0, 20)
+        clean.labKey = rec.data?.labKey ? String(rec.data.labKey).slice(0, 40) : undefined
+        clean.refLow = finite(rec.data?.refLow)
+        clean.refHigh = finite(rec.data?.refHigh)
       }
       const enc = await encrypt(user.id, clean)
       const row = { user_id: user.id, category: rec.category, recorded_on: rec.recordedOn ?? null, key_version: KEY_VERSION, ...enc }

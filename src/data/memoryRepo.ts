@@ -4,6 +4,8 @@ import type { Repo } from './repo'
 import type { PlanChange } from '../core/planner/adapt'
 import type { WeekDraft } from '../core/planner/plan'
 import { weekStart } from '../core/dates'
+import { LOCAL_MODEL, localMenu } from './localMenu'
+import { DEFAULT_NUTRITION } from './types'
 import type {
   Availability,
   CurrentPlan,
@@ -27,6 +29,9 @@ import type {
   MergeRecord,
   NewSource,
   NutritionPrefs,
+  MealPlan,
+  MenuRequest,
+  RecommendationState,
   Pause,
   PhysiologyEntry,
   Profile,
@@ -65,6 +70,8 @@ interface State {
   sessions: (StoredSession & { isDemo: boolean })[]
   changes: (PlanChangeRecord & { isDemo: boolean })[]
   inbox: InboxItem[]
+  mealPlans: MealPlan[]
+  recState: RecommendationState[]
 }
 
 const now = () => new Date().toISOString()
@@ -111,6 +118,8 @@ function initial(): State {
     sessions: [],
     changes: [],
     inbox: [],
+    mealPlans: [],
+    recState: [],
   }
 }
 
@@ -182,7 +191,7 @@ export class MemoryRepo implements Repo {
     await this.done(null)
   }
   async getNutrition() {
-    return clone(this.s.nutrition)
+    return this.s.nutrition ? clone({ ...DEFAULT_NUTRITION, ...this.s.nutrition }) : null
   }
   async saveNutrition(p: NutritionPrefs) {
     this.s.nutrition = p
@@ -466,6 +475,46 @@ export class MemoryRepo implements Repo {
   }
 
   // ---- Demo y cuenta
+  // ---- Alimentación: en modo local no hay IA; menú de ejemplo con reglas
+  async listMealPlans() {
+    return clone([...(this.s.mealPlans ?? [])].sort((a, b) => b.weekStart.localeCompare(a.weekStart)))
+  }
+  async generateMenu(req: MenuRequest) {
+    const prefs = this.s.nutrition
+    if (!prefs) throw new Error('nutrition_profile_required')
+    const { inputs, menu } = localMenu({ ...DEFAULT_NUTRITION, ...prefs }, req)
+    this.s.mealPlans ??= []
+    const existing = this.s.mealPlans.find((m) => m.weekStart === inputs.days[0].date)
+    const plan: MealPlan = { id: existing?.id ?? uid(), weekStart: inputs.days[0].date, inputs, menu, model: LOCAL_MODEL, createdAt: existing?.createdAt ?? now(), updatedAt: now() }
+    this.s.mealPlans = [...this.s.mealPlans.filter((m) => m.id !== plan.id), plan]
+    await this.done(null)
+    return clone(plan)
+  }
+  async swapMeal(planId: string, date: string, mealIndex: number) {
+    const plan = this.s.mealPlans?.find((m) => m.id === planId)
+    const day = plan?.menu.days.find((d) => d.date === date)
+    if (!plan || !day || !day.meals[mealIndex]) throw new Error('not_found')
+    // Ejemplo: rota con el plato de otro día que tenga el mismo nombre de comida
+    const other = plan.menu.days.flatMap((d) => d.meals).find((m) => m.label === day.meals[mealIndex].label && m.dish !== day.meals[mealIndex].dish)
+    if (other) day.meals[mealIndex] = { ...other, kcal: day.meals[mealIndex].kcal }
+    plan.updatedAt = now()
+    await this.done(null)
+    return clone(plan)
+  }
+  async deleteMealPlan(id: string) {
+    this.s.mealPlans = (this.s.mealPlans ?? []).filter((m) => m.id !== id)
+    await this.done(null)
+  }
+
+  // ---- Recomendaciones
+  async listRecommendationState() {
+    return clone(this.s.recState ?? [])
+  }
+  async dismissRecommendation(ruleKey: string, reaction: RecommendationState['reaction'], until: string) {
+    this.s.recState = [...(this.s.recState ?? []).filter((r) => r.ruleKey !== ruleKey), { ruleKey, reaction, dismissedUntil: until }]
+    await this.done(null)
+  }
+
   async clearDemoData() {
     this.s.plans = this.s.plans.filter((p) => !p.isDemo)
     this.s.weeks = this.s.weeks.filter((p) => !p.isDemo)

@@ -51,7 +51,7 @@ async function makeUploadFiles() {
   await p.getByRole('button', { name: 'Continuar' }).click();
   await p.getByRole('button', { name: 'Hacerlo después' }).click();
   await p.waitForURL(u => u.hash === '#/' );
-  const routes = ['/', '/plan', '/plan/disponibilidad', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/guias', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva'];
+  const routes = ['/', '/plan', '/plan/disponibilidad', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/guias', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva', '/nutricion', '/laboratorio'];
   for (const scheme of ['light', 'dark']) {
     await p.emulateMedia({ colorScheme: scheme });
     for (const r of routes) {
@@ -92,6 +92,64 @@ async function makeUploadFiles() {
   await p.screenshot({ path: out + 'e2e_diagnostico.png', fullPage: true });
   await p.goto(base + '#/plan'); await p.waitForTimeout(500);
   await p.screenshot({ path: out + 'e2e_plan.png', fullPage: true });
+
+  // Fase 3: alimentación (menú de ejemplo en modo local), exámenes y recomendaciones
+  const axe = async (name) => {
+    const r = await new AxeBuilder({ page: p }).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
+    const sw = await p.evaluate(() => document.documentElement.scrollWidth);
+    console.log(name, r.violations.map(v => `${v.id}(${v.nodes.length}): ${v.nodes[0].target}`).join(' | ') || 'ok', sw > 360 ? 'OVERFLOW ' + sw : '');
+    if (r.violations.length || sw > 360) throw new Error('Problemas de accesibilidad o desborde en ' + name);
+  };
+  await p.goto(base + '#/nutricion'); await p.waitForTimeout(800);
+  if (!/no reemplaza a un nutricionista/.test(await p.locator('main').innerText())) throw new Error('Falta el aviso en alimentación');
+  await p.getByLabel('Alergias e intolerancias de comida').fill('maní, mariscos');
+  await p.getByLabel('Alimentos que tienes en casa').fill('arroz, lentejas');
+  await p.getByRole('button', { name: 'Guardar perfil de alimentación' }).click();
+  await p.getByText('Alergias: maní, mariscos').waitFor();
+  await p.getByRole('heading', { name: 'Lo que necesitas cada día' }).waitFor();
+  await axe('alimentación (necesidades)');
+  await p.getByRole('button', { name: 'Generar menú de la semana' }).click();
+  await p.getByRole('heading', { name: 'Lista de mercado' }).waitFor({ timeout: 20000 });
+  await p.locator('details.menu-day').first().locator('summary').click();
+  await p.getByRole('button', { name: /^Otra opción para/ }).first().click(); await p.waitForTimeout(300);
+  await p.getByText('Lo que se envió a la IA').click();
+  const sent = await p.locator('details.sent pre').innerText();
+  for (const banned of ['Gabriel', 'Persona de prueba', 'Gravel', 'strava', 'Vuelta', 'weight', 'birth', 'hr']) if (sent.includes(banned)) throw new Error('Se enviaría a la IA: ' + banned);
+  if (!sent.includes('maní')) throw new Error('Las alergias no llegan a la IA');
+  console.log('alimentación: menú de ejemplo con', await p.locator('details.menu-day').count(), 'días; lo enviado no tiene nombre, actividades ni peso');
+  await axe('alimentación (menú)');
+  await p.screenshot({ path: out + 'e2e_nutricion.png', fullPage: true });
+
+  await p.goto(base + '#/perfil'); await p.waitForTimeout(500);
+  await p.getByRole('button', { name: 'Acepto que se guarden mis datos de salud' }).click(); await p.waitForTimeout(300);
+  await p.goto(base + '#/laboratorio'); await p.waitForTimeout(500);
+  await p.getByLabel('Examen', { exact: true }).selectOption('ferritin');
+  const day = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+  await p.getByLabel('Fecha del examen').fill(day(120));
+  await p.getByLabel('Resultado', { exact: true }).fill('42');
+  await p.getByRole('button', { name: 'Guardar resultado' }).click();
+  await p.getByText('Resultado guardado.').waitFor();
+  await p.getByLabel('Fecha del examen').fill(day(3));
+  await p.getByLabel('Resultado', { exact: true }).fill('18');
+  await p.getByRole('button', { name: 'Guardar resultado' }).click();
+  await p.getByText('Por debajo del rango').waitFor();
+  await p.getByText('Evolución de Ferritina').waitFor();
+  console.log('exámenes: ferritina 42 → 18, «Por debajo del rango» con gráfica');
+  await axe('exámenes');
+  await p.screenshot({ path: out + 'e2e_laboratorio.png', fullPage: true });
+
+  await p.goto(base + '#/'); await p.waitForTimeout(1000);
+  await p.getByRole('heading', { name: 'Recomendaciones' }).waitFor();
+  const recs = await p.locator('.rec h3').allInnerTexts();
+  console.log('recomendaciones:', recs.join(' | '));
+  if (recs.length < 1 || recs.length > 3) throw new Error('Se esperaban de 1 a 3 recomendaciones');
+  if (!recs.some(r => /examen está fuera del rango/.test(r))) throw new Error('Falta la recomendación del examen');
+  await axe('inicio con recomendaciones');
+  await p.getByRole('button', { name: /^Entendido: Un examen/ }).click(); await p.waitForTimeout(500);
+  const after = await p.locator('.rec h3').allInnerTexts();
+  if (after.some(r => /examen está fuera del rango/.test(r))) throw new Error('«Entendido» no ocultó la recomendación');
+  console.log('recomendaciones tras «Entendido»:', after.join(' | ') || '(ninguna)');
+  await p.screenshot({ path: out + 'e2e_inicio_recs.png', fullPage: true });
 
   // detalle de la actividad fusionada
   await p.goto(base + '#/actividades'); await p.waitForTimeout(400);

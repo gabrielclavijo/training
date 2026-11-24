@@ -27,6 +27,9 @@ import type {
   StoredSource,
   Streams,
   WeightEntry,
+  MealPlan,
+  MenuRequest,
+  RecommendationState,
 } from './types'
 
 /**
@@ -113,6 +116,16 @@ export interface Repo {
   stravaConnect(code: string, scope: string): Promise<void>
   stravaDisconnect(): Promise<void>
   stravaSync(): Promise<{ queued: number }>
+
+  // Alimentación (fase 3): los menús los arma la IA en el servidor
+  listMealPlans(): Promise<MealPlan[]>
+  generateMenu(req: MenuRequest): Promise<MealPlan>
+  swapMeal(planId: string, date: string, mealIndex: number): Promise<MealPlan>
+  deleteMealPlan(id: string): Promise<void>
+
+  // Recomendaciones ocultadas por la persona
+  listRecommendationState(): Promise<RecommendationState[]>
+  dismissRecommendation(ruleKey: string, reaction: RecommendationState['reaction'], until: string): Promise<void>
 
   // Datos de prueba y cuenta
   clearDemoData(): Promise<void>

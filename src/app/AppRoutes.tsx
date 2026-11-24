@@ -34,6 +34,8 @@ const OnboardingPage = lazyPage(() => import('../features/onboarding/OnboardingP
 const PlanPage = lazyPage(() => import('../features/plan/PlanPage'), 'PlanPage')
 const SessionDetailPage = lazyPage(() => import('../features/plan/SessionDetailPage'), 'SessionDetailPage')
 const AvailabilityPage = lazyPage(() => import('../features/plan/AvailabilityPage'), 'AvailabilityPage')
+const NutritionPage = lazyPage(() => import('../features/nutrition/NutritionPage'), 'NutritionPage')
+const LabsPage = lazyPage(() => import('../features/labs/LabsPage'), 'LabsPage')
 const StravaCallbackPage = lazyPage(() => import('../features/strava/StravaCallbackPage'), 'StravaCallbackPage')
 const UpdatePasswordPage = lazyPage(() => import('../features/auth/UpdatePasswordPage'), 'UpdatePasswordPage')
 
@@ -79,6 +81,8 @@ export function AppRoutes() {
         <Route path="metas/nueva" element={<S><GoalFormPage /></S>} />
         <Route path="metas/:id" element={<S><GoalDetailPage /></S>} />
         <Route path="metas/:id/editar" element={<S><GoalFormPage /></S>} />
+        <Route path="nutricion" element={<S><NutritionPage /></S>} />
+        <Route path="laboratorio" element={<S><LabsPage /></S>} />
         <Route path="temporada" element={<S><SeasonPage /></S>} />
         <Route path="metricas" element={<S><MetricsPage /></S>} />
         <Route path="importacion" element={<S><ImportPage /></S>} />

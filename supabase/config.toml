@@ -7,6 +7,9 @@ verify_jwt = true
 [functions.account-delete]
 verify_jwt = true
 
+[functions.nutrition-menu]
+verify_jwt = true
+
 [functions.strava-connect]
 verify_jwt = true
 

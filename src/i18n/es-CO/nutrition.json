@@ -1,0 +1,240 @@
+{
+  "nutrition": {
+    "title": "Alimentación",
+    "legal": "Orientativo: no reemplaza a un nutricionista ni a un médico. Revisa las alergias en cada receta antes de prepararla.",
+    "intro": "Calculamos lo que necesitas cada día según tu plan de entrenamiento (con fórmulas, sin IA). Con eso, la IA puede proponerte un menú semanal.",
+    "profileTitle": "Tu perfil de alimentación",
+    "profileHelp": "Esto lo escribes tú. Es lo único personal que se envía a la IA para armar el menú, junto con las calorías de cada día.",
+    "editProfile": "Editar perfil de alimentación",
+    "goal": "¿Qué buscas?",
+    "goals": {
+      "perform": "Rendir en mis entrenamientos y eventos",
+      "maintain": "Mantener mi peso",
+      "lose": "Bajar de peso poco a poco",
+      "gain": "Subir de peso"
+    },
+    "diet": "Tipo de alimentación",
+    "diets": {
+      "omnivore": "Como de todo",
+      "vegetarian": "Vegetariana",
+      "vegan": "Vegana"
+    },
+    "allergies": "Alergias e intolerancias de comida",
+    "allergiesHelp": "Separadas por comas, por ejemplo: maní, lactosa, mariscos. Se envían a la IA para evitarlas.",
+    "excluded": "Alimentos que no comes",
+    "excludedHelp": "Separados por comas, por ejemplo: hígado, coliflor.",
+    "pantry": "Alimentos que tienes en casa",
+    "pantryHelp": "Separados por comas. El menú los usa primero.",
+    "mealsPerDay": "Comidas al día",
+    "cookingMinutes": "Minutos máximos para cocinar cada comida",
+    "budget": "Presupuesto",
+    "budgets": {
+      "low": "Económico",
+      "medium": "Moderado",
+      "high": "Amplio"
+    },
+    "save": "Guardar perfil de alimentación",
+    "saved": "Perfil de alimentación guardado.",
+    "summary": "{{diet}} · {{meals}} comidas al día · hasta {{minutes}} min de cocina · presupuesto {{budget}}",
+    "summaryAllergies": "Alergias: {{list}}",
+    "noAllergies": "Sin alergias registradas",
+    "needsTitle": "Lo que necesitas cada día",
+    "needsHelp": "Calorías y macronutrientes según tu peso, estatura, edad y la sesión planeada de cada día. Son aproximados.",
+    "missingData": "Para calcular necesitamos en tu perfil: {{list}}.",
+    "missing": {
+      "weight": "tu peso",
+      "height": "tu estatura",
+      "birthDate": "tu fecha de nacimiento",
+      "sex": "el sexo para las fórmulas"
+    },
+    "goToProfile": "Completar el perfil",
+    "thisWeek": "Esta semana",
+    "nextWeek": "La próxima semana",
+    "weekOf": "Semana del {{date}}",
+    "noPlan": "No hay sesiones planeadas esta semana: se calculan como días de descanso.",
+    "day": "Día",
+    "training": "Entrenamiento",
+    "kcal": "Calorías",
+    "protein": "Proteína",
+    "carbs": "Carbohidratos",
+    "fat": "Grasa",
+    "grams": "{{value}} g",
+    "kcalValue": "{{value}} kcal",
+    "rest": "Descanso",
+    "dayType": {
+      "rest": "Descanso",
+      "light": "Día suave",
+      "moderate": "Día moderado",
+      "hard": "Día exigente",
+      "long": "Día largo"
+    },
+    "fuelingTitle": "Alrededor de tus sesiones",
+    "before": "Antes: {{from}}–{{to}} g de carbohidratos {{hours}} horas antes.",
+    "duringWater": "Durante: agua; {{fluidFrom}}–{{fluidTo}} ml por hora.",
+    "during": "Durante: {{from}}–{{to}} g de carbohidratos y {{fluidFrom}}–{{fluidTo}} ml de líquido por hora.",
+    "sodium": "Agrega sales (bebida deportiva o pastillas de electrolitos).",
+    "after": "Después: {{protein}} g de proteína y {{carbs}} g de carbohidratos en la primera hora.",
+    "afterProtein": "Después: {{protein}} g de proteína en la primera hora.",
+    "menuTitle": "Menú de la semana",
+    "menuHelp": "Lo arma la IA (Claude) con tu perfil de alimentación y las calorías de cada día. Puedes pedir hasta {{count}} menús al día.",
+    "generate": "Generar menú de la semana",
+    "regenerate": "Hacer un menú nuevo",
+    "generating": "Armando tu menú… puede tardar hasta 2 minutos. No cierres esta pantalla.",
+    "needProfile": "Guarda tu perfil de alimentación para poder generar el menú.",
+    "needData": "Completa tu perfil (peso, estatura, nacimiento y sexo) para generar el menú.",
+    "localNotice": "Modo local: no se usa IA. Este es un menú de EJEMPLO para ver cómo funciona.",
+    "createdAt": "Generado el {{date}}",
+    "dayTotal": "Total del día: {{kcal}} kcal (objetivo {{target}})",
+    "mealKcal": "{{kcal}} kcal · P {{p}} g · C {{c}} g · G {{f}} g",
+    "swap": "Otra opción",
+    "swapLabel": "Otra opción para {{meal}} del {{date}}",
+    "swapping": "Buscando otra opción…",
+    "shoppingTitle": "Lista de mercado",
+    "shoppingRange": "Del {{from}} al {{to}}",
+    "print": "Imprimir el menú y la lista",
+    "tips": "Consejos de la semana",
+    "sentTitle": "Lo que se envió a la IA",
+    "sentHelp": "Esto es todo lo que recibió la IA: tu perfil de alimentación y los números de cada día. Nunca tus actividades, datos de Strava, exámenes, nombre ni correo.",
+    "delete": "Borrar este menú",
+    "deleteConfirm": "¿Borrar el menú de esta semana?",
+    "errors": {
+      "ai_not_configured": "La IA todavía no está configurada en esta app (falta la clave; ver README, paso 7).",
+      "daily_limit": "Llegaste al límite de hoy. Puedes volver a intentarlo mañana.",
+      "nutrition_profile_required": "Guarda tu perfil de alimentación primero.",
+      "ai_busy": "La IA está muy ocupada. Intenta de nuevo en unos minutos.",
+      "ai_failed": "La IA no pudo armar el menú esta vez. Intenta de nuevo; no se descontó de tu límite.",
+      "bad_request": "Faltan datos para armar el menú. Revisa tu perfil.",
+      "generic": "No pudimos armar el menú. Revisa tu conexión e intenta de nuevo; si falló, no se descontó de tu límite."
+    }
+  },
+  "labs": {
+    "title": "Exámenes de laboratorio",
+    "legal": "La app no interpreta ni diagnostica exámenes. Si un valor te preocupa o está fuera del rango, habla con tu médico.",
+    "intro": "Registra tus resultados para ver cómo cambian en el tiempo. Se guardan cifrados y nunca se envían a la IA.",
+    "needConsent": "Para guardar exámenes necesitas dar el permiso de datos de salud en tu perfil.",
+    "giveConsent": "Ir a dar el permiso",
+    "add": "Agregar resultado",
+    "exam": "Examen",
+    "other": "Otro examen",
+    "customName": "Nombre del examen",
+    "date": "Fecha del examen",
+    "value": "Resultado",
+    "unit": "Unidad",
+    "refLow": "Mínimo del rango de tu laboratorio",
+    "refHigh": "Máximo del rango de tu laboratorio",
+    "refHelp": "Aparece en el reporte junto al resultado. Si lo dejas vacío, usamos un rango general.",
+    "save": "Guardar resultado",
+    "saved": "Resultado guardado.",
+    "empty": "Todavía no has registrado exámenes.",
+    "latest": "Último: {{value}} {{unit}} ({{date}})",
+    "range": "Rango: {{range}} {{unit}}",
+    "rangeLab": "rango de tu laboratorio",
+    "rangeGeneral": "rango general de referencia; usa el de tu laboratorio si lo tienes",
+    "rangeFrom": "desde {{low}}",
+    "rangeTo": "hasta {{high}}",
+    "noRange": "Sin rango de referencia",
+    "status": {
+      "low": "Por debajo del rango",
+      "in_range": "Dentro del rango",
+      "high": "Por encima del rango",
+      "unknown": "Sin rango"
+    },
+    "chartTitle": "Evolución de {{name}}",
+    "chartSummary": "{{count}} resultados; el último, {{value}} {{unit}}.",
+    "history": "Resultados de {{name}}",
+    "delete": "Borrar",
+    "deleteLabel": "Borrar el resultado de {{name}} del {{date}}",
+    "catalog": {
+      "hemoglobin": "Hemoglobina",
+      "hematocrit": "Hematocrito",
+      "ferritin": "Ferritina",
+      "iron": "Hierro sérico",
+      "vitamin_d": "Vitamina D (25-OH)",
+      "b12": "Vitamina B12",
+      "glucose": "Glucosa en ayunas",
+      "hba1c": "Hemoglobina glicosilada (HbA1c)",
+      "cholesterol_total": "Colesterol total",
+      "ldl": "Colesterol LDL",
+      "hdl": "Colesterol HDL",
+      "triglycerides": "Triglicéridos",
+      "tsh": "TSH (tiroides)",
+      "creatinine": "Creatinina"
+    }
+  },
+  "recs": {
+    "title": "Recomendaciones",
+    "why": "Por qué: ",
+    "ok": "Entendido",
+    "notApplicable": "No aplica",
+    "hiddenFor": "Se oculta por 7 días.",
+    "link": {
+      "plan": "Ver el plan",
+      "availability": "Revisar mi tiempo disponible",
+      "profile": "Ir al perfil",
+      "guides": "Cómo medirlo",
+      "nutrition": "Ver alimentación",
+      "labs": "Ver exámenes",
+      "goal": "Ver la meta"
+    },
+    "very_tired": {
+      "title": "Toca bajar la carga unos días",
+      "body": "Haz 2 o 3 días suaves o de descanso antes de la próxima sesión exigente.",
+      "why": "tu estado de forma está en {{tsb}}: acumulas mucha fatiga."
+    },
+    "ramp_high": {
+      "title": "Tu carga está subiendo muy rápido",
+      "body": "Mantén la carga de esta semana parecida a la anterior en vez de subirla.",
+      "why": "tu forma subió {{ramp}} puntos en una semana; más de 8 aumenta el riesgo de lesión o enfermedad."
+    },
+    "lab_out_of_range": {
+      "title": "Un examen está fuera del rango",
+      "body": "Habla con tu médico sobre este resultado. La app no lo interpreta.",
+      "why": "{{names}}."
+    },
+    "hr_rest_high": {
+      "title": "Tu pulso en reposo está alto",
+      "body": "Considera un día suave o de descanso, duerme bien y revisa si te estás enfermando.",
+      "why": "registraste {{latest}} ppm; lo habitual para ti es {{baseline}} ppm."
+    },
+    "load_rising": {
+      "title": "Dos semanas seguidas subiendo la carga",
+      "body": "La próxima semana conviene una descarga: menos volumen para asimilar lo entrenado.",
+      "why": "la última semana completa subió {{pct}} % frente a la anterior, y la anterior también subió más del 10 %."
+    },
+    "no_recovery_week": {
+      "title": "Llevas varias semanas sin descarga",
+      "body": "Programa una semana con menos carga (60-70 %) para recuperarte y seguir mejorando.",
+      "why": "las últimas {{weeks}} semanas tuvieron una carga parecida, sin una semana más suave."
+    },
+    "missed_sessions": {
+      "title": "Hay sesiones que no estás haciendo",
+      "body": "Revisa tu tiempo disponible: un plan que puedes cumplir es mejor que uno ambicioso.",
+      "why": "en las últimas 2 semanas quedaron {{count}} sesiones sin hacer."
+    },
+    "long_short": {
+      "title": "Alarga poco a poco tu salida larga",
+      "body": "Sube la salida larga unos 15-20 minutos por semana hasta acercarte a la duración de tu meta.",
+      "why": "tu salida más larga de las últimas 4 semanas fue de {{longest}} min y {{name}} dura unos {{goal}} min por día."
+    },
+    "climbing_short": {
+      "title": "Suma desnivel para tu meta",
+      "body": "Incluye rutas con subidas en tus salidas largas o una sesión de subidas por semana.",
+      "why": "en las últimas 4 semanas acumulaste {{done}} m de desnivel; {{name}} tiene {{goal}} m."
+    },
+    "weight_change": {
+      "title": "Tu peso cambió rápido",
+      "body": "Revisa que estés comiendo lo suficiente para tu entrenamiento. Si no es intencional, consúltalo.",
+      "why": "cambió {{pct}} % en {{days}} días."
+    },
+    "missing_threshold": {
+      "title": "Registra tu umbral",
+      "body": "Con tu pulso de umbral (o tu FTP) las zonas y la carga serán tuyas y no estimadas.",
+      "why": "hoy tus zonas se calculan con fórmulas generales."
+    },
+    "missing_hrmax": {
+      "title": "Registra tu pulso máximo",
+      "body": "Ayuda a afinar las zonas y la carga de las sesiones sin potencia.",
+      "why": "no tenemos tu pulso máximo medido."
+    }
+  }
+}

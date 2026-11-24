@@ -9,7 +9,7 @@ export function PrivacyPage() {
   return (
     <Page title={t('privacy.title')}>
       <article className="card prose">
-        <p className="muted">Última actualización: 24/11/2026 · Versión 2</p>
+        <p className="muted">Última actualización: 25/11/2026 · Versión 3</p>
 
         <h2>En pocas palabras</h2>
         <ul>
@@ -17,6 +17,7 @@ export function PrivacyPage() {
           <li>No vendemos ni compartimos tus datos con nadie.</li>
           <li>Puedes descargar todo lo que guardaste y borrar tu cuenta cuando quieras.</li>
           <li>Los datos de salud (medicamentos, alergias, exámenes) solo se guardan si das tu permiso, y van cifrados.</li>
+          <li>Si pides un menú, a la inteligencia artificial solo le llega tu perfil de alimentación y las calorías de cada día. Nunca tus entrenamientos, tus datos de Strava ni tus exámenes.</li>
         </ul>
 
         <h2>Qué guardamos</h2>
@@ -25,13 +26,14 @@ export function PrivacyPage() {
           <li><strong>Perfil:</strong> fecha de nacimiento, sexo (solo para las fórmulas), estatura, peso y los datos fisiológicos que quieras registrar (pulso, FTP, ritmos).</li>
           <li><strong>Entrenamientos:</strong> los archivos que subes (.FIT, .GPX, .TCX o exportaciones de Strava y Garmin) convertidos en un resumen: deporte, hora, duración, distancia, desnivel, pulso, potencia y, de los últimos 12 meses, el recorrido y las series de datos. El archivo original no se guarda.</li>
           <li><strong>Metas y temporada:</strong> lo que escribas sobre tus eventos.</li>
-          <li><strong>Datos de salud (opcional):</strong> medicamentos que alteran el pulso, alergias y, más adelante, resultados de laboratorio.</li>
+          <li><strong>Alimentación:</strong> tu perfil de alimentación (objetivo, tipo de alimentación, alergias e intolerancias de comida, alimentos que no comes o tienes en casa, comidas al día, tiempo de cocina y presupuesto) y los menús que pidas.</li>
+          <li><strong>Datos de salud (opcional):</strong> medicamentos que alteran el pulso, alergias y resultados de laboratorio (fecha, valor, unidad y rango).</li>
         </ul>
 
         <h2>Para qué los usamos</h2>
         <p>
-          Solo para mostrarte tus entrenamientos, calcular tu forma física y ayudarte a planear tus metas. Los
-          cálculos los hace la aplicación con fórmulas conocidas.
+          Solo para mostrarte tus entrenamientos, calcular tu forma física, ayudarte a planear tus metas y tu
+          alimentación. Los cálculos los hace la aplicación con fórmulas conocidas.
         </p>
 
         <h2>Datos de salud</h2>
@@ -43,10 +45,30 @@ export function PrivacyPage() {
 
         <h2>Inteligencia artificial</h2>
         <p>
-          En esta versión no se usa inteligencia artificial. Si más adelante se activan menús sugeridos por IA, solo
-          se enviará lo que tú escribas a mano para ese fin (tipo de alimentación, alergias, alimentos que no comes,
-          meta de peso y un rango de calorías). Nunca se enviarán tus entrenamientos ni datos de Strava.
+          Las recomendaciones, el plan y los cálculos de calorías los hace la aplicación con reglas y fórmulas, sin
+          inteligencia artificial. La IA solo se usa cuando tú tocas «Generar menú de la semana» u «Otra opción», en la
+          sección Alimentación.
         </p>
+        <ul>
+          <li>
+            <strong>Qué se envía:</strong> tu perfil de alimentación tal como lo escribiste y, para cada día, las calorías,
+            los gramos de proteína, carbohidratos y grasa, y el tipo y la duración de la sesión planeada (por ejemplo,
+            «ciclismo, larga, 240 min»). En la misma pantalla puedes ver exactamente lo que se envió.
+          </li>
+          <li>
+            <strong>Qué nunca se envía:</strong> tus actividades, recorridos, pulso o potencia; nada que venga de Strava o
+            Garmin; tus exámenes, medicamentos u otros datos de salud; tu nombre, correo, edad o peso.
+          </li>
+          <li>
+            <strong>Quién lo procesa:</strong> Anthropic (el modelo Claude), a través de su servicio para desarrolladores.
+            Según sus condiciones, no usa lo que se le envía por ese servicio para entrenar sus modelos. La solicitud se
+            hace desde nuestro servidor, nunca desde tu navegador.
+          </li>
+          <li>
+            <strong>Para qué:</strong> solo para armar tu menú y tu lista de mercado. El menú queda guardado en tu cuenta
+            y lo puedes borrar cuando quieras.
+          </li>
+        </ul>
 
         <h2>Conexión con Strava (opcional)</h2>
         <p>

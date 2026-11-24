@@ -70,11 +70,11 @@ export function SessionCard({
   )
 }
 
-export function LegalNotice() {
+export function LegalNotice({ text }: { text?: string } = {}) {
   const { t } = useTranslation()
   return (
     <div className="notice-legal" role="note">
-      <strong>⚠ {t('plan.legal')}</strong>
+      <strong>⚠ {text ?? t('plan.legal')}</strong>
     </div>
   )
 }

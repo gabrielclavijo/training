@@ -1171,3 +1171,130 @@ textarea {
   text-align: center;
   font-size: 1.1rem;
 }
+
+/* ---------- Fase 3: alimentación, exámenes, recomendaciones ---------- */
+.btn-small {
+  min-height: 44px;
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.95rem;
+}
+.needs-day {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+.macro-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: var(--space-1) 0 0;
+}
+.macro-row div {
+  min-width: 0;
+}
+.macro-row dt {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.macro-row dd {
+  margin: 0;
+  font-weight: 700;
+}
+.fueling {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-4);
+  font-size: 0.95rem;
+}
+.menu-day {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-2) 0;
+  background: var(--surface);
+}
+.menu-day > summary {
+  cursor: pointer;
+  font-weight: 700;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.meal {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+.meal-title {
+  font-size: 1rem;
+  margin: 0;
+}
+.meal-dish {
+  font-weight: 600;
+  margin: var(--space-1) 0;
+}
+.meal ul,
+.shopping ul {
+  padding-left: var(--space-4);
+  margin: var(--space-1) 0;
+}
+.shopping h4 {
+  margin: var(--space-3) 0 var(--space-1);
+}
+.sent {
+  margin-top: var(--space-4);
+}
+.sent > summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.sent pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 320px;
+  overflow: auto;
+  background: var(--surface-2);
+  color: var(--text);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+.recs .rec {
+  padding: var(--space-3);
+  margin: var(--space-2) 0;
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--focus);
+  border-radius: var(--radius-sm);
+}
+.recs .rec-high {
+  border-left-color: var(--warning);
+}
+.recs .rec h3 {
+  font-size: 1.05rem;
+  margin: 0 0 var(--space-1);
+}
+.recs .rec p {
+  margin: var(--space-1) 0;
+}
+.recs .row {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Imprimir el menú y la lista de mercado: solo el contenido */
+@media print {
+  .topbar,
+  .sidebar,
+  .bottom-nav,
+  .skip-link,
+  .local-banner,
+  .no-print {
+    display: none !important;
+  }
+  .menu-day {
+    break-inside: avoid;
+  }
+}

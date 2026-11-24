@@ -26,6 +26,9 @@ import type {
   ImportKind,
   NewSource,
   NutritionPrefs,
+  MealPlan,
+  MenuRequest,
+  RecommendationState,
   Pause,
   PhysiologyEntry,
   Profile,
@@ -33,6 +36,7 @@ import type {
   Streams,
   WeightEntry,
 } from './types'
+import { DEFAULT_NUTRITION } from './types'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Row = Record<string, any>
@@ -279,10 +283,32 @@ export class SupabaseRepo implements Repo {
   }
   async getNutrition(): Promise<NutritionPrefs | null> {
     const r = check(await this.sb.from('nutrition_preferences').select('*').maybeSingle()) as Row | null
-    return r ? { dietType: r.diet_type, excludedFoods: r.excluded_foods } : null
+    return r
+      ? {
+          dietType: r.diet_type,
+          excludedFoods: r.excluded_foods ?? [],
+          goal: r.goal ?? DEFAULT_NUTRITION.goal,
+          foodAllergies: r.food_allergies ?? [],
+          mealsPerDay: r.meals_per_day ?? DEFAULT_NUTRITION.mealsPerDay,
+          cookingMinutes: r.cooking_minutes ?? DEFAULT_NUTRITION.cookingMinutes,
+          budget: r.budget ?? DEFAULT_NUTRITION.budget,
+          pantry: r.pantry ?? [],
+        }
+      : null
   }
   async saveNutrition(p: NutritionPrefs) {
-    check(await this.sb.from('nutrition_preferences').upsert({ diet_type: p.dietType, excluded_foods: p.excludedFoods }))
+    check(
+      await this.sb.from('nutrition_preferences').upsert({
+        diet_type: p.dietType,
+        excluded_foods: p.excludedFoods,
+        goal: p.goal,
+        food_allergies: p.foodAllergies,
+        meals_per_day: p.mealsPerDay,
+        cooking_minutes: p.cookingMinutes,
+        budget: p.budget,
+        pantry: p.pantry,
+      }),
+    )
   }
 
   // ---- Consentimiento y salud
@@ -759,6 +785,32 @@ export class SupabaseRepo implements Repo {
     return this.fn<{ queued: number }>('strava-sync')
   }
 
+  // ---- Alimentación
+  async listMealPlans(): Promise<MealPlan[]> {
+    const rows = check(await this.sb.from('meal_plans').select('*').order('week_start', { ascending: false }).limit(20)) as Row[]
+    return rows.map(toMealPlan)
+  }
+  async generateMenu(req: MenuRequest) {
+    const res = await this.fn<{ plan: Row }>('nutrition-menu', { action: 'generate', request: req })
+    return toMealPlan(res.plan)
+  }
+  async swapMeal(planId: string, date: string, mealIndex: number) {
+    const res = await this.fn<{ plan: Row }>('nutrition-menu', { action: 'swap', planId, date, mealIndex })
+    return toMealPlan(res.plan)
+  }
+  async deleteMealPlan(id: string) {
+    check(await this.sb.from('meal_plans').delete().eq('id', id))
+  }
+
+  // ---- Recomendaciones
+  async listRecommendationState(): Promise<RecommendationState[]> {
+    const rows = check(await this.sb.from('recommendation_state').select('*')) as Row[]
+    return rows.map((r) => ({ ruleKey: r.rule_key, reaction: r.reaction, dismissedUntil: r.dismissed_until }))
+  }
+  async dismissRecommendation(ruleKey: string, reaction: RecommendationState['reaction'], until: string) {
+    check(await this.sb.from('recommendation_state').upsert({ rule_key: ruleKey, reaction, dismissed_until: until }))
+  }
+
   // ---- Demo y cuenta
   async clearDemoData() {
     check(await this.sb.from('training_plans').delete().eq('is_demo', true))
@@ -775,4 +827,8 @@ export class SupabaseRepo implements Repo {
     if (error) throw new Error(error.message)
     await this.sb.auth.signOut()
   }
+}
+
+function toMealPlan(r: Row): MealPlan {
+  return { id: r.id, weekStart: r.week_start, inputs: r.inputs, menu: r.menu, model: r.model, createdAt: r.created_at, updatedAt: r.updated_at ?? r.created_at }
 }
