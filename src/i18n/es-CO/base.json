@@ -16,7 +16,7 @@
     "nutrition": "Alimentación",
     "labs": "Exámenes",
     "import": "Importación",
-    "guides": "Guías",
+    "guides": "Ayuda",
     "profile": "Perfil",
     "settings": "Ajustes",
     "glossary": "¿Qué significa?",
@@ -105,5 +105,18 @@
   },
   "privacy": {
     "title": "Política de privacidad"
+  },
+  "navDesc": {
+    "/metas": "Tus eventos y cómo vas",
+    "/nutricion": "Calorías y menús de la semana",
+    "/laboratorio": "Resultados y su evolución",
+    "/metricas": "Volumen por deporte",
+    "/temporada": "Metas y pausas en el calendario",
+    "/importacion": "Strava, Garmin y archivos",
+    "/ayuda": "Guías paso a paso",
+    "/perfil": "Tus datos, foto y salud",
+    "/ajustes": "Exportar, datos de prueba, cuenta",
+    "/glosario": "Qué significa cada número",
+    "/privacidad": "Cómo cuidamos tus datos"
   }
 }

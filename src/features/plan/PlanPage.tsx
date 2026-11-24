@@ -6,7 +6,7 @@ import { Alert, Page, Spinner } from '../../components/ui/Page'
 import { addDays, formatDate, formatLongDate, weekStart } from '../../core/dates'
 import { formatNumber } from '../../core/units'
 import { usePlanChanges } from './usePlanChanges'
-import { Icon, type IconName } from '../../components/ui/Icon'
+import { Icon, type IconName, TitleIcon } from '../../components/ui/Icon'
 import type { StoredSession } from '../../data/types'
 import type { MatchResult } from '../../core/planner/adapt'
 import { LegalNotice, SessionCard, ZonesNotice } from './SessionView'
@@ -20,8 +20,18 @@ export function PlanPage() {
   const { derived, isLoading, error } = usePlan()
   const [offset, setOffset] = useState(0)
 
-  if (isLoading) return <Page title={t('plan.title')}><Spinner full /></Page>
-  if (error || !derived) return <Page title={t('plan.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
+  if (isLoading)
+    return (
+      <Page title={t('plan.title')}>
+        <Spinner full />
+      </Page>
+    )
+  if (error || !derived)
+    return (
+      <Page title={t('plan.title')}>
+        <Alert kind="error">{t('errors.generic')}</Alert>
+      </Page>
+    )
   const { plan, today, matches, zones, ctx } = derived
 
   const hasGoals = ctx.goals.some((g) => g.status === 'active')
@@ -44,9 +54,7 @@ export function PlanPage() {
     >
       <LegalNotice />
       <ZonesNotice zones={zones} />
-      {!hasGoals && (
-        <EmptyState icon="goal" title={t('plan.noPlan')} body={t('plan.noPlanBody')} actionLabel={t('plan.createGoal')} actionTo="/metas/nueva" />
-      )}
+      {!hasGoals && <EmptyState icon="goal" title={t('plan.noPlan')} body={t('plan.noPlanBody')} actionLabel={t('plan.createGoal')} actionTo="/metas/nueva" />}
 
       <section className="card" aria-labelledby="week-h">
         <div className="week-nav">
@@ -73,7 +81,13 @@ export function PlanPage() {
             {t(`plan.notes.${n}`)}
           </p>
         ))}
-        <WeekStrip days={days} today={today} sessions={weekSessions} matches={matches} pct={week && week.targetLoad > 0 && ws <= today ? Math.round((doneLoad / week.targetLoad) * 100) : null} />
+        <WeekStrip
+          days={days}
+          today={today}
+          sessions={weekSessions}
+          matches={matches}
+          pct={week && week.targetLoad > 0 && ws <= today ? Math.round((doneLoad / week.targetLoad) * 100) : null}
+        />
         <ol className="day-list">
           {days.map((d) => {
             const list = weekSessions.filter((s) => s.date === d)
@@ -142,7 +156,9 @@ function WeekStrip({
           ]
             .filter(Boolean)
             .join(' · ')
-          const cls = ['day-chip', done && 'day-chip-done', missed && 'day-chip-missed', event && 'day-chip-event', d === today && 'day-chip-today'].filter(Boolean).join(' ')
+          const cls = ['day-chip', done && 'day-chip-done', missed && 'day-chip-missed', event && 'day-chip-event', d === today && 'day-chip-today']
+            .filter(Boolean)
+            .join(' ')
           return (
             <li key={d}>
               <button
@@ -176,7 +192,10 @@ function UpcomingWeeks() {
   if (!future.length) return null
   return (
     <section className="card" aria-labelledby="up-h">
-      <h2 id="up-h">{t('plan.nextWeeks')}</h2>
+      <h2 id="up-h" className="card-title-icon">
+        <TitleIcon name="calendar" tone="sky" />
+        {t('plan.nextWeeks')}
+      </h2>
       <div className="table-wrap" tabIndex={0} role="region" aria-label={t('fitness.seeTable')}>
         <table>
           <thead>
@@ -209,7 +228,10 @@ function ChangesList() {
   const changes = usePlanChanges()
   return (
     <section className="card" aria-labelledby="ch-h">
-      <h2 id="ch-h">{t('plan.changesTitle')}</h2>
+      <h2 id="ch-h" className="card-title-icon">
+        <TitleIcon name="refresh" tone="soft" />
+        {t('plan.changesTitle')}
+      </h2>
       {changes.data?.length === 0 && <p className="muted">{t('plan.noChanges')}</p>}
       <ul className="plain-list">
         {(changes.data ?? []).slice(0, 10).map((c) => (

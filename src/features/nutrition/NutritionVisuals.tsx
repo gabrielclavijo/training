@@ -29,7 +29,11 @@ export function WeekDays({ days, selected, onSelect, today }: { days: DayRow[]; 
                 type="button"
                 className={`nday nday-${d.needs.dayType}${d.date === selected ? ' nday-on' : ''}${d.date === today ? ' nday-today' : ''}`}
                 aria-pressed={d.date === selected}
-                aria-label={t('nutrition.dayButton', { date: formatLongDate(`${d.date}T12:00:00Z`), kcal: formatNumber(d.needs.kcal), type: t(`nutrition.dayType.${d.needs.dayType}`) })}
+                aria-label={t('nutrition.dayButton', {
+                  date: formatLongDate(`${d.date}T12:00:00Z`),
+                  kcal: formatNumber(d.needs.kcal),
+                  type: t(`nutrition.dayType.${d.needs.dayType}`),
+                })}
                 onClick={() => onSelect(d.date)}
               >
                 <span className="nday-letter" aria-hidden="true">
@@ -150,18 +154,33 @@ export function FuelingTimeline({ session, weightKg }: { session: DaySession; we
   const f = sessionFueling(session, weightKg)
   const during: string[] = []
   if (f.during) {
-    during.push(f.during.carbsPerHourFrom > 0 ? t('nutrition.duringShort', { from: f.during.carbsPerHourFrom, to: f.during.carbsPerHourTo }) : t('nutrition.duringWaterShort'))
+    during.push(
+      f.during.carbsPerHourFrom > 0
+        ? t('nutrition.duringShort', { from: f.during.carbsPerHourFrom, to: f.during.carbsPerHourTo })
+        : t('nutrition.duringWaterShort'),
+    )
     during.push(t('nutrition.fluidShort', { fluidFrom: f.during.fluidMlPerHourFrom, fluidTo: f.during.fluidMlPerHourTo }))
     if (f.during.sodium) during.push(t('nutrition.sodiumShort'))
   }
   const steps: { key: string; icon: IconName; title: string; lines: string[] }[] = [
-    { key: 'before', icon: 'clock', title: t('nutrition.stepBefore'), lines: f.before ? [t('nutrition.beforeShort', { from: f.before.carbsFromG, to: f.before.carbsToG, hours: f.before.hoursBefore })] : [] },
+    {
+      key: 'before',
+      icon: 'clock',
+      title: t('nutrition.stepBefore'),
+      lines: f.before ? [t('nutrition.beforeShort', { from: f.before.carbsFromG, to: f.before.carbsToG, hours: f.before.hoursBefore })] : [],
+    },
     { key: 'during', icon: 'drop', title: t('nutrition.stepDuring'), lines: during },
     {
       key: 'after',
       icon: 'refresh',
       title: t('nutrition.stepAfter'),
-      lines: f.after ? [f.after.carbsG ? t('nutrition.afterShort', { protein: f.after.proteinG, carbs: f.after.carbsG }) : t('nutrition.afterProteinShort', { protein: f.after.proteinG })] : [],
+      lines: f.after
+        ? [
+            f.after.carbsG
+              ? t('nutrition.afterShort', { protein: f.after.proteinG, carbs: f.after.carbsG })
+              : t('nutrition.afterProteinShort', { protein: f.after.proteinG }),
+          ]
+        : [],
     },
   ]
   return (
@@ -260,14 +279,15 @@ export function ShoppingChecklist({ planId, lists }: { planId: string; lists: { 
       <p className="muted">{t('nutrition.shoppingHelp')}</p>
       <div className="shop-progress">
         <span className="macro-track" aria-hidden="true">
-          <span className="progress-good" style={{ width: `${total ? (count / total) * 100 : 0}%` }} />
+          <span className="prog-good" style={{ width: `${total ? (count / total) * 100 : 0}%` }} />
         </span>
         <span className="num">{t('nutrition.shoppingProgress', { done: count, total })}</span>
       </div>
       {lists.map((list) => (
         <section key={list.from} className="shop-list">
           <h4>
-            <Icon name="cart" /> {t('nutrition.shoppingRange', { from: formatDate(`${list.from}T12:00:00Z`).slice(0, 5), to: formatDate(`${list.to}T12:00:00Z`).slice(0, 5) })}
+            <Icon name="cart" />{' '}
+            {t('nutrition.shoppingRange', { from: formatDate(`${list.from}T12:00:00Z`).slice(0, 5), to: formatDate(`${list.to}T12:00:00Z`).slice(0, 5) })}
           </h4>
           <ul>
             {list.items.map((it, i) => {

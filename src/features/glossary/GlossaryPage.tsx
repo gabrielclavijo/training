@@ -1,3 +1,4 @@
+import { TitleIcon } from '../../components/ui/Icon'
 import { useTranslation } from 'react-i18next'
 import { LoadBadge } from '../../components/ui/Badges'
 import { Page } from '../../components/ui/Page'
@@ -18,7 +19,10 @@ export function GlossaryPage() {
     <Page title={t('glossary.title')}>
       <p className="muted">{t('glossary.intro')}</p>
       <section className="card prose" aria-labelledby="g-load">
-        <h2 id="g-load">{t('glossary.loadTitle')}</h2>
+        <h2 id="g-load" className="card-title-icon">
+          <TitleIcon name="bolt" tone="coral" />
+          {t('glossary.loadTitle')}
+        </h2>
         <p>{t('glossary.loadText')}</p>
         <h3>{t('glossary.methodsTitle')}</h3>
         <dl className="glossary">
@@ -35,7 +39,10 @@ export function GlossaryPage() {
         <p>{t('glossary.confidenceText')}</p>
       </section>
       <section className="card prose" aria-labelledby="g-fit">
-        <h2 id="g-fit">{t('fitness.title')}</h2>
+        <h2 id="g-fit" className="card-title-icon">
+          <TitleIcon name="trend" />
+          {t('fitness.title')}
+        </h2>
         <dl className="glossary">
           {terms.map(([k, v]) => (
             <div key={k}>

@@ -1,3 +1,4 @@
+import { TitleIcon } from '../../components/ui/Icon'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -15,7 +16,8 @@ export function SettingsPage() {
   return (
     <Page title={t('settings.title')}>
       <section className="card" aria-labelledby="locale-h">
-        <h2 id="locale-h">
+        <h2 id="locale-h" className="card-title-icon">
+          <TitleIcon name="book" tone="soft" />
           {t('settings.language')} y {t('settings.units').toLowerCase()}
         </h2>
         <div className="field">
@@ -36,20 +38,29 @@ export function SettingsPage() {
       </section>
 
       <section className="card" aria-labelledby="demo-h">
-        <h2 id="demo-h">{t('settingsExtra.demo')}</h2>
+        <h2 id="demo-h" className="card-title-icon">
+          <TitleIcon name="sparkles" tone="sky" />
+          {t('settingsExtra.demo')}
+        </h2>
         <p className="muted">{t('settingsExtra.demoHelp')}</p>
         <DemoDataButton withClear />
       </section>
 
       <section className="card" aria-labelledby="data-h">
-        <h2 id="data-h">{t('settingsExtra.data')}</h2>
+        <h2 id="data-h" className="card-title-icon">
+          <TitleIcon name="import" />
+          {t('settingsExtra.data')}
+        </h2>
         <ExportButton />
         <hr className="sep" />
         <DeleteAccount />
       </section>
 
       <section className="card" aria-labelledby="account-h">
-        <h2 id="account-h">{t('settings.account')}</h2>
+        <h2 id="account-h" className="card-title-icon">
+          <TitleIcon name="logout" tone="soft" />
+          {t('settings.account')}
+        </h2>
         {mode === 'local' ? <p className="muted">{t('local.banner')}</p> : user?.email && <p className="muted">{user.email}</p>}
         <button type="button" className="btn btn-secondary" onClick={() => void signOut()}>
           {t('settings.signOut')}

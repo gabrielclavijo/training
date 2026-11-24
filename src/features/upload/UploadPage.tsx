@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, type DragEvent } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Icon } from '../../components/ui/Icon'
+import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { Alert, Page } from '../../components/ui/Page'
 import { runImportJob, type ImportProgress, type ImportQueueItem } from '../../data/importer'
 import { useRepo } from '../../data/RepoProvider'
@@ -65,7 +65,9 @@ export function UploadPage() {
     // Mantener la pantalla encendida mientras importa (si el navegador lo permite)
     let wakeLock: { release: () => Promise<void> } | null = null
     try {
-      wakeLock = (await (navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request('screen')) ?? null
+      wakeLock =
+        (await (navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request('screen')) ??
+        null
     } catch {
       wakeLock = null
     }
@@ -183,7 +185,9 @@ export function UploadPage() {
           <div className="card">
             <p>
               <strong>
-                {progress.total > 0 ? t('upload.progress', { processed: progress.processed.toLocaleString('es-CO'), total: progress.total.toLocaleString('es-CO') }) : t('upload.reading')}
+                {progress.total > 0
+                  ? t('upload.progress', { processed: progress.processed.toLocaleString('es-CO'), total: progress.total.toLocaleString('es-CO') })
+                  : t('upload.reading')}
               </strong>
             </p>
             <progress className="progress" max={100} value={pct} aria-label={`${pct} %`} />
@@ -219,7 +223,7 @@ export function UploadPage() {
           </Link>
         )}
         <Link to="/actividades/nueva">{t('upload.manualLink')}</Link>
-        <Link to="/guias">{t('upload.guideLink')}</Link>
+        <Link to="/ayuda?tema=subir">{t('upload.guideLink')}</Link>
       </div>
     </Page>
   )
@@ -232,7 +236,10 @@ function ResultList({ rows }: { rows: Row[] }) {
   const visible = sorted.slice(0, 200)
   return (
     <section className="card" aria-labelledby="results-h">
-      <h2 id="results-h">{t('upload.results')}</h2>
+      <h2 id="results-h" className="card-title-icon">
+        <TitleIcon name="check" />
+        {t('upload.results')}
+      </h2>
       <ul className="plain-list">
         {visible.map((r, i) => (
           <li key={r.name + i}>

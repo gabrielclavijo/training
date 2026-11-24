@@ -16,7 +16,10 @@ export function OnboardingPage() {
   const profile = useProfile()
   const navigate = useNavigate()
   const [step, setStep] = useState<number>(() => Math.min(TOTAL, Math.max(1, (profile.data?.onboardingStep ?? 0) + 1)))
-  const setProgress = useRepoMutation((s: { step: number; done?: boolean }) => repo.updateProfile({ onboardingStep: s.step, onboardingDone: s.done }), [keys.profile])
+  const setProgress = useRepoMutation(
+    (s: { step: number; done?: boolean }) => repo.updateProfile({ onboardingStep: s.step, onboardingDone: s.done }),
+    [keys.profile],
+  )
 
   async function next(current: number) {
     await setProgress.mutateAsync({ step: current })
@@ -66,7 +69,7 @@ export function OnboardingPage() {
             <button type="button" className="btn btn-primary" onClick={() => void finish('/subir')}>
               {t('onboarding.s3Upload')}
             </button>
-            <Link className="btn btn-secondary" to="/guias">
+            <Link className="btn btn-secondary" to="/ayuda">
               {t('onboarding.s3Guide')}
             </Link>
             <DemoDataButton />

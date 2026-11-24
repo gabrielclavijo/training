@@ -1,3 +1,4 @@
+import { TitleIcon, type IconName } from '../../components/ui/Icon'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -10,6 +11,13 @@ import type { ImportJob } from '../../data/types'
 import { PROVIDERS } from '../../providers'
 import { StravaConnection } from '../strava/StravaConnection'
 
+const PROVIDER_ICON: Record<string, [IconName, 'coral' | 'sky' | 'soft' | undefined]> = {
+  file: ['upload', undefined],
+  manual: ['dumbbell', 'soft'],
+  strava: ['route', 'coral'],
+  garmin_api: ['activity', 'sky'],
+}
+
 export function ImportPage() {
   const { t } = useTranslation()
   const connections = useConnections()
@@ -18,7 +26,10 @@ export function ImportPage() {
   return (
     <Page title={t('import.title')}>
       <section className="card" aria-labelledby="conn-h">
-        <h2 id="conn-h">{t('import.connections')}</h2>
+        <h2 id="conn-h" className="card-title-icon">
+          <TitleIcon name="route" tone="coral" />
+          {t('import.connections')}
+        </h2>
         {connections.isLoading && <Spinner />}
         {connections.error && <Alert kind="error">{t('errors.generic')}</Alert>}
         <ul className="plain-list">
@@ -26,9 +37,12 @@ export function ImportPage() {
             const c = connections.data?.find((x) => x.provider === p.id)
             const status = c?.status ?? (p.enabled ? 'active' : 'not_available')
             return (
-              <li key={p.id}>
+              <li key={p.id} className="conn">
                 <div className="row-between">
-                  <strong>{t(`import.providers.${p.id}`)}</strong>
+                  <span className="conn-name">
+                    <TitleIcon name={PROVIDER_ICON[p.id][0]} tone={PROVIDER_ICON[p.id][1]} />
+                    <strong>{t(`import.providers.${p.id}`)}</strong>
+                  </span>
                   <span className={`badge badge-status-${status}`}>
                     <span aria-hidden="true">{status === 'active' ? '✓ ' : status === 'error' ? '⚠ ' : '– '}</span>
                     {t(`import.status.${status}`)}
@@ -45,14 +59,17 @@ export function ImportPage() {
           <Link className="btn btn-primary" to="/subir">
             {t('import.upload')}
           </Link>
-          <Link className="btn btn-secondary" to="/guias">
+          <Link className="btn btn-secondary" to="/ayuda?tema=strava">
             {t('nav.guides')}
           </Link>
         </div>
       </section>
 
       <section className="card" aria-labelledby="hist-h">
-        <h2 id="hist-h">{t('import.history')}</h2>
+        <h2 id="hist-h" className="card-title-icon">
+          <TitleIcon name="clock" tone="soft" />
+          {t('import.history')}
+        </h2>
         {jobs.data && jobs.data.length === 0 && <p className="muted">{t('import.noHistory')}</p>}
         <ul className="plain-list">
           {(jobs.data ?? []).map((j) => (
@@ -82,7 +99,11 @@ function JobRow({ job }: { job: ImportJob }) {
       </div>
       {open && (
         <ul className="plain-list compact">
-          {items.isLoading && <li><Spinner /></li>}
+          {items.isLoading && (
+            <li>
+              <Spinner />
+            </li>
+          )}
           {(errors.length ? errors : (items.data ?? []).slice(0, 50)).map((i) => (
             <li key={i.id}>
               <span className="filename">{i.filename}</span> — {t(`upload.status.${i.status}`)}

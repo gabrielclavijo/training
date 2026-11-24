@@ -1,3 +1,4 @@
+import { TitleIcon } from '../../components/ui/Icon'
 import { useMemo } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -109,7 +110,10 @@ export function RecommendationsCard() {
   if (shown.length === 0) return null
   return (
     <section className="card" aria-labelledby="recs-h">
-      <h2 id="recs-h">{t('recs.title')}</h2>
+      <h2 id="recs-h" className="card-title-icon">
+        <TitleIcon name="bulb" tone="coral" />
+        {t('recs.title')}
+      </h2>
       <ul className="plain-list recs">
         {shown.map((r) => (
           <RecItem key={r.key} rec={r} onDismiss={(reaction) => dismiss.mutate({ key: r.key, reaction, today: recs.today })} busy={dismiss.isPending} />
@@ -136,10 +140,22 @@ function RecItem({ rec, onDismiss, busy }: { rec: Recommendation; onDismiss: (r:
       </p>
       <div className="row">
         {rec.link && <Link to={rec.link.to}>{t(`recs.link.${rec.link.label}`)}</Link>}
-        <button type="button" className="btn btn-secondary btn-small" disabled={busy} onClick={() => onDismiss('ok')} aria-label={`${t('recs.ok')}: ${t(`recs.${rec.key}.title`)}`}>
+        <button
+          type="button"
+          className="btn btn-secondary btn-small"
+          disabled={busy}
+          onClick={() => onDismiss('ok')}
+          aria-label={`${t('recs.ok')}: ${t(`recs.${rec.key}.title`)}`}
+        >
           {t('recs.ok')}
         </button>
-        <button type="button" className="btn-link" disabled={busy} onClick={() => onDismiss('not_applicable')} aria-label={`${t('recs.notApplicable')}: ${t(`recs.${rec.key}.title`)}`}>
+        <button
+          type="button"
+          className="btn-link"
+          disabled={busy}
+          onClick={() => onDismiss('not_applicable')}
+          aria-label={`${t('recs.notApplicable')}: ${t(`recs.${rec.key}.title`)}`}
+        >
           {t('recs.notApplicable')}
         </button>
       </div>

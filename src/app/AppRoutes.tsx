@@ -43,7 +43,7 @@ function OnboardingGate({ children }: { children: ReactNode }) {
   const profile = useProfile()
   const location = useLocation()
   if (profile.isLoading) return <main className="main"><Spinner full /></main>
-  const free = ['/bienvenida', '/guias', '/privacidad', '/subir', '/metas/nueva', '/cambiar-clave', '/ajustes', '/strava']
+  const free = ['/bienvenida', '/guias', '/ayuda', '/privacidad', '/subir', '/metas/nueva', '/cambiar-clave', '/ajustes', '/strava']
   if (profile.data && !profile.data.onboardingDone && !free.includes(location.pathname)) {
     return <Navigate to="/bienvenida" replace />
   }
@@ -84,7 +84,8 @@ export function AppRoutes() {
         <Route path="temporada" element={<S><SeasonPage /></S>} />
         <Route path="metricas" element={<S><MetricsPage /></S>} />
         <Route path="importacion" element={<S><ImportPage /></S>} />
-        <Route path="guias" element={<S><GuidesPage /></S>} />
+        <Route path="ayuda" element={<S><GuidesPage /></S>} />
+        <Route path="guias" element={<GuidesRedirect />} />
         <Route path="perfil" element={<S><ProfilePage /></S>} />
         <Route path="glosario" element={<S><GlossaryPage /></S>} />
         <Route path="ajustes" element={<S><SettingsPage /></S>} />
@@ -96,6 +97,12 @@ export function AppRoutes() {
       <Route path="/privacidad" element={<PublicShell />} />
     </Routes>
   )
+}
+
+/** La antigua dirección de Guías lleva a Ayuda (conserva el tema). */
+function GuidesRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={`/ayuda${search}`} replace />
 }
 
 function S({ children }: { children: ReactNode }) {

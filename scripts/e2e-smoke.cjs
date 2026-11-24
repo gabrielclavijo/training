@@ -52,7 +52,7 @@ async function makeUploadFiles() {
   await p.getByRole('button', { name: 'Continuar' }).click();
   await p.getByRole('button', { name: 'Hacerlo después' }).click();
   await p.waitForURL(u => u.hash === '#/' );
-  const routes = ['/', '/plan', '/plan/disponibilidad', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/guias', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva', '/nutricion', '/laboratorio'];
+  const routes = ['/', '/plan', '/plan/disponibilidad', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/ayuda', '/ayuda?tema=pausa', '/ayuda?tema=meta', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva', '/nutricion', '/laboratorio'];
   for (const scheme of ['light']) {
     await p.emulateMedia({ colorScheme: scheme });
     for (const r of routes) {

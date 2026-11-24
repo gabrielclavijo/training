@@ -1,18 +1,19 @@
 {
   "guides": {
-    "title": "Guías paso a paso",
-    "intro": "Instrucciones sencillas para traer tus entrenamientos. Elige la que necesites.",
+    "title": "Ayuda",
+    "intro": "Guías cortas y con dibujos para sacarle provecho a la app. Elige un tema.",
     "account": {
-      "title": "1. Crear tu cuenta",
+      "title": "Crear tu cuenta",
       "steps": [
         "Abre la app en tu celular o computador.",
         "Toca «Continuar con Google», o escribe tu correo y una contraseña y toca «Crear cuenta».",
         "Si usaste correo, abre el mensaje que te llegó y toca el enlace para confirmar.",
         "Completa tus datos básicos. Lo demás es opcional y lo puedes hacer después."
-      ]
+      ],
+      "desc": "Entrar con Google o con tu correo."
     },
     "strava": {
-      "title": "2. Traer todo tu historial de Strava",
+      "title": "Traer tu historial de Strava",
       "note": "Esto se hace desde el sitio web de Strava (no desde la app del celular). Funciona con cuentas gratuitas.",
       "steps": [
         "En un computador, entra a strava.com e inicia sesión.",
@@ -21,32 +22,48 @@
         "En «Descargar solicitud», haz clic en «Solicitar tu archivo». Strava te enviará un correo con un enlace; puede tardar unas horas.",
         "Descarga el archivo .zip del correo. No lo descomprimas.",
         "En esta app, ve a «Subir» y elige ese .zip. Verás el progreso: «Importando 340 de 1.200 actividades…»."
-      ]
+      ],
+      "desc": "Todas tus actividades de una vez."
     },
     "garmin": {
-      "title": "3. Traer tu historial de Garmin Connect",
+      "title": "Traer tu historial de Garmin",
       "note": "Útil si no usas Strava o si quieres los archivos originales de tu reloj (con potencia y cadencia completas).",
       "steps": [
         "En un computador, entra a connect.garmin.com e inicia sesión.",
         "Haz clic en tu foto → «Configuración de la cuenta» → «Administración de datos» (o búscalo como «Exportar tus datos»).",
         "Elige «Exportar datos» y confirma. Garmin te enviará un correo con el enlace; puede tardar hasta un par de días.",
         "Descarga el .zip y súbelo tal cual en «Subir». La app abre los archivos internos sola."
-      ]
+      ],
+      "desc": "Los archivos originales de tu reloj."
     },
     "single": {
-      "title": "4. Subir una actividad nueva",
+      "title": "Subir una actividad nueva",
       "intro": "Después de cada entrenamiento (toma menos de un minuto):",
       "garmin": "Desde Garmin Connect (web): abre la actividad → ícono de engranaje → «Exportar original» (descarga un .zip con el .fit) o «Exportar a GPX».",
       "strava": "Desde Strava (web): abre la actividad → botón «…» → «Exportar original» o «Exportar GPX».",
       "other": "Otros relojes (Coros, Suunto, Polar, Wahoo, Apple Watch): en su app o sitio web busca «Exportar» y elige .FIT o .GPX.",
-      "upload": "Luego, en esta app, toca «Subir» y elige el archivo. Si la misma actividad ya estaba (por ejemplo, la subiste desde Strava y desde Garmin), aparecerá una sola vez."
+      "upload": "Luego, en esta app, toca «Subir» y elige el archivo. Si la misma actividad ya estaba (por ejemplo, la subiste desde Strava y desde Garmin), aparecerá una sola vez.",
+      "desc": "Después de cada entrenamiento, en menos de un minuto.",
+      "steps": [
+        "Desde Garmin Connect (web): abre la actividad → ícono de engranaje → «Exportar original» (descarga un .zip con el .fit) o «Exportar a GPX».",
+        "Desde Strava (web): abre la actividad → botón «…» → «Exportar original» o «Exportar GPX».",
+        "Otros relojes (Coros, Suunto, Polar, Wahoo, Apple Watch): en su app o sitio web busca «Exportar» y elige .FIT o .GPX.",
+        "Luego, en esta app, toca «Subir» y elige el archivo. Si la misma actividad ya estaba (por ejemplo, la subiste desde Strava y desde Garmin), aparecerá una sola vez."
+      ]
     },
     "manual": {
-      "title": "5. Registrar a mano",
-      "text": "Para el gimnasio o si no llevabas reloj: toca «Subir» → «Registra una actividad a mano». Con la duración y qué tan duro se sintió (1 a 10) ya calculamos tu carga."
+      "title": "Registrar a mano",
+      "text": "Para el gimnasio o si no llevabas reloj: toca «Subir» → «Registra una actividad a mano». Con la duración y qué tan duro se sintió (1 a 10) ya calculamos tu carga.",
+      "desc": "Gimnasio o sesiones sin reloj.",
+      "steps": [
+        "Toca «Subir» y luego «Registra una actividad a mano».",
+        "Elige el deporte, la fecha, la hora y la duración.",
+        "Marca qué tan duro se sintió, de 1 (muy suave) a 10 (máximo esfuerzo).",
+        "Guarda: con eso ya calculamos la carga de la sesión."
+      ]
     },
     "trouble": {
-      "title": "6. Si algo falla",
+      "title": "Si algo falla",
       "items": [
         "«Este archivo no es una actividad válida»: puede ser una ruta planeada (GPX sin horas) o un archivo de configuración. Exporta la actividad grabada.",
         "«El archivo está dañado»: vuelve a descargarlo; a veces la descarga queda incompleta.",
@@ -54,9 +71,114 @@
         "Una actividad salió repetida o se fusionó con otra que no era: abre la actividad → «De dónde vino» → «No son la misma actividad».",
         "La carga dice «Sin calcular»: registra qué tan duro se sintió (1 a 10) o agrega tus datos fisiológicos en el perfil.",
         "Si nada de esto funciona, escríbele a la persona que administra el grupo de prueba."
-      ]
+      ],
+      "desc": "Archivos dañados, repetidos o sin carga."
     },
-    "strava_api_note": "Si la app tiene activada la conexión con Strava, ve a Más → Importación → «Connect with Strava». Las actividades nuevas llegan solas, pero por reglas de Strava se guardan solo 7 días: para conservarlas en tu historial, sube también su archivo o la exportación de tu cuenta (la app no las duplica)."
+    "strava_api_note": "Si la app tiene activada la conexión con Strava, ve a Más → Importación → «Connect with Strava». Las actividades nuevas llegan solas, pero por reglas de Strava se guardan solo 7 días: para conservarlas en tu historial, sube también su archivo o la exportación de tu cuenta (la app no las duplica).",
+    "ask": "¿En qué te ayudamos?",
+    "back": "Todas las guías",
+    "others": "Otras guías",
+    "stepN": "Paso {{n}}",
+    "groups": {
+      "start": "Empezar",
+      "train": "Entrenar",
+      "health": "Alimentación y salud",
+      "help": "Si algo falla"
+    },
+    "goal": {
+      "title": "Crear una meta",
+      "desc": "Tu carrera, reto o evento, y cómo vas para lograrlo.",
+      "steps": [
+        "Ve a «Metas» y toca «Nueva meta».",
+        "Elige si es una salida única (un día) o por etapas (varios días seguidos).",
+        "Escribe el nombre, el deporte, la fecha, la distancia y el desnivel. En las carreras por etapas, los datos de cada etapa.",
+        "Elige si es tu meta principal o secundaria, y si quieres solo terminar o tienes un tiempo objetivo.",
+        "Si quieres, sube la ruta en GPX. Guarda.",
+        "Listo: verás el diagnóstico (vas bien, justo o atrasado) y el plan se arma solo hasta la fecha."
+      ],
+      "cta": "Crear una meta"
+    },
+    "plan": {
+      "title": "Tu plan de entrenamiento",
+      "desc": "Qué hacer cada día y cómo se ajusta solo.",
+      "steps": [
+        "El plan se arma solo con tus metas, tu historial y tu tiempo disponible. Lo ves en «Plan».",
+        "Arriba está la semana: toca un día de la tira para ir a sus sesiones. El ícono te dice si fue descanso, si ya la hiciste o si es una salida larga.",
+        "Cada sesión dice qué hacer, cuánto tiempo y a qué intensidad (zona, pulso o esfuerzo de 1 a 10). Tócala para ver el detalle y por qué está en el plan.",
+        "Sube tus actividades: cada sesión queda como hecha, parcial, más dura o no hecha, y las semanas siguientes se ajustan.",
+        "Si una semana fue muy dura, el plan pone días suaves; las sesiones que no hiciste no se recuperan doblando.",
+        "Cada cambio queda explicado al final, en «Cambios del plan»."
+      ],
+      "cta": "Ver mi plan"
+    },
+    "availability": {
+      "title": "Tu tiempo disponible",
+      "desc": "Cuántos minutos puedes entrenar cada día.",
+      "steps": [
+        "En «Plan», toca «Tu tiempo disponible».",
+        "Escribe los minutos que puedes entrenar cada día. Pon 0 los días que no entrenas.",
+        "Elige el día de tu salida larga (normalmente sábado o domingo).",
+        "Guarda: el plan se ajusta y nunca te pedirá más tiempo del que tienes."
+      ],
+      "cta": "Cambiar mi tiempo"
+    },
+    "pause": {
+      "title": "Registrar una pausa",
+      "desc": "Enfermedad, lesión, viaje o vacaciones.",
+      "steps": [
+        "En «Plan» (al final) o en «Temporada», toca «Registrar una pausa».",
+        "Elige el tipo: enfermedad, lesión, viaje, vacaciones u otra.",
+        "Pon desde cuándo y hasta cuándo. Si no sabes cuándo termina, deja la fecha final vacía.",
+        "Si es un viaje o vacaciones, di si podrás entrenar, qué tendrás a mano (bici, correr, gimnasio o piscina) y cuántos minutos al día.",
+        "Guarda: toda la temporada se reajusta. Al volver de una enfermedad o lesión, el plan sube poco a poco."
+      ],
+      "cta": "Registrar una pausa"
+    },
+    "season": {
+      "title": "Tu temporada",
+      "desc": "Tus metas en el calendario y si caben bien.",
+      "steps": [
+        "Ve a «Más» → «Temporada».",
+        "Cada meta tiene su franja de colores: preparación, disminución de carga previa, el evento y la recuperación.",
+        "Las pausas aparecen en rojo sobre el calendario.",
+        "Si dos metas quedan muy cerca, verás un aviso con alternativas (por ejemplo, usar la secundaria como entrenamiento)."
+      ],
+      "cta": "Ver mi temporada"
+    },
+    "nutrition": {
+      "title": "Alimentación y menú",
+      "desc": "Calorías de cada día y menús hechos con IA.",
+      "steps": [
+        "Ve a «Más» → «Alimentación» y llena tu perfil: objetivo, tipo de alimentación, alergias y presupuesto.",
+        "Elige un día de la semana: verás sus calorías, la mezcla de proteína, carbohidratos y grasa, y qué comer antes, durante y después de entrenar.",
+        "Toca «Generar menú de la semana». La IA arma las comidas con lo que escribiste (nunca con tus actividades ni tus exámenes).",
+        "¿No te gusta un plato? Toca «Otra opción» en esa comida.",
+        "Abajo está la lista de mercado: ve marcando lo que compras."
+      ],
+      "cta": "Ir a Alimentación"
+    },
+    "labs": {
+      "title": "Tus exámenes",
+      "desc": "Registra resultados y mira cómo cambian.",
+      "steps": [
+        "En «Perfil», da el permiso de datos de salud (se guardan cifrados).",
+        "Ve a «Más» → «Exámenes».",
+        "Elige el examen, la fecha y el resultado. Si tu reporte trae el rango del laboratorio, escríbelo.",
+        "Verás si está por debajo, dentro o por encima del rango, y su gráfica en el tiempo. La app no interpreta: si algo te preocupa, habla con tu médico."
+      ],
+      "cta": "Ir a Exámenes"
+    },
+    "reading": {
+      "title": "Leer tus números",
+      "desc": "Qué significan los semáforos de Inicio.",
+      "steps": [
+        "En Inicio, cada indicador tiene un semáforo: verde (bien), amarillo (atención) o rojo (alerta), con una frase que dice qué hacer.",
+        "La escala de colores muestra dónde estás; en la forma, la marca «Mejor» es tu mejor forma registrada.",
+        "La tarjeta «Tu meta» compara tu forma de hoy con la recomendada para el evento.",
+        "¿Dudas con un término? Toca «¿Qué es?» en cada tarjeta o ve a «¿Qué significa?»."
+      ],
+      "cta": "Ver ¿Qué significa?"
+    }
   },
   "settingsExtra": {
     "demo": "Datos de prueba",

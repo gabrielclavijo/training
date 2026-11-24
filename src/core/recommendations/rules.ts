@@ -124,7 +124,7 @@ const rules: Rule[] = [
   },
 
   // Datos que faltan para que las zonas sean tuyas
-  (c) => (c.hasActivities && !c.hasThreshold ? { key: 'missing_threshold', severity: 'low', params: {}, link: { to: '/guias', label: 'guides' } } : null),
+  (c) => (c.hasActivities && !c.hasThreshold ? { key: 'missing_threshold', severity: 'low', params: {}, link: { to: '/ayuda?tema=numeros', label: 'guides' } } : null),
   (c) => (c.hasActivities && !c.hasHrMax && c.hasThreshold ? { key: 'missing_hrmax', severity: 'low', params: {}, link: { to: '/perfil', label: 'profile' } } : null),
 ]
 

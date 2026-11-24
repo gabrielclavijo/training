@@ -13,7 +13,7 @@ import { useFitness, useGoals } from '../../data/hooks'
 import { ActivityRow } from '../activities/ActivitiesPage'
 import { TodayCard } from '../plan/TodayCard'
 import { usePlan } from '../plan/usePlan'
-import { Icon, type IconName } from '../../components/ui/Icon'
+import { Icon, type IconName, TitleIcon } from '../../components/ui/Icon'
 import { RecommendationsCard } from '../recommendations/RecommendationsCard'
 
 const dayLabel = (d: string) => formatDate(`${d}T12:00:00Z`).slice(0, 5)
@@ -29,8 +29,18 @@ export function HomePage() {
   const { t } = useTranslation()
   const { loaded, overview, isLoading, error, today } = useFitness()
 
-  if (isLoading) return <Page title={t('nav.home')}><Spinner full /></Page>
-  if (error) return <Page title={t('nav.home')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
+  if (isLoading)
+    return (
+      <Page title={t('nav.home')}>
+        <Spinner full />
+      </Page>
+    )
+  if (error)
+    return (
+      <Page title={t('nav.home')}>
+        <Alert kind="error">{t('errors.generic')}</Alert>
+      </Page>
+    )
 
   const pending = loaded?.filter((l) => l.load.method === 'none' && l.day >= daysAgo(today, 41)) ?? []
 
@@ -46,9 +56,14 @@ export function HomePage() {
 
       <RecommendationsCard />
 
-
       {!loaded || loaded.length === 0 ? (
-        <EmptyState icon="activity" title={t('empty.activities.title')} body={t('empty.activities.body')} actionLabel={t('empty.activities.action')} actionTo="/subir" />
+        <EmptyState
+          icon="activity"
+          title={t('empty.activities.title')}
+          body={t('empty.activities.body')}
+          actionLabel={t('empty.activities.action')}
+          actionTo="/subir"
+        />
       ) : (
         <>
           {pending.length > 0 && (
@@ -102,7 +117,11 @@ function FitnessCards() {
           value={s.ctl}
           status={best}
           verdict={t(`fitness.verdict.${best.verdict}`)}
-          detail={best.bestDay && best.best >= 10 ? t('fitness.vsBest', { pct: best.pct, best: formatNumber(best.best), date: formatDate(`${best.bestDay}T12:00:00Z`) }) : undefined}
+          detail={
+            best.bestDay && best.best >= 10
+              ? t('fitness.vsBest', { pct: best.pct, best: formatNumber(best.best), date: formatDate(`${best.bestDay}T12:00:00Z`) })
+              : undefined
+          }
           gaugeLabel={t('fitness.gaugeFitness', { value: formatNumber(s.ctl), pct: best.pct, best: formatNumber(best.best) })}
           gaugeTicks={[{ value: 100, label: t('fitness.bestTick') }]}
           help={t('fitness.ctlHelp')}
@@ -215,7 +234,12 @@ function GoalOverview() {
           <Progress
             pct={pct}
             level={level ?? 'good'}
-            label={t('fitness.goalProgress', { current: formatNumber(x.currentCtl), target: formatNumber(x.targetCtl), pct, projected: formatNumber(x.projectedCtl) })}
+            label={t('fitness.goalProgress', {
+              current: formatNumber(x.currentCtl),
+              target: formatNumber(x.targetCtl),
+              pct,
+              projected: formatNumber(x.projectedCtl),
+            })}
             marks={[{ pct: projPct, label: t('fitness.goalFormProjected') }]}
           />
           {d?.estimate && d.targetTimeS !== null && (
@@ -260,7 +284,11 @@ function FitnessHero({ state, ctl, atl, tsb }: { state: string; ctl: number; atl
         <p className="hero-sub">{t('fitness.heroSummary', { ctl: formatNumber(ctl), atl: formatNumber(atl), tsb: formatNumber(tsb) })}</p>
       </div>
       {pct !== null && week && (
-        <Ring pct={pct} label={t('fitness.heroRingLabel', { pct, done: formatNumber(done), planned: formatNumber(week.targetLoad) })} caption={t('fitness.heroWeekShort')} />
+        <Ring
+          pct={pct}
+          label={t('fitness.heroRingLabel', { pct, done: formatNumber(done), planned: formatNumber(week.targetLoad) })}
+          caption={t('fitness.heroWeekShort')}
+        />
       )}
     </div>
   )
@@ -400,7 +428,10 @@ function WeeklyLoad() {
   const change = lastComplete.changePct !== null ? ` (${lastComplete.changePct > 0 ? '+' : ''}${formatNumber(lastComplete.changePct)} %)` : ''
   return (
     <section className="card" aria-labelledby="weekly-h">
-      <h2 id="weekly-h">{t('fitness.weeklyLoad')}</h2>
+      <h2 id="weekly-h" className="card-title-icon">
+        <TitleIcon name="chart" />
+        {t('fitness.weeklyLoad')}
+      </h2>
       <p className="muted">{t('fitness.weeklyLoadHelp')}</p>
       {jump && (
         <Alert kind="warning">

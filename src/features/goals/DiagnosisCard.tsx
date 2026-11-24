@@ -1,3 +1,4 @@
+import { TitleIcon } from '../../components/ui/Icon'
 import { useTranslation } from 'react-i18next'
 import { formatClock, formatNumber } from '../../core/units'
 import { usePlan } from '../plan/usePlan'
@@ -14,7 +15,10 @@ export function DiagnosisCard({ goalId }: { goalId: string }) {
   if (x.status === 'past') return null
   return (
     <section className={`card diagnosis diagnosis-${x.status}`} aria-labelledby="diag-h">
-      <h2 id="diag-h">{t('diagnosis.title')}</h2>
+      <h2 id="diag-h" className="card-title-icon">
+        <TitleIcon name="gauge" />
+        {t('diagnosis.title')}
+      </h2>
       <p className="big-text">
         <span aria-hidden="true">{ICON[x.status]} </span>
         <strong>{t(`diagnosis.status.${x.status}`)}</strong>

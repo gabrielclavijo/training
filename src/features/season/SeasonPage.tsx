@@ -1,3 +1,4 @@
+import { TitleIcon } from '../../components/ui/Icon'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -22,8 +23,18 @@ export function SeasonPage() {
   const pauses = usePauses()
   const today = localDayKey(new Date())
 
-  if (goals.isLoading) return <Page title={t('season.title')}><Spinner full /></Page>
-  if (goals.error) return <Page title={t('season.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
+  if (goals.isLoading)
+    return (
+      <Page title={t('season.title')}>
+        <Spinner full />
+      </Page>
+    )
+  if (goals.error)
+    return (
+      <Page title={t('season.title')}>
+        <Alert kind="error">{t('errors.generic')}</Alert>
+      </Page>
+    )
 
   const active = (goals.data ?? []).filter((g) => g.status === 'active')
   if (active.length === 0) {
@@ -47,7 +58,12 @@ export function SeasonPage() {
       {season.warnings.map((w) => (
         <Alert key={w.goalId + w.kind} kind="warning">
           {w.kind === 'overlap'
-            ? t('season.warningOverlap', { goal: byId.get(w.goalId)?.name, previous: byId.get(w.previousGoalId)?.name, days: w.daysBetween, recovery: w.recoveryDays })
+            ? t('season.warningOverlap', {
+                goal: byId.get(w.goalId)?.name,
+                previous: byId.get(w.previousGoalId)?.name,
+                days: w.daysBetween,
+                recovery: w.recoveryDays,
+              })
             : t('season.warningTight', { goal: byId.get(w.goalId)?.name, previous: byId.get(w.previousGoalId)?.name })}
           <br />
           <strong>{t('season.suggestionsTitle')}</strong>
@@ -71,9 +87,15 @@ export function SeasonPage() {
             {b.kind === 'event' ? '★' : ''}
           </div>
         ))}
-        {(pauses.data ?? []).filter((p) => p.startsOn >= today).map((p) => (
-          <div key={p.id} className="tl-pause" style={{ left: `${pct(p.startsOn)}%`, width: `${Math.max(0.8, pct(p.endsOn ?? p.startsOn) - pct(p.startsOn))}%` }} />
-        ))}
+        {(pauses.data ?? [])
+          .filter((p) => p.startsOn >= today)
+          .map((p) => (
+            <div
+              key={p.id}
+              className="tl-pause"
+              style={{ left: `${pct(p.startsOn)}%`, width: `${Math.max(0.8, pct(p.endsOn ?? p.startsOn) - pct(p.startsOn))}%` }}
+            />
+          ))}
       </div>
       <ul className="legend-list" aria-hidden="true">
         {(['build', 'taper', 'event', 'recovery'] as BlockKind[]).map((k) => (
@@ -90,20 +112,38 @@ export function SeasonPage() {
       <ol className="season-list">
         {season.goals.map((g) => (
           <li key={g.id} className="card">
-            <h3>
-              <Link to={`/metas/${g.id}`}>{g.name}</Link>{' '}
-              <span className="muted">({g.priority === 'primary' ? t('goals.primary') : t('goals.secondary')})</span>
+            <h3 className="card-title-icon">
+              <TitleIcon name="flag" tone={g.priority === 'primary' ? undefined : 'soft'} />
+              <span>
+                <Link to={`/metas/${g.id}`}>{g.name}</Link>{' '}
+                <span className="muted">({g.priority === 'primary' ? t('goals.primary') : t('goals.secondary')})</span>
+              </span>
             </h3>
-            <ul className="plain-list">
+            <ol className="season-steps">
               {season.blocks
                 .filter((b) => b.goalId === g.id)
-                .map((b) => (
-                  <li key={b.kind}>
-                    <span aria-hidden="true">{BLOCK_ICON[b.kind]} </span>
-                    <strong>{t(`season.blocks.${b.kind}`)}</strong>: {t('season.from', { from: fmt(b.startsOn), to: fmt(b.endsOn) })} ({t('season.days', { count: daysBetween(b.startsOn, b.endsOn) + 1 })})
-                  </li>
-                ))}
-            </ul>
+                .map((b, i, arr) => {
+                  const days = daysBetween(b.startsOn, b.endsOn) + 1
+                  const maxDays = Math.max(...arr.map((x) => daysBetween(x.startsOn, x.endsOn) + 1))
+                  return (
+                    <li key={b.kind} style={{ animationDelay: `${i * 80}ms` }}>
+                      <span className={`season-dot tl-${b.kind}`} aria-hidden="true">
+                        {BLOCK_ICON[b.kind]}
+                      </span>
+                      <div className="season-step-body">
+                        <div className="row-between">
+                          <strong>{t(`season.blocks.${b.kind}`)}</strong>
+                          <span className="chip">{t('season.days', { count: days })}</span>
+                        </div>
+                        <span className="muted">{t('season.from', { from: fmt(b.startsOn), to: fmt(b.endsOn) })}</span>
+                        <span className="season-len" aria-hidden="true">
+                          <span className={`tl-${b.kind}`} style={{ width: `${Math.max(4, (days / maxDays) * 100)}%` }} />
+                        </span>
+                      </div>
+                    </li>
+                  )
+                })}
+            </ol>
           </li>
         ))}
       </ol>
@@ -154,7 +194,10 @@ function PausesSection() {
 
   return (
     <section className="card" aria-labelledby="pauses-h">
-      <h2 id="pauses-h">{t('season.pauses')}</h2>
+      <h2 id="pauses-h" className="card-title-icon">
+        <TitleIcon name="moon" tone="soft" />
+        {t('season.pauses')}
+      </h2>
       <p className="muted">{t('season.pausePhase2')}</p>
       <ul className="plain-list">
         {(pauses.data ?? []).map((p) => (

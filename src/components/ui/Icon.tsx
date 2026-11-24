@@ -51,6 +51,7 @@ const paths = {
   sparkles: 'M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z',
   coins: 'M8 10a5 3 0 1 0 0-.01M3 10v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4m-2-3.5C12 5.6 13.4 5 15 5c2.8 0 5 1.3 5 3v4c0 1.5-1.6 2.7-4 3',
   target: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm0-4a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z',
+  scale: 'M5 21h14a1 1 0 0 0 1-1V8a5 5 0 0 0-5-5H9a5 5 0 0 0-5 5v12a1 1 0 0 0 1 1zm7-12 2-3M8 9a4 4 0 0 1 8 0',
   empty: 'M4 7h16l-2 13H6zM8 7V5a4 4 0 0 1 8 0v2',
 } as const
 
@@ -70,5 +71,14 @@ export function Icon({ name }: { name: IconName }) {
     >
       <path d={paths[name]} />
     </svg>
+  )
+}
+
+/** Mosaico de ícono para títulos de tarjetas. */
+export function TitleIcon({ name, tone }: { name: IconName; tone?: 'coral' | 'sky' | 'soft' }) {
+  return (
+    <span className={`icon-tile${tone ? ` icon-tile-${tone}` : ''}`} aria-hidden="true">
+      <Icon name={name} />
+    </span>
   )
 }

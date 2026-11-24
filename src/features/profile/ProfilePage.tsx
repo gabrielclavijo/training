@@ -7,7 +7,7 @@ import { ageOn, formatDate, localDayKey } from '../../core/dates'
 import { formatPower, formatWeight } from '../../core/units'
 import { keys, useAvatar, usePhysiology, useProfile, useRepoMutation, useWeights } from '../../data/hooks'
 import { Avatar } from '../../components/ui/Avatar'
-import { Icon } from '../../components/ui/Icon'
+import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { AvatarError, prepareAvatar } from './avatarImage'
 import { useAuth } from '../auth/AuthProvider'
 import { latestWeight, physiologyOn } from '../../data/analysis'
@@ -21,20 +21,32 @@ export function ProfilePage() {
     <Page title={t('profile.title')}>
       <ProfileHeader />
       <section className="card" aria-labelledby="basics-h">
-        <h2 id="basics-h">{t('profile.basics')}</h2>
+        <h2 id="basics-h" className="card-title-icon">
+          <TitleIcon name="user" />
+          {t('profile.basics')}
+        </h2>
         <BasicsForm />
       </section>
       <section className="card" aria-labelledby="weight-h">
-        <h2 id="weight-h">{t('profile.weight')}</h2>
+        <h2 id="weight-h" className="card-title-icon">
+          <TitleIcon name="scale" tone="sky" />
+          {t('profile.weight')}
+        </h2>
         <WeightSection />
       </section>
       <section className="card" aria-labelledby="phys-h">
-        <h2 id="phys-h">{t('profile.physiology')}</h2>
+        <h2 id="phys-h" className="card-title-icon">
+          <TitleIcon name="heart" tone="coral" />
+          {t('profile.physiology')}
+        </h2>
         <PhysiologyForm />
         <PhysiologyHistory />
       </section>
       <section className="card" aria-labelledby="health-h">
-        <h2 id="health-h">{t('profile.health')}</h2>
+        <h2 id="health-h" className="card-title-icon">
+          <TitleIcon name="shield" tone="soft" />
+          {t('profile.health')}
+        </h2>
         <HealthSection />
       </section>
       <section className="card" aria-labelledby="nutrition-h">
@@ -53,7 +65,10 @@ function AccountSection() {
   const { user, signOut, mode } = useAuth()
   return (
     <section className="card" aria-labelledby="account-h">
-      <h2 id="account-h">{t('settings.account')}</h2>
+      <h2 id="account-h" className="card-title-icon">
+        <TitleIcon name="logout" tone="soft" />
+        {t('settings.account')}
+      </h2>
       {mode === 'local' ? <p className="muted">{t('local.banner')}</p> : user?.email && <p className="muted">{user.email}</p>}
       <button type="button" className="btn btn-secondary" onClick={() => void signOut()}>
         <Icon name="logout" /> {t('settings.signOut')}
@@ -121,7 +136,15 @@ function PhotoControls() {
       <p id="photo-help" className="hint muted">
         {t('profile.photoHelp')}
       </p>
-      <input ref={input} type="file" accept="image/*" className="visually-hidden" tabIndex={-1} aria-hidden="true" onChange={(e) => onFile(e.target.files?.[0])} />
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        className="visually-hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(e) => onFile(e.target.files?.[0])}
+      />
     </div>
   )
 }
@@ -137,11 +160,9 @@ function ProfileHeader() {
   const today = localDayKey(new Date())
   const kg = weights.data ? latestWeight(weights.data) : null
   const ph = phys.data ? physiologyOn(phys.data, today) : null
-  const facts = [
-    p.birthDate && t('profile.ageYears', { count: ageOn(p.birthDate, today) }),
-    p.heightCm && `${p.heightCm} cm`,
-    kg && formatWeight(kg),
-  ].filter(Boolean)
+  const facts = [p.birthDate && t('profile.ageYears', { count: ageOn(p.birthDate, today) }), p.heightCm && `${p.heightCm} cm`, kg && formatWeight(kg)].filter(
+    Boolean,
+  )
   return (
     <section className="card profile-head" aria-label={p.displayName ?? t('profile.title')}>
       <div className="row" style={{ flexWrap: 'nowrap' }}>
@@ -161,9 +182,7 @@ function ProfileHeader() {
             <span className="z4" />
             <span className="z5" />
           </div>
-          <p className="mono">
-            {ph.hrRest ? t('profile.hrSpectrumRest', { max: ph.hrMax, rest: ph.hrRest }) : t('profile.hrSpectrum', { max: ph.hrMax })}
-          </p>
+          <p className="mono">{ph.hrRest ? t('profile.hrSpectrumRest', { max: ph.hrMax, rest: ph.hrRest }) : t('profile.hrSpectrum', { max: ph.hrMax })}</p>
         </div>
       )}
     </section>
@@ -176,7 +195,12 @@ function PhysiologyHistory() {
   const repo = useRepo()
   const del = useRepoMutation((id: string) => repo.deletePhysiology(id), [keys.physiology])
   if (!phys.data) return null
-  if (phys.data.length === 0) return <p className="muted" style={{ marginTop: 'var(--space-4)' }}>{t('profile.noPhysiology')}</p>
+  if (phys.data.length === 0)
+    return (
+      <p className="muted" style={{ marginTop: 'var(--space-4)' }}>
+        {t('profile.noPhysiology')}
+      </p>
+    )
   return (
     <>
       <h3 style={{ marginTop: 'var(--space-5)' }}>{t('profile.physiologyHistory')}</h3>

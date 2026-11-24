@@ -1,3 +1,4 @@
+import { TitleIcon } from '../../components/ui/Icon'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { addDays } from '../../core/dates'
@@ -14,7 +15,10 @@ export function TodayCard() {
   const tomorrow = plan.sessions.filter((s) => s.date === addDays(today, 1))
   return (
     <section className="card" aria-labelledby="today-h">
-      <h2 id="today-h">{t('plan.today')}</h2>
+      <h2 id="today-h" className="card-title-icon">
+        <TitleIcon name="calendar" />
+        {t('plan.today')}
+      </h2>
       {todays.length === 0 ? <p>{t('plan.todayRest')}</p> : todays.map((s) => <SessionCard key={s.id} session={s} match={matches.get(s.id)} zones={zones} />)}
       {tomorrow.length > 0 && (
         <>

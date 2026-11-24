@@ -1,3 +1,4 @@
+import { TitleIcon } from '../../components/ui/Icon'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BarChart } from '../../components/ui/Charts'
@@ -30,12 +31,28 @@ export function MetricsPage() {
   const { loaded, isLoading, error } = useFitness()
   const [sport, setSport] = useState<Sport>('cycling')
 
-  if (isLoading) return <Page title={t('metrics.title')}><Spinner full /></Page>
-  if (error) return <Page title={t('metrics.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
+  if (isLoading)
+    return (
+      <Page title={t('metrics.title')}>
+        <Spinner full />
+      </Page>
+    )
+  if (error)
+    return (
+      <Page title={t('metrics.title')}>
+        <Alert kind="error">{t('errors.generic')}</Alert>
+      </Page>
+    )
   if (!loaded || loaded.length === 0) {
     return (
       <Page title={t('metrics.title')}>
-        <EmptyState icon="chart" title={t('empty.activities.title')} body={t('empty.activities.body')} actionLabel={t('empty.activities.action')} actionTo="/subir" />
+        <EmptyState
+          icon="chart"
+          title={t('empty.activities.title')}
+          body={t('empty.activities.body')}
+          actionLabel={t('empty.activities.action')}
+          actionTo="/subir"
+        />
       </Page>
     )
   }
@@ -89,7 +106,8 @@ function SportPanel({ sport }: { sport: Sport }) {
   // Rellena periodos sin actividad para que la gráfica no engañe
   const filled: typeof periods = []
   if (unit === 'week') {
-    for (let w = from12w; w <= today; w = addDays(w, 7)) filled.push(periods.find((p) => p.period === w) ?? { period: w, count: 0, durationS: 0, distanceM: 0, elevationM: 0 })
+    for (let w = from12w; w <= today; w = addDays(w, 7))
+      filled.push(periods.find((p) => p.period === w) ?? { period: w, count: 0, durationS: 0, distanceM: 0, elevationM: 0 })
   } else {
     const start = new Date(`${from}T12:00:00Z`)
     for (let i = 0; i < 12; i++) {
@@ -98,7 +116,10 @@ function SportPanel({ sport }: { sport: Sport }) {
       filled.push(periods.find((p) => p.period === key) ?? { period: key, count: 0, durationS: 0, distanceM: 0, elevationM: 0 })
     }
   }
-  const label = (p: string) => (unit === 'week' ? formatDate(`${p}T12:00:00Z`).slice(0, 5) : new Intl.DateTimeFormat('es-CO', { month: 'short', year: '2-digit', timeZone: 'UTC' }).format(new Date(`${p}-15T12:00:00Z`)))
+  const label = (p: string) =>
+    unit === 'week'
+      ? formatDate(`${p}T12:00:00Z`).slice(0, 5)
+      : new Intl.DateTimeFormat('es-CO', { month: 'short', year: '2-digit', timeZone: 'UTC' }).format(new Date(`${p}-15T12:00:00Z`))
 
   if (summary.count === 0 && filled.every((p) => p.count === 0)) {
     return <p className="muted card">{t('metrics.noActivities')}</p>
@@ -121,7 +142,8 @@ function SportPanel({ sport }: { sport: Sport }) {
     } else items.push([t('metrics.avgPower'), t('metrics.noPower')])
   }
   if (sport === 'running' && summary.avgSpeedMs) items.push([t('metrics.pacePerKm'), formatPacePerKm(1000, 1000 / summary.avgSpeedMs), t('metrics.help.pace')])
-  if (sport === 'swimming' && summary.avgSpeedMs) items.push([t('metrics.pacePer100'), formatPacePer100m(100, 100 / summary.avgSpeedMs), t('metrics.help.pace')])
+  if (sport === 'swimming' && summary.avgSpeedMs)
+    items.push([t('metrics.pacePer100'), formatPacePer100m(100, 100 / summary.avgSpeedMs), t('metrics.help.pace')])
   if (summary.avgHr) items.push([t('metrics.avgHr'), formatHeartRate(summary.avgHr)])
 
   return (
@@ -156,7 +178,10 @@ function SportPanel({ sport }: { sport: Sport }) {
       </div>
 
       <section className="card" aria-labelledby="sum-h">
-        <h2 id="sum-h">{t('metrics.last12w')}</h2>
+        <h2 id="sum-h" className="card-title-icon">
+          <TitleIcon name="chart" />
+          {t('metrics.last12w')}
+        </h2>
         <dl className="stat-grid">
           {items.map(([k, v, help]) => (
             <div key={k}>

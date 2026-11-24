@@ -1,3 +1,4 @@
+import { TitleIcon } from '../../components/ui/Icon'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -17,8 +18,18 @@ export function GoalDetailPage() {
   const navigate = useNavigate()
   const q = useQuery({ queryKey: ['goal', id], queryFn: () => repo.getGoal(id) })
 
-  if (q.isLoading) return <Page title={t('goals.title')}><Spinner full /></Page>
-  if (q.error) return <Page title={t('goals.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
+  if (q.isLoading)
+    return (
+      <Page title={t('goals.title')}>
+        <Spinner full />
+      </Page>
+    )
+  if (q.error)
+    return (
+      <Page title={t('goals.title')}>
+        <Alert kind="error">{t('errors.generic')}</Alert>
+      </Page>
+    )
   const g = q.data
   if (!g) {
     return (
@@ -91,7 +102,10 @@ export function GoalDetailPage() {
 
       {g.goalType === 'stage' && (
         <section className="card" aria-labelledby="stages-h">
-          <h2 id="stages-h">{t('goals.stages')}</h2>
+          <h2 id="stages-h" className="card-title-icon">
+            <TitleIcon name="route" tone="sky" />
+            {t('goals.stages')}
+          </h2>
           <div className="table-wrap" tabIndex={0} role="region" aria-label={t('fitness.seeTable')}>
             <table>
               <thead>

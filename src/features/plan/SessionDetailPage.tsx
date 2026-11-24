@@ -1,3 +1,4 @@
+import { TitleIcon } from '../../components/ui/Icon'
 import { Link, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../components/ui/EmptyState'
@@ -11,8 +12,18 @@ export function SessionDetailPage() {
   const { t } = useTranslation()
   const { derived, isLoading, error } = usePlan()
   const describe = useDescribeBlocks()
-  if (isLoading) return <Page title={t('plan.session')}><Spinner full /></Page>
-  if (error || !derived) return <Page title={t('plan.session')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
+  if (isLoading)
+    return (
+      <Page title={t('plan.session')}>
+        <Spinner full />
+      </Page>
+    )
+  if (error || !derived)
+    return (
+      <Page title={t('plan.session')}>
+        <Alert kind="error">{t('errors.generic')}</Alert>
+      </Page>
+    )
   const s = derived.plan.sessions.find((x) => x.id === id)
   if (!s) {
     return (
@@ -44,7 +55,10 @@ export function SessionDetailPage() {
       <LegalNotice />
       <ZonesNotice zones={derived.zones} />
       <section className="card" aria-labelledby="what-h">
-        <h2 id="what-h">{t('plan.whatToDo')}</h2>
+        <h2 id="what-h" className="card-title-icon">
+          <TitleIcon name="activity" />
+          {t('plan.whatToDo')}
+        </h2>
         <p>{t(`plan.kindHelp.${s.kind}`)}</p>
         <ol>
           {describe(s.blocks, derived.zones, s.sport).map((l, i) => (
@@ -53,10 +67,20 @@ export function SessionDetailPage() {
         </ol>
       </section>
       <section className="card" aria-labelledby="why-h">
-        <h2 id="why-h">{t('plan.why')}</h2>
-        {week && <p>{t(`plan.phase.${week.phase}`)}{goal ? ` · ${goal.name}` : ''}</p>}
+        <h2 id="why-h" className="card-title-icon">
+          <TitleIcon name="bulb" tone="sky" />
+          {t('plan.why')}
+        </h2>
+        {week && (
+          <p>
+            {t(`plan.phase.${week.phase}`)}
+            {goal ? ` · ${goal.name}` : ''}
+          </p>
+        )}
         {s.note && <p>{t(`plan.sessionNote.${s.note}`)}</p>}
-        {week?.notes.map((n) => <p key={n}>{t(`plan.notes.${n}`)}</p>)}
+        {week?.notes.map((n) => (
+          <p key={n}>{t(`plan.notes.${n}`)}</p>
+        ))}
       </section>
       <Link to="/plan">← {t('plan.title')}</Link>
     </Page>

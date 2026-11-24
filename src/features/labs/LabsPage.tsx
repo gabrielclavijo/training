@@ -1,3 +1,4 @@
+import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -30,13 +31,22 @@ export function LabsPage() {
       {consent.isLoading ? (
         <Spinner />
       ) : !consent.data ? (
-        <Alert kind="info">
-          {t('labs.needConsent')} <Link to="/perfil">{t('labs.giveConsent')}</Link>
-        </Alert>
+        <div className="empty-visual card">
+          <span className="ai-orb" aria-hidden="true">
+            <Icon name="lab" />
+          </span>
+          <p>{t('labs.needConsent')}</p>
+          <Link className="btn btn-primary" to="/perfil">
+            <Icon name="shield" /> {t('labs.giveConsent')}
+          </Link>
+        </div>
       ) : (
         <>
           <section className="card" aria-labelledby="addlab-h">
-            <h2 id="addlab-h">{t('labs.add')}</h2>
+            <h2 id="addlab-h" className="card-title-icon">
+              <TitleIcon name="lab" tone="sky" />
+              {t('labs.add')}
+            </h2>
             <AddLabForm />
           </section>
           {health.isLoading && <Spinner />}
@@ -98,9 +108,17 @@ function LabCard({ group, sex }: { group: LabGroup; sex: 'female' | 'male' | nul
         {[...group.results].reverse().map((r) => (
           <li key={r.id} className="row-between">
             <span>
-              {d(r.recordedOn!)}: <strong>{r.data.value} {r.data.unit ?? ''}</strong>
+              {d(r.recordedOn!)}:{' '}
+              <strong>
+                {r.data.value} {r.data.unit ?? ''}
+              </strong>
             </span>
-            <button type="button" className="btn-link" onClick={() => del.mutate(r.id)} aria-label={t('labs.deleteLabel', { name: group.name, date: d(r.recordedOn!) })}>
+            <button
+              type="button"
+              className="btn-link"
+              onClick={() => del.mutate(r.id)}
+              aria-label={t('labs.deleteLabel', { name: group.name, date: d(r.recordedOn!) })}
+            >
               {t('labs.delete')}
             </button>
           </li>
@@ -151,7 +169,10 @@ function AddLabForm() {
     if (key === OTHER && !custom.trim()) errs.custom = t('activities.required')
     const v = parseNum(value)
     if (v === null || Number.isNaN(v)) errs.value = t('activities.required')
-    for (const [k, s] of [['low', low], ['high', high]] as const) {
+    for (const [k, s] of [
+      ['low', low],
+      ['high', high],
+    ] as const) {
       const n = parseNum(s)
       if (n !== null && Number.isNaN(n)) errs[k] = t('activities.mustBePositive')
     }
@@ -178,7 +199,9 @@ function AddLabForm() {
         ))}
         <option value={OTHER}>{t('labs.other')}</option>
       </SelectField>
-      {key === OTHER && <TextField label={t('labs.customName')} value={custom} onChange={(e) => setCustom(e.target.value)} maxLength={100} error={errors.custom} />}
+      {key === OTHER && (
+        <TextField label={t('labs.customName')} value={custom} onChange={(e) => setCustom(e.target.value)} maxLength={100} error={errors.custom} />
+      )}
       <div className="field">
         <label htmlFor="lab-date">{t('labs.date')}</label>
         <input id="lab-date" type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} aria-invalid={errors.date ? true : undefined} />

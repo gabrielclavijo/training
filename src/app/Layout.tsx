@@ -27,10 +27,10 @@ export const SECONDARY: NavItem[] = [
   { to: '/metricas', label: 'nav.metrics', icon: 'chart' },
   { to: '/temporada', label: 'nav.season', icon: 'calendar' },
   { to: '/importacion', label: 'nav.import', icon: 'import' },
-  { to: '/guias', label: 'nav.guides', icon: 'book' },
+  { to: '/ayuda', label: 'nav.guides', icon: 'help' },
   { to: '/perfil', label: 'nav.profile', icon: 'user' },
   { to: '/ajustes', label: 'nav.settings', icon: 'settings' },
-  { to: '/glosario', label: 'nav.glossary', icon: 'help' },
+  { to: '/glosario', label: 'nav.glossary', icon: 'book' },
   { to: '/privacidad', label: 'nav.privacy', icon: 'shield' },
 ]
 

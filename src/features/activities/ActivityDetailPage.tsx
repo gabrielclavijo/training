@@ -1,3 +1,4 @@
+import { TitleIcon } from '../../components/ui/Icon'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -35,8 +36,18 @@ export function ActivityDetailPage() {
   const repo = useRepo()
   const q = useQuery({ queryKey: ['activity', id], queryFn: () => repo.getActivity(id) })
 
-  if (q.isLoading) return <Page title={t('activities.detail')}><Spinner full /></Page>
-  if (q.error) return <Page title={t('activities.detail')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
+  if (q.isLoading)
+    return (
+      <Page title={t('activities.detail')}>
+        <Spinner full />
+      </Page>
+    )
+  if (q.error)
+    return (
+      <Page title={t('activities.detail')}>
+        <Alert kind="error">{t('errors.generic')}</Alert>
+      </Page>
+    )
   if (!q.data) {
     // También es lo que ve alguien que intenta abrir la actividad de otra persona
     return (
@@ -109,7 +120,10 @@ function Detail({ activity: a, merges }: { activity: Activity; merges: MergeReco
       </section>
 
       <section className="card" aria-labelledby="load-h">
-        <h2 id="load-h">{t('activities.loadTitle')}</h2>
+        <h2 id="load-h" className="card-title-icon">
+          <TitleIcon name="bolt" tone="coral" />
+          {t('activities.loadTitle')}
+        </h2>
         <p className="big-number">{load.load !== null ? t('load.points', { value: formatNumber(load.load) }) : t('load.noLoad')}</p>
         <p>
           {t('activities.loadMethod')}: <LoadBadge method={load.method} confidence={load.confidence} />
@@ -149,7 +163,13 @@ function RpeForm({ activity }: { activity: Activity }) {
   return (
     <form onSubmit={onSubmit} noValidate style={{ marginTop: 'var(--space-4)' }}>
       {saved && <Alert kind="success">{t('common.saved')}</Alert>}
-      <RpeSelect value={rpe} onChange={(v) => { setRpe(v); setSaved(false) }} />
+      <RpeSelect
+        value={rpe}
+        onChange={(v) => {
+          setRpe(v)
+          setSaved(false)
+        }}
+      />
       <button type="submit" className="btn btn-secondary">
         {t('rpe.save')}
       </button>
@@ -158,9 +178,20 @@ function RpeForm({ activity }: { activity: Activity }) {
 }
 
 function sourceLabel(t: (k: string) => string, s: StoredSource) {
-  const kind = s.provider === 'demo' ? t('activities.sourceDemo') : s.format === 'manual' && s.originHint !== 'strava_export' ? t('activities.sourceManual') : t('activities.sourceFile')
+  const kind =
+    s.provider === 'demo'
+      ? t('activities.sourceDemo')
+      : s.format === 'manual' && s.originHint !== 'strava_export'
+        ? t('activities.sourceManual')
+        : t('activities.sourceFile')
   const origin =
-    s.originHint === 'strava_export' ? t('activities.originStrava') : s.originHint === 'garmin_export' ? t('activities.originGarmin') : s.originHint === 'device_file' ? t('activities.originDevice') : null
+    s.originHint === 'strava_export'
+      ? t('activities.originStrava')
+      : s.originHint === 'garmin_export'
+        ? t('activities.originGarmin')
+        : s.originHint === 'device_file'
+          ? t('activities.originDevice')
+          : null
   return `${kind} ${s.format !== 'manual' ? `.${s.format.toUpperCase()}` : ''}${origin ? ` (${origin})` : ''}`
 }
 
@@ -195,7 +226,10 @@ function SourcesSection({ activity: a, merges }: { activity: Activity; merges: M
   const activeMerges = merges.filter((m) => !m.undoneAt)
   return (
     <section className="card" aria-labelledby="sources-h">
-      <h2 id="sources-h">{t('activities.sourcesTitle')}</h2>
+      <h2 id="sources-h" className="card-title-icon">
+        <TitleIcon name="import" tone="soft" />
+        {t('activities.sourcesTitle')}
+      </h2>
       {a.sources.length > 1 && <p className="muted">{t('activities.sourcesHelp')}</p>}
       {done && <Alert kind="success">{t('activities.splitDone')}</Alert>}
       {error && <Alert kind="error">{t('errors.generic')}</Alert>}
@@ -266,12 +300,22 @@ function EditSection({ activity: a }: { activity: Activity }) {
   }
   return (
     <section className="card" aria-labelledby="edit-h">
-      <h2 id="edit-h">{t('activities.edit')}</h2>
+      <h2 id="edit-h" className="card-title-icon">
+        <TitleIcon name="settings" tone="soft" />
+        {t('activities.edit')}
+      </h2>
       <form onSubmit={onSubmit} noValidate>
         {saved && <Alert kind="success">{t('common.saved')}</Alert>}
         <TextField label={t('activities.titleField')} value={title} onChange={(e) => setTitle(e.target.value)} />
         <div className="grid-2">
-          <SelectField label={t('activities.sport')} value={sport} onChange={(e) => { setSport(e.target.value as Sport); setSub('') }}>
+          <SelectField
+            label={t('activities.sport')}
+            value={sport}
+            onChange={(e) => {
+              setSport(e.target.value as Sport)
+              setSub('')
+            }}
+          >
             {SPORTS.map((s) => (
               <option key={s} value={s}>
                 {t(`sports.${s}`)}

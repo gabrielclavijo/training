@@ -60,12 +60,12 @@ export function Progress({ pct, label, level = 'good', marks = [] }: { pct: numb
     return () => cancelAnimationFrame(id)
   }, [target])
   return (
-    <div className="progress" role="img" aria-label={label}>
-      <span className={`progress-fill progress-${level}`} style={{ width: `${shown}%` }} />
+    <div className="prog" role="img" aria-label={label}>
+      <span className={`prog-fill prog-${level}`} style={{ width: `${shown}%` }} />
       {marks.map((m) => (
         <span
           key={m.label}
-          className={`progress-mark${m.pct > 80 ? ' progress-mark-end' : m.pct < 20 ? ' progress-mark-start' : ''}`}
+          className={`prog-mark${m.pct > 80 ? ' prog-mark-end' : m.pct < 20 ? ' prog-mark-start' : ''}`}
           style={{ left: `${Math.min(100, Math.max(0, m.pct))}%` }}
           aria-hidden="true"
         >
