@@ -1,7 +1,17 @@
 import type { MatchDeltas, MatchedBy, MergedActivity } from '../core/dedupe'
 import { pairKey } from '../core/dedupe'
 import type { Repo } from './repo'
+import type { PlanChange } from '../core/planner/adapt'
+import type { WeekDraft } from '../core/planner/plan'
+import { weekStart } from '../core/dates'
 import type {
+  Availability,
+  CurrentPlan,
+  InboxItem,
+  PlanChangeRecord,
+  StoredPlan,
+  StoredSession,
+  StoredWeek,
   Activity,
   Connection,
   Consent,
@@ -49,6 +59,11 @@ interface State {
   items: ImportItem[]
   goals: Goal[]
   pauses: Pause[]
+  availability: Availability | null
+  plans: (StoredPlan & { isDemo: boolean })[]
+  weeks: (StoredWeek & { isDemo: boolean })[]
+  sessions: (StoredSession & { isDemo: boolean })[]
+  changes: (PlanChangeRecord & { isDemo: boolean })[]
 }
 
 const now = () => new Date().toISOString()
@@ -89,6 +104,11 @@ function initial(): State {
     items: [],
     goals: [],
     pauses: [],
+    availability: null,
+    plans: [],
+    weeks: [],
+    sessions: [],
+    changes: [],
   }
 }
 
@@ -356,6 +376,9 @@ export class MemoryRepo implements Repo {
   }
   async deleteGoal(id: string) {
     this.s.goals = this.s.goals.filter((g) => g.id !== id)
+    // Igual que la llave foránea en Supabase: las sesiones quedan sin meta
+    for (const x of this.s.sessions) if (x.goalId === id) x.goalId = null
+    for (const w of this.s.weeks) if (w.goalId === id) w.goalId = null
     await this.done(null)
   }
   async listPauses() {
@@ -372,11 +395,76 @@ export class MemoryRepo implements Repo {
     await this.done(null)
   }
 
+  // ---- Plan
+  async getAvailability() {
+    return clone(this.s.availability)
+  }
+  async saveAvailability(a: Availability) {
+    this.s.availability = a
+    await this.done(null)
+  }
+  async getCurrentPlan(): Promise<CurrentPlan> {
+    // La última versión guardada (el orden de inserción desempata horas iguales)
+    const plan = this.s.plans[this.s.plans.length - 1] ?? null
+    return clone({
+      plan,
+      weeks: [...this.s.weeks].sort((a, b) => a.weekStart.localeCompare(b.weekStart)),
+      sessions: [...this.s.sessions].sort((a, b) => a.date.localeCompare(b.date)),
+    })
+  }
+  async savePlan(args: { reason: PlanChange['reason']; inputsHash: string; weeks: WeekDraft[]; fromDay: string; changes: PlanChange[]; isDemo: boolean }) {
+    const id = uid()
+    const createdAt = now()
+    this.s.plans.push({ id, reason: args.reason, inputsHash: args.inputsHash, createdAt, isDemo: args.isDemo })
+    const ws = weekStart(args.fromDay)
+    this.s.weeks = this.s.weeks.filter((w) => w.weekStart < ws)
+    this.s.sessions = this.s.sessions.filter((x) => x.date < args.fromDay)
+    for (const w of args.weeks) {
+      this.s.weeks.push({ planId: id, weekStart: w.weekStart, phase: w.phase, goalId: w.goalId, targetLoad: w.targetLoad, notes: w.notes, isDemo: args.isDemo })
+      for (const x of w.sessions) {
+        if (x.date < args.fromDay) continue
+        this.s.sessions.push({
+          id: uid(), planId: id, goalId: x.goalId, date: x.date, sport: x.sport, kind: x.kind, durationMin: x.durationMin,
+          plannedLoad: x.load, blocks: x.blocks, phase: x.phase, note: x.note ?? null, isDemo: args.isDemo,
+        })
+      }
+    }
+    for (const c of args.changes) this.s.changes.push({ id: uid(), planId: id, reason: c.reason, params: c.params, createdAt, isDemo: args.isDemo })
+    return this.done(id)
+  }
+  async listPlanChanges(limit = 30) {
+    return clone([...this.s.changes].reverse().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit))
+  }
+
+  // ---- Strava (no disponible en modo local)
+  async listInbox(): Promise<InboxItem[]> {
+    return []
+  }
+  async deleteInbox() {}
+  async deleteSourceByExternalId(externalId: string) {
+    const src = this.s.sources.find((x) => x.externalId === externalId)
+    if (!src) return
+    this.s.sources = this.s.sources.filter((x) => x.id !== src.id)
+    if (!this.s.sources.some((x) => x.activityId === src.activityId)) await this.deleteActivity(src.activityId)
+    await this.done(null)
+  }
+  async stravaConnect(): Promise<void> {
+    throw new Error('strava_requires_account')
+  }
+  async stravaDisconnect() {}
+  async stravaSync() {
+    return { queued: 0 }
+  }
+
   // ---- Demo y cuenta
   async clearDemoData() {
+    this.s.plans = this.s.plans.filter((p) => !p.isDemo)
+    this.s.weeks = this.s.weeks.filter((p) => !p.isDemo)
+    this.s.sessions = this.s.sessions.filter((p) => !p.isDemo)
+    this.s.changes = this.s.changes.filter((p) => !p.isDemo)
     const demoActs = new Set(this.s.activities.filter((a) => a.isDemo).map((a) => a.id))
     for (const id of demoActs) await this.deleteActivity(id)
-    this.s.goals = this.s.goals.filter((g) => !g.isDemo)
+    for (const g of this.s.goals.filter((x) => x.isDemo)) await this.deleteGoal(g.id)
     this.s.pauses = this.s.pauses.filter((p) => !p.isDemo)
     this.s.physiology = this.s.physiology.filter((p) => !p.isDemo)
     this.s.weights = this.s.weights.filter((w) => !w.isDemo)

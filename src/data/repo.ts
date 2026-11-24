@@ -1,5 +1,11 @@
 import type { MatchDeltas, MatchedBy, MergedActivity } from '../core/dedupe'
+import type { WeekDraft } from '../core/planner/plan'
+import type { PlanChange } from '../core/planner/adapt'
 import type {
+  Availability,
+  CurrentPlan,
+  InboxItem,
+  PlanChangeRecord,
   Activity,
   Connection,
   Consent,
@@ -91,6 +97,22 @@ export interface Repo {
   listPauses(): Promise<Pause[]>
   savePause(p: Omit<Pause, 'id'> & { id?: string }): Promise<void>
   deletePause(id: string): Promise<void>
+
+  // Plan de entrenamiento (fase 2)
+  getAvailability(): Promise<Availability | null>
+  saveAvailability(a: Availability): Promise<void>
+  getCurrentPlan(): Promise<CurrentPlan>
+  /** Guarda una versión nueva: reemplaza semanas desde la semana de `fromDay` y sesiones desde `fromDay`. */
+  savePlan(args: { reason: PlanChange['reason']; inputsHash: string; weeks: WeekDraft[]; fromDay: string; changes: PlanChange[]; isDemo: boolean }): Promise<string>
+  listPlanChanges(limit?: number): Promise<PlanChangeRecord[]>
+
+  // Strava (bandeja de entrada del webhook y conexión)
+  listInbox(): Promise<InboxItem[]>
+  deleteInbox(ids: string[]): Promise<void>
+  deleteSourceByExternalId(externalId: string): Promise<void>
+  stravaConnect(code: string, scope: string): Promise<void>
+  stravaDisconnect(): Promise<void>
+  stravaSync(): Promise<{ queued: number }>
 
   // Datos de prueba y cuenta
   clearDemoData(): Promise<void>

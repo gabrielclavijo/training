@@ -1,6 +1,8 @@
 import type { OriginHint, Provider, SourceFormat, Sport, SubSport } from '../core/activity/types'
 import type { MatchDeltas, MatchedBy, MergedActivity, SourceLike } from '../core/dedupe'
 import type { Streams } from '../core/activity/types'
+import type { Availability, Block, Phase, SessionDraft, SessionKind, WeekNote } from '../core/planner/plan'
+import type { ChangeReason } from '../core/planner/adapt'
 
 /** Modelos de dominio (camelCase). La capa de datos convierte desde/hacia las tablas. */
 
@@ -192,3 +194,62 @@ export interface NewSource extends Omit<SourceLike, 'id'> {
 }
 
 export type { Streams }
+
+// ---------------------------------------------------------------------------
+// Fase 2: plan de entrenamiento y Strava
+// ---------------------------------------------------------------------------
+
+export type { Availability }
+
+export interface StoredWeek {
+  planId: string
+  weekStart: string
+  phase: Phase
+  goalId: string | null
+  targetLoad: number
+  notes: WeekNote[]
+}
+
+export interface StoredSession {
+  id: string
+  planId: string
+  goalId: string | null
+  date: string
+  sport: Sport
+  kind: SessionKind
+  durationMin: number
+  plannedLoad: number
+  blocks: Block[]
+  phase: Phase | null
+  note: SessionDraft['note'] | null
+}
+
+export interface StoredPlan {
+  id: string
+  reason: ChangeReason
+  inputsHash: string | null
+  createdAt: string
+}
+
+export interface PlanChangeRecord {
+  id: string
+  planId: string
+  reason: string
+  params: Record<string, number | string>
+  createdAt: string
+}
+
+export interface CurrentPlan {
+  plan: StoredPlan | null
+  weeks: StoredWeek[]
+  sessions: StoredSession[]
+}
+
+export interface InboxItem {
+  id: string
+  provider: 'strava' | 'garmin_api'
+  externalId: string
+  event: 'create' | 'update' | 'delete'
+  payload: unknown
+  receivedAt: string
+}

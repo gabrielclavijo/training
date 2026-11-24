@@ -193,10 +193,19 @@ export async function loadDemoData(repo: Repo, opts: { onProgress?: (p: ImportPr
     isDemo: true,
   })
 
+  // Disponibilidad del caso de prueba (~6 h/semana con la salida larga del sábado)
+  if (!(await repo.getAvailability())) {
+    await repo.saveAvailability({ minutesByDay: { 1: 0, 2: 60, 3: 75, 4: 50, 5: 0, 6: 240, 7: 90 }, longDay: 6 })
+  }
+
   const items = demoCandidates(today)
-  return runImportJob(repo, 'demo', items.map((c) => ({ name: c.name, candidate: c })), {
+  const result = await runImportJob(repo, 'demo', items.map((c) => ({ name: c.name, candidate: c })), {
     total: items.length,
     isDemo: true,
     onProgress: opts.onProgress,
   })
+  // Plan de entrenamiento con las metas y la pausa de prueba
+  const { refreshPlan } = await import('../data/planService')
+  await refreshPlan(repo, { isDemo: true })
+  return result
 }

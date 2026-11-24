@@ -3,7 +3,16 @@ import { gunzipSync, gzipSync, strFromU8, strToU8 } from 'fflate'
 import type { MatchDeltas, MatchedBy, MergedActivity } from '../core/dedupe'
 import { pairKey } from '../core/dedupe'
 import type { Repo } from './repo'
+import type { PlanChange } from '../core/planner/adapt'
+import type { WeekDraft } from '../core/planner/plan'
+import { weekStart } from '../core/dates'
 import type {
+  Availability,
+  CurrentPlan,
+  InboxItem,
+  PlanChangeRecord,
+  StoredSession,
+  StoredWeek,
   Activity,
   Connection,
   ConsentType,
@@ -619,8 +628,138 @@ export class SupabaseRepo implements Repo {
     check(await this.sb.from('pauses').delete().eq('id', id))
   }
 
+  // ---- Plan
+  async getAvailability(): Promise<Availability | null> {
+    const r = check(await this.sb.from('training_availability').select('*').maybeSingle()) as Row | null
+    if (!r) return null
+    const m: Row = r.minutes_by_day ?? {}
+    const minutesByDay = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((d) => [d, Number(m[d] ?? 0)])) as Availability['minutesByDay']
+    return { minutesByDay, longDay: r.long_day }
+  }
+  async saveAvailability(a: Availability) {
+    check(await this.sb.from('training_availability').upsert({ minutes_by_day: a.minutesByDay, long_day: a.longDay, updated_at: new Date().toISOString() }))
+  }
+  async getCurrentPlan(): Promise<CurrentPlan> {
+    const plans = check(await this.sb.from('training_plans').select('*').order('created_at', { ascending: false }).limit(1)) as Row[]
+    const weeks = check(await this.sb.from('plan_weeks').select('*').order('week_start')) as Row[]
+    const sessions: Row[] = []
+    for (let from = 0; ; from += 1000) {
+      const page = check(await this.sb.from('planned_sessions').select('*').order('date').range(from, from + 999)) as Row[]
+      sessions.push(...page)
+      if (page.length < 1000) break
+    }
+    const p = plans[0]
+    return {
+      plan: p ? { id: p.id, reason: p.reason, inputsHash: p.inputs?.hash ?? null, createdAt: p.created_at } : null,
+      weeks: weeks.map(
+        (w): StoredWeek => ({ planId: w.plan_id, weekStart: w.week_start, phase: w.phase, goalId: w.goal_id, targetLoad: Number(w.target_load), notes: w.notes ?? [] }),
+      ),
+      sessions: sessions.map(
+        (x): StoredSession => ({
+          id: x.id,
+          planId: x.plan_id,
+          goalId: x.goal_id,
+          date: x.date,
+          sport: x.sport,
+          kind: x.kind,
+          durationMin: x.duration_min,
+          plannedLoad: Number(x.planned_load),
+          blocks: x.structure?.blocks ?? [],
+          phase: x.phase,
+          note: x.structure?.note ?? null,
+        }),
+      ),
+    }
+  }
+  async savePlan(args: { reason: PlanChange['reason']; inputsHash: string; weeks: WeekDraft[]; fromDay: string; changes: PlanChange[]; isDemo: boolean }) {
+    const plan = check(
+      await this.sb.from('training_plans').insert({ reason: args.reason, inputs: { hash: args.inputsHash }, is_demo: args.isDemo }).select('id').single(),
+    ) as Row
+    const id = plan.id as string
+    const ws = weekStart(args.fromDay)
+    check(await this.sb.from('plan_weeks').delete().gte('week_start', ws))
+    check(await this.sb.from('planned_sessions').delete().gte('date', args.fromDay))
+    const weekRows = args.weeks.map((w) => ({
+      plan_id: id,
+      week_start: w.weekStart,
+      phase: w.phase,
+      goal_id: w.goalId,
+      target_load: w.targetLoad,
+      notes: w.notes,
+      is_demo: args.isDemo,
+    }))
+    if (weekRows.length) check(await this.sb.from('plan_weeks').insert(weekRows))
+    const sessionRows = args.weeks.flatMap((w) =>
+      w.sessions
+        .filter((x) => x.date >= args.fromDay)
+        .map((x) => ({
+          plan_id: id,
+          goal_id: x.goalId,
+          date: x.date,
+          sport: x.sport,
+          kind: x.kind,
+          duration_min: Math.round(x.durationMin),
+          planned_load: x.load,
+          structure: { blocks: x.blocks, note: x.note ?? null },
+          phase: x.phase,
+          is_demo: args.isDemo,
+        })),
+    )
+    for (let i = 0; i < sessionRows.length; i += 500) check(await this.sb.from('planned_sessions').insert(sessionRows.slice(i, i + 500)))
+    if (args.changes.length) {
+      check(await this.sb.from('plan_changes').insert(args.changes.map((c) => ({ plan_id: id, reason: c.reason, params: c.params, is_demo: args.isDemo }))))
+    }
+    return id
+  }
+  async listPlanChanges(limit = 30): Promise<PlanChangeRecord[]> {
+    const rows = check(await this.sb.from('plan_changes').select('*').order('created_at', { ascending: false }).limit(limit)) as Row[]
+    return rows.map((r) => ({ id: r.id, planId: r.plan_id, reason: r.reason, params: r.params ?? {}, createdAt: r.created_at }))
+  }
+
+  // ---- Strava
+  async listInbox(): Promise<InboxItem[]> {
+    const rows = check(await this.sb.from('provider_inbox').select('*').order('received_at')) as Row[]
+    return rows.map((r) => ({ id: r.id, provider: r.provider, externalId: r.external_id, event: r.event, payload: r.payload, receivedAt: r.received_at }))
+  }
+  async deleteInbox(ids: string[]) {
+    if (ids.length) check(await this.sb.from('provider_inbox').delete().in('id', ids))
+  }
+  async deleteSourceByExternalId(externalId: string) {
+    const rows = check(await this.sb.from('activity_sources').select('id, activity_id').eq('external_id', externalId)) as Row[]
+    for (const r of rows) {
+      check(await this.sb.from('activity_sources').delete().eq('id', r.id))
+      const left = check(await this.sb.from('activity_sources').select('id').eq('activity_id', r.activity_id).limit(1)) as Row[]
+      if (left.length === 0) check(await this.sb.from('activities').delete().eq('id', r.activity_id))
+    }
+  }
+  private async fn<T>(name: string, body: Row = {}): Promise<T> {
+    const { data, error } = await this.sb.functions.invoke(name, { body })
+    if (error) {
+      // Mensaje del servidor si lo hay
+      const ctx = (error as { context?: Response }).context
+      let detail = error.message
+      try {
+        if (ctx) detail = ((await ctx.json()) as { error?: string }).error ?? detail
+      } catch {
+        /* sin cuerpo */
+      }
+      throw new Error(detail)
+    }
+    return data as T
+  }
+  async stravaConnect(code: string, scope: string) {
+    await this.fn('strava-connect', { code, scope })
+  }
+  async stravaDisconnect() {
+    await this.fn('strava-disconnect')
+  }
+  async stravaSync() {
+    return this.fn<{ queued: number }>('strava-sync')
+  }
+
   // ---- Demo y cuenta
   async clearDemoData() {
+    check(await this.sb.from('training_plans').delete().eq('is_demo', true))
     const rows = check(await this.sb.from('activity_sources').select('streams_path').eq('is_demo', true)) as Row[]
     const paths = rows.map((r) => r.streams_path).filter(Boolean)
     if (paths.length) await this.sb.storage.from('activity-streams').remove(paths)
