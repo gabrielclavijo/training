@@ -8,6 +8,7 @@ import { keys, useAvatar, usePhysiology, useProfile, useRepoMutation, useWeights
 import { Avatar } from '../../components/ui/Avatar'
 import { Icon } from '../../components/ui/Icon'
 import { AvatarError, prepareAvatar } from './avatarImage'
+import { useAuth } from '../auth/AuthProvider'
 import { latestWeight, physiologyOn } from '../../data/analysis'
 import { useRepo } from '../../data/RepoProvider'
 import { HealthSection } from './HealthSection'
@@ -40,7 +41,23 @@ export function ProfilePage() {
         <p>{t('nutrition.profileHelp')}</p>
         <Link to="/nutricion">{t('nutrition.editProfile')} →</Link>
       </section>
+      <AccountSection />
     </Page>
+  )
+}
+
+/** Cuenta: correo y cerrar sesión (también está en Ajustes). */
+function AccountSection() {
+  const { t } = useTranslation()
+  const { user, signOut, mode } = useAuth()
+  return (
+    <section className="card" aria-labelledby="account-h">
+      <h2 id="account-h">{t('settings.account')}</h2>
+      {mode === 'local' ? <p className="muted">{t('local.banner')}</p> : user?.email && <p className="muted">{user.email}</p>}
+      <button type="button" className="btn btn-secondary" onClick={() => void signOut()}>
+        <Icon name="logout" /> {t('settings.signOut')}
+      </button>
+    </section>
   )
 }
 

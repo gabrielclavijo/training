@@ -130,6 +130,8 @@ async function makeUploadFiles() {
   await p.locator('.topbar-avatar img').waitFor();
   await p.getByRole('button', { name: 'Cambiar foto' }).waitFor();
   console.log('foto de perfil: subida, recortada y visible en la barra superior');
+  await p.getByRole('button', { name: 'Cerrar sesión' }).waitFor();
+  console.log('perfil: tiene «Cerrar sesión»');
   await axe('perfil con foto');
   await p.screenshot({ path: out + 'e2e_perfil_foto.png' });
   p.once('dialog', d => d.accept());

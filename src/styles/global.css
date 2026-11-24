@@ -2018,3 +2018,7 @@ details[open] > *:not(summary) {
   margin-left: var(--space-2);
   vertical-align: middle;
 }
+.btn svg {
+  width: 20px;
+  height: 20px;
+}
