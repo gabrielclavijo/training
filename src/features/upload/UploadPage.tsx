@@ -4,12 +4,12 @@ import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '../../components/ui/Icon'
 import { Alert, Page } from '../../components/ui/Page'
-import { runImportJob, type ImportCandidate, type ImportProgress } from '../../data/importer'
+import { runImportJob, type ImportProgress, type ImportQueueItem } from '../../data/importer'
 import { useRepo } from '../../data/RepoProvider'
 import type { ImportItemStatus, ImportKind } from '../../data/types'
 import type { WorkerIn, WorkerOut } from '../../workers/import.worker'
 
-type QueueItem = { name: string; candidate?: ImportCandidate; errorCode?: string }
+type QueueItem = ImportQueueItem
 interface Row {
   name: string
   status: ImportItemStatus
@@ -58,12 +58,21 @@ export function UploadPage() {
   const [phase, setPhase] = useState<'idle' | 'running' | 'done' | 'cancelled' | 'error'>('idle')
   const [progress, setProgress] = useState<ImportProgress | null>(null)
   const [rows, setRows] = useState<Row[]>([])
+  const [bigFile, setBigFile] = useState(false)
 
   async function start(files: File[]) {
+    setBigFile(files.some((f) => f.size > 200 * 1024 * 1024))
+    // Mantener la pantalla encendida mientras importa (si el navegador lo permite)
+    let wakeLock: { release: () => Promise<void> } | null = null
+    try {
+      wakeLock = (await (navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request('screen')) ?? null
+    } catch {
+      wakeLock = null
+    }
     if (files.length === 0 || phase === 'running') return
     setPhase('running')
     setRows([])
-    setProgress({ total: 0, processed: 0, imported: 0, merged: 0, duplicates: 0, failed: 0 })
+    setProgress({ total: 0, processed: 0, imported: 0, merged: 0, duplicates: 0, failed: 0, skipped: 0 })
     const queue = createQueue()
     let discovered = 0
     const worker = new Worker(new URL('../../workers/import.worker.ts', import.meta.url), { type: 'module' })
@@ -74,7 +83,7 @@ export function UploadPage() {
         setProgress((p) => (p ? { ...p, total: Math.max(discovered, p.processed) } : p))
       } else if (m.type === 'item') {
         if (m.ok) queue.push({ name: m.name, candidate: { name: m.name, parsed: m.parsed, sha256: m.sha256 } })
-        else queue.push({ name: m.name, errorCode: m.code })
+        else queue.push({ name: m.name, errorCode: m.code, skipped: m.skipped })
       } else queue.close()
     }
     let workerFailed = false
@@ -120,6 +129,7 @@ export function UploadPage() {
       console.error(e)
       setPhase('error')
     } finally {
+      void wakeLock?.release().catch(() => undefined)
       worker.terminate()
       await qc.invalidateQueries()
     }
@@ -178,6 +188,7 @@ export function UploadPage() {
             </p>
             <progress className="progress" max={100} value={pct} aria-label={`${pct} %`} />
             <p className="muted">{t('upload.summary', { ...progress })}</p>
+            {bigFile && <p className="muted">{t('upload.bigFileTip')}</p>}
             <button type="button" className="btn btn-secondary" onClick={() => abortRef.current?.abort()}>
               {t('upload.cancel')}
             </button>
@@ -188,6 +199,12 @@ export function UploadPage() {
             <strong>{phase === 'cancelled' ? t('upload.cancelled') : t('upload.done')}</strong>
             <br />
             {t('upload.summary', { ...progress })}
+            {(progress.skipped ?? 0) > 0 && (
+              <>
+                <br />
+                {t('upload.skippedSummary', { count: progress.skipped })}
+              </>
+            )}
           </Alert>
         )}
         {phase === 'error' && <Alert kind="error">{t('errors.generic')}</Alert>}

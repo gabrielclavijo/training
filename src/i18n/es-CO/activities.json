@@ -86,6 +86,9 @@
     "reading": "Leyendo archivos…",
     "done": "Importación terminada",
     "summary": "{{imported}} nuevas · {{merged}} fusionadas · {{duplicates}} ya estaban · {{failed}} con error",
+    "skippedSummary": "{{count}} archivo omitido porque no es una actividad (por ejemplo, una ruta planeada)",
+    "skippedSummary_other": "{{count}} archivos omitidos porque no son actividades (por ejemplo, rutas planeadas)",
+    "bigFileTip": "Archivo grande: se lee por partes. Deja esta pestaña abierta y la pantalla encendida mientras importa; puede tardar varios minutos.",
     "cancel": "Detener",
     "cancelled": "Importación detenida. Lo que ya se procesó quedó guardado.",
     "results": "Resultado por archivo",
@@ -93,7 +96,7 @@
       "imported": "Importada",
       "merged": "Fusionada con una actividad existente",
       "duplicate": "Ya estaba importada",
-      "skipped": "Omitida",
+      "skipped": "Omitido: no es una actividad",
       "error": "No se pudo importar"
     },
     "errors": {
@@ -101,7 +104,7 @@
       "not_activity": "Este archivo no es una actividad válida (puede ser una ruta planeada o un archivo de configuración).",
       "corrupt": "El archivo está dañado o incompleto. Descárgalo de nuevo e inténtalo otra vez.",
       "empty": "El archivo no tiene datos de tiempo: no parece una actividad grabada.",
-      "too_large": "El archivo es demasiado grande (más de 1 GB).",
+      "too_large": "Este archivo suelto es demasiado grande para ser una actividad (más de 200 MB). Si es una exportación, súbela como .zip.",
       "save_failed": "No pudimos guardar esta actividad. Revisa tu conexión e inténtalo de nuevo."
     },
     "seeActivities": "Ver mis actividades",

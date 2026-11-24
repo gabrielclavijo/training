@@ -1,7 +1,67 @@
 import type { ParsedActivity } from '../core/activity/types'
 import { findDuplicate, mergeSources, splitSource, TOLERANCE, type SourceLike } from '../core/dedupe'
 import type { Repo } from './repo'
-import type { ImportItemStatus, ImportKind, NewSource } from './types'
+import type { Activity, ImportItemStatus, ImportKind, NewSource, StoredSource } from './types'
+
+/**
+ * Índice en memoria de lo que ya existe, para no consultar la base de datos por
+ * cada actividad al importar miles de una vez (historial completo).
+ */
+export class ImportIndex {
+  private byHash = new Map<string, string>()
+  private byExternal = new Map<string, string>()
+  private activities = new Map<string, Activity>()
+  private sorted: { t: number; activityId: string }[] = []
+  private dirty = false
+
+  constructor(existing: Activity[]) {
+    for (const a of existing) this.activities.set(a.id, a)
+    for (const a of existing) for (const s of a.sources) this.indexSource(a.id, s)
+  }
+
+  private indexSource(activityId: string, s: { fileSha256?: string | null; externalId: string | null; startTime: string }) {
+    if (s.fileSha256) this.byHash.set(s.fileSha256, activityId)
+    if (s.externalId) this.byExternal.set(s.externalId, activityId)
+    this.sorted.push({ t: Date.parse(s.startTime), activityId })
+    this.dirty = true
+  }
+
+  findIdentity(hash: string | null, externalId: string | null) {
+    const id = (hash && this.byHash.get(hash)) || (externalId && this.byExternal.get(externalId))
+    return id ? { activityId: id } : null
+  }
+
+  near(startIso: string, windowS: number): Activity[] {
+    if (this.dirty) {
+      this.sorted.sort((a, b) => a.t - b.t)
+      this.dirty = false
+    }
+    const t = Date.parse(startIso)
+    const lo = t - windowS * 1000
+    const hi = t + windowS * 1000
+    // búsqueda binaria del primer elemento ≥ lo
+    let a = 0
+    let b = this.sorted.length
+    while (a < b) {
+      const m = (a + b) >> 1
+      if (this.sorted[m].t < lo) a = m + 1
+      else b = m
+    }
+    const ids = new Set<string>()
+    for (let i = a; i < this.sorted.length && this.sorted[i].t <= hi; i++) ids.add(this.sorted[i].activityId)
+    return [...ids].map((id) => this.activities.get(id)!).filter(Boolean)
+  }
+
+  addSource(activityId: string, source: StoredSource, canonical?: Partial<Activity>) {
+    let a = this.activities.get(activityId)
+    if (!a) {
+      a = { ...(canonical as Activity), id: activityId, sources: [] }
+      this.activities.set(activityId, a)
+    }
+    a.sources = [...a.sources, source]
+    this.indexSource(activityId, source)
+  }
+}
 
 /**
  * Guarda actividades ya leídas aplicando la detección de duplicados.
@@ -26,12 +86,13 @@ const STREAMS_MAX_AGE_DAYS = 365
 export async function importOne(
   repo: Repo,
   c: ImportCandidate,
-  opts: { jobId: string | null; isDemo?: boolean; notDuplicatePairs?: Set<string> } = { jobId: null },
+  opts: { jobId: string | null; isDemo?: boolean; notDuplicatePairs?: Set<string>; index?: ImportIndex } = { jobId: null },
 ): Promise<ImportResult> {
   const { summary, streams, format, originHint } = c.parsed
+  const index = opts.index
 
   // 1. ¿Ya está exactamente este archivo o este identificador?
-  const same = await repo.findSourceByIdentity(c.sha256, summary.externalId)
+  const same = index ? index.findIdentity(c.sha256, summary.externalId) : await repo.findSourceByIdentity(c.sha256, summary.externalId)
   if (same) return { status: 'duplicate', activityId: same.activityId }
 
   const newSource: NewSource = {
@@ -75,7 +136,7 @@ export async function importOne(
   const candidate: SourceLike = { ...newSource, id: '__nueva__' }
 
   // 2. ¿Coincide con una actividad que ya existe?
-  const near = await repo.activitiesNear(summary.startTime, TOLERANCE.startS + 120)
+  const near = index ? index.near(summary.startTime, TOLERANCE.startS + 120) : await repo.activitiesNear(summary.startTime, TOLERANCE.startS + 120)
   const pairs = opts.notDuplicatePairs ?? (await repo.listNotDuplicatePairs())
   const match = findDuplicate(candidate, near, pairs)
 
@@ -88,6 +149,7 @@ export async function importOne(
     await repo.updateCanonical(activity.id, merged)
     await repo.insertMerge(activity.id, sourceId, match.matchedBy, match.deltas)
     if (keepStreams) await repo.saveStreams(sourceId, streams)
+    index?.addSource(activity.id, toStored(newSource, sourceId, activity.id))
     return { status: 'merged', activityId: activity.id, sourceId }
   }
 
@@ -99,7 +161,12 @@ export async function importOne(
   const sourceId = await repo.insertSource(activityId, newSource)
   await repo.updateCanonical(activityId, mergeSources([{ ...candidate, id: sourceId }]))
   if (keepStreams) await repo.saveStreams(sourceId, streams)
+  index?.addSource(activityId, toStored(newSource, sourceId, activityId), { ...base, rpe: base.rpe, rpeIsEstimated: false, notes: null, isDemo: Boolean(opts.isDemo) } as Partial<Activity>)
   return { status: 'imported', activityId, sourceId }
+}
+
+function toStored(s: NewSource, id: string, activityId: string): StoredSource {
+  return { ...s, id, activityId, importedAt: new Date().toISOString(), streamsPath: null }
 }
 
 export interface ImportProgress {
@@ -109,18 +176,29 @@ export interface ImportProgress {
   merged: number
   duplicates: number
   failed: number
+  /** Archivos de la exportación que no son actividades (se omiten, no son error) */
+  skipped?: number
+}
+
+export interface ImportQueueItem {
+  name: string
+  candidate?: ImportCandidate
+  errorCode?: string
+  skipped?: boolean
 }
 
 /** Corre un trabajo de importación completo y va informando el progreso. */
 export async function runImportJob(
   repo: Repo,
   kind: ImportKind,
-  items: AsyncIterable<{ name: string; candidate?: ImportCandidate; errorCode?: string }> | Iterable<{ name: string; candidate?: ImportCandidate; errorCode?: string }>,
+  items: AsyncIterable<ImportQueueItem> | Iterable<ImportQueueItem>,
   opts: { total: number; isDemo?: boolean; onProgress?: (p: ImportProgress) => void; signal?: AbortSignal },
 ): Promise<{ jobId: string; progress: ImportProgress }> {
   const jobId = await repo.createJob(kind, opts.total)
-  const p: ImportProgress = { total: opts.total, processed: 0, imported: 0, merged: 0, duplicates: 0, failed: 0 }
+  const p: ImportProgress = { total: opts.total, processed: 0, imported: 0, merged: 0, duplicates: 0, failed: 0, skipped: 0 }
   const pairs = await repo.listNotDuplicatePairs()
+  // Se carga una sola vez lo que ya existe (en vez de consultar por cada archivo)
+  const index = new ImportIndex(await repo.listActivities())
   let lastSaved = 0
   try {
     for await (const it of items) {
@@ -128,11 +206,11 @@ export async function runImportJob(
         await repo.updateJob(jobId, { ...p, status: 'cancelled', finishedAt: new Date().toISOString() })
         return { jobId, progress: p }
       }
-      let status: ImportItemStatus = 'error'
+      let status: ImportItemStatus = it.skipped ? 'skipped' : 'error'
       let sourceId: string | null = null
       if (it.candidate) {
         try {
-          const r = await importOne(repo, it.candidate, { jobId, isDemo: opts.isDemo, notDuplicatePairs: pairs })
+          const r = await importOne(repo, it.candidate, { jobId, isDemo: opts.isDemo, notDuplicatePairs: pairs, index })
           status = r.status
           if (r.status !== 'duplicate') sourceId = r.sourceId
         } catch (e) {
@@ -146,6 +224,7 @@ export async function runImportJob(
       if (status === 'imported') p.imported++
       else if (status === 'merged') p.merged++
       else if (status === 'duplicate') p.duplicates++
+      else if (status === 'skipped') p.skipped = (p.skipped ?? 0) + 1
       else p.failed++
       await repo.addJobItem(jobId, it.name, status, status === 'error' ? (it.errorCode ?? 'corrupt') : null, sourceId)
       opts.onProgress?.({ ...p })

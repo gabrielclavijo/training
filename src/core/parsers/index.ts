@@ -6,6 +6,7 @@ import { parseFit } from './fit'
 import { parseGpx } from './gpx'
 import { manualFromStravaRow, parseStravaActivitiesCsv, type StravaExportRow } from './stravaExport'
 import { parseTcx } from './tcx'
+import { entryBlob, isZip, listZip, readEntry, type ZipEntry } from './zipReader'
 
 export { ImportError } from './errors'
 export type { ImportErrorCode } from './errors'
@@ -21,7 +22,7 @@ export interface FileEntry {
 /** Resultado de procesar un archivo (o cada actividad dentro de un .zip). */
 export type ParseOutcome =
   | { ok: true; name: string; activity: ParsedActivity; raw?: Uint8Array }
-  | { ok: false; name: string; code: ImportError['code'] }
+  | { ok: false; name: string; code: ImportError['code']; skipped?: boolean }
 
 const lower = (s: string) => s.toLowerCase()
 const isActivityFile = (n: string) => /\.(fit|gpx|tcx)(\.gz)?$/i.test(n)
@@ -153,4 +154,112 @@ function* parseArchive(
 export async function sha256Hex(bytes: Uint8Array): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', bytes as BufferSource)
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+
+// ---------------------------------------------------------------------------
+// Versión por partes (para archivos grandes): trabaja sobre un File/Blob y nunca
+// carga el .zip entero en memoria. Es la que usa la app.
+// ---------------------------------------------------------------------------
+
+/** Tamaño máximo de un archivo suelto (.fit, .gpx, .tcx): ninguno real se acerca. */
+const MAX_SINGLE_FILE_BYTES = 200 * 1024 * 1024
+const GARMIN_ACTIVITIES = /DI-Connect-Uploaded-Files/i
+
+export async function* parseUploadBlob(
+  file: Blob,
+  name: string,
+  opts: UploadOptions = {},
+): AsyncGenerator<ParseOutcome, void, void> {
+  if (/\.zip$/i.test(name) || (await isZip(file))) {
+    let entries: ZipEntry[]
+    try {
+      entries = await listZip(file)
+    } catch {
+      opts.onDiscovered?.(1)
+      yield { ok: false, name, code: 'corrupt' }
+      return
+    }
+    yield* parseZipBlob(file, entries, 0, undefined, opts)
+    return
+  }
+  opts.onDiscovered?.(1)
+  if (file.size > MAX_SINGLE_FILE_BYTES) {
+    yield { ok: false, name, code: 'too_large' }
+    return
+  }
+  yield parseOne({ name, bytes: new Uint8Array(await file.arrayBuffer()) })
+}
+
+async function* parseZipBlob(
+  blob: Blob,
+  entries: ZipEntry[],
+  depth: number,
+  inheritedOrigin: OriginHint | undefined,
+  opts: UploadOptions,
+): AsyncGenerator<ParseOutcome, void, void> {
+  const files = entries.filter((e) => !e.name.endsWith('/'))
+  const csv = files.find((e) => /(^|\/)activities\.csv$/i.test(e.name))
+  const isGarmin = inheritedOrigin === 'garmin_export' || files.some((e) => /DI_CONNECT|DI-Connect/i.test(e.name))
+  const originHint: OriginHint = csv ? 'strava_export' : isGarmin ? 'garmin_export' : (inheritedOrigin ?? 'other')
+
+  // De la exportación de Garmin solo interesan las actividades (el resto es sueño,
+  // pasos, datos de salud… que no se abren). Dentro de un zip anidado ya filtrado
+  // se toma todo.
+  const relevant = isGarmin && depth === 0 ? files.filter((e) => GARMIN_ACTIVITIES.test(e.name)) : files
+  const activityEntries = relevant.filter((e) => isActivityFile(e.name))
+  const nestedZips = depth < 3 ? relevant.filter((e) => /\.zip$/i.test(e.name)) : []
+
+  let stravaRows: StravaExportRow[] = []
+  if (csv) {
+    try {
+      stravaRows = parseStravaActivitiesCsv(new TextDecoder().decode(await readEntry(blob, csv)))
+    } catch {
+      stravaRows = []
+    }
+  }
+  const byFile = new Map(stravaRows.filter((r) => r.filename).map((r) => [lower(r.filename!), r]))
+  const manualRows = stravaRows.filter((r) => !r.filename)
+  opts.onDiscovered?.(activityEntries.length + manualRows.length)
+
+  for (const e of activityEntries) {
+    let bytes: Uint8Array
+    try {
+      bytes = await readEntry(blob, e)
+    } catch {
+      yield { ok: false, name: e.name, code: 'corrupt' }
+      continue
+    }
+    const row = byFile.get(lower(e.name))
+    const outcome = parseOne({ name: e.name, bytes }, row?.mapping, originHint)
+    if (outcome.ok && row) {
+      outcome.activity.summary.title ??= row.title
+      outcome.activity.summary.rpe ??= row.rpe
+      outcome.activity.summary.externalId ??= `strava-export:${row.activityId}`
+    }
+    // En una exportación, un archivo que no es actividad (ej. un curso o un
+    // entrenamiento planeado) no es un error: simplemente se omite.
+    if (!outcome.ok && outcome.code === 'not_activity') outcome.skipped = true
+    yield outcome
+  }
+
+  for (const z of nestedZips) {
+    try {
+      const inner = await entryBlob(blob, z)
+      yield* parseZipBlob(inner, await listZip(inner), depth + 1, originHint, opts)
+    } catch {
+      opts.onDiscovered?.(1)
+      yield { ok: false, name: z.name, code: 'corrupt' }
+    }
+  }
+
+  for (const row of manualRows) {
+    const a = manualFromStravaRow(row)
+    if (a) {
+      a.summary.externalId = `strava-export:${row.activityId}`
+      yield { ok: true, name: `Strava: ${row.title ?? row.activityId}`, activity: a }
+    } else {
+      yield { ok: false, name: `Strava: ${row.title ?? row.activityId}`, code: 'empty', skipped: true }
+    }
+  }
 }

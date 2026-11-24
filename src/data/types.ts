@@ -85,6 +85,7 @@ export interface StoredSource extends SourceLike {
   powerCurve: Record<string, number> | null
   streamsPath: string | null
   rawSport: string | null
+  fileSha256?: string | null
 }
 
 export interface Activity extends Omit<MergedActivity, 'rpe'> {
