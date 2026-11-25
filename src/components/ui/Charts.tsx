@@ -75,6 +75,10 @@ export function BarChart({
   const titleId = useId()
   const { ref, seen } = useInView<HTMLDivElement>()
   const dense = data.length > 8
+  // Con muchas barras (p. ej. 30 días): pocas fechas y solo los valores destacados
+  const many = data.length > 14
+  const step = Math.ceil(data.length / 6)
+  const maxIdx = data.reduce((m, d, i) => (d.value > data[m].value ? i : m), 0)
   return (
     <figure className="chart" aria-labelledby={titleId}>
       <figcaption id={titleId} className="chart-title">
@@ -95,7 +99,10 @@ export function BarChart({
         {average && average.value > 0 && <div className="bars-avg" style={{ bottom: `${(average.value / max) * 100}%` }} aria-hidden="true" />}
         {data.map((d, i) => (
           <div key={d.label + i} className="bar-col" aria-hidden="true">
-            <span className={`bar-value${d.highlight ? ' bar-value-strong' : ''}`} style={{ animationDelay: `${300 + i * 40}ms` }}>
+            <span
+              className={`bar-value${d.highlight ? ' bar-value-strong' : ''}${many && !(d.highlight || d.partial || i === maxIdx) ? ' bar-value-hide' : ''}`}
+              style={{ animationDelay: `${300 + i * 40}ms` }}
+            >
               {d.warn && <span className="bar-flag">▲</span>}
               {d.short ?? d.display}
             </span>
@@ -108,10 +115,10 @@ export function BarChart({
           </div>
         ))}
       </div>
-      <div className={`bar-xlabels${dense ? ' bar-xlabels-dense' : ''}`} aria-hidden="true">
+      <div className={`bar-xlabels${dense && !many ? ' bar-xlabels-dense' : ''}`} aria-hidden="true">
         {data.map((d, i) => (
           <span key={d.label + i} className={d.highlight ? 'strong' : undefined}>
-            {d.label}
+            {!many || i % step === 0 || i === data.length - 1 ? d.label : ''}
           </span>
         ))}
       </div>

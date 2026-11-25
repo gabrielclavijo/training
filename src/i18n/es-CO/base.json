@@ -20,7 +20,8 @@
     "profile": "Perfil",
     "settings": "Ajustes",
     "glossary": "¿Qué significa?",
-    "privacy": "Privacidad"
+    "privacy": "Privacidad",
+    "admin": "Administración"
   },
   "common": {
     "loading": "Cargando…",
@@ -117,6 +118,7 @@
     "/perfil": "Tus datos, foto y salud",
     "/ajustes": "Exportar, datos de prueba, cuenta",
     "/glosario": "Qué significa cada número",
-    "/privacidad": "Cómo cuidamos tus datos"
+    "/privacidad": "Cómo cuidamos tus datos",
+    "/admin": "Uso de la app y saldo de la IA"
   }
 }

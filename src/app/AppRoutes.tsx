@@ -36,6 +36,7 @@ const SessionDetailPage = lazyPage(() => import('../features/plan/SessionDetailP
 const AvailabilityPage = lazyPage(() => import('../features/plan/AvailabilityPage'), 'AvailabilityPage')
 const NutritionPage = lazyPage(() => import('../features/nutrition/NutritionPage'), 'NutritionPage')
 const LabsPage = lazyPage(() => import('../features/labs/LabsPage'), 'LabsPage')
+const AdminPage = lazyPage(() => import('../features/admin/AdminPage'), 'AdminPage')
 const StravaCallbackPage = lazyPage(() => import('../features/strava/StravaCallbackPage'), 'StravaCallbackPage')
 const UpdatePasswordPage = lazyPage(() => import('../features/auth/UpdatePasswordPage'), 'UpdatePasswordPage')
 
@@ -189,6 +190,14 @@ export function AppRoutes() {
           element={
             <S>
               <LabsPage />
+            </S>
+          }
+        />
+        <Route
+          path="admin"
+          element={
+            <S>
+              <AdminPage />
             </S>
           }
         />

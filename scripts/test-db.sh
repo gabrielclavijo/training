@@ -35,3 +35,5 @@ done
   | sed -e 's/^psql:[^ ]* NOTICE:  /  /' -e '/^$/d' -e '/^aaaa\|^bbbb\|^{/d'
 "${PSQL[@]}" -At -f "$ROOT/supabase/tests/rls_fase3_test.sql" 2>&1 \
   | sed -e 's/^psql:[^ ]* NOTICE:  /  /' -e '/^$/d' -e '/^aaaa\|^bbbb\|^{/d'
+"${PSQL[@]}" -At -f "$ROOT/supabase/tests/rls_admin_test.sql" 2>&1 \
+  | sed -e 's/^psql:[^ ]* NOTICE:  /  /' -e '/^$/d' -e '/^aaaa\|^bbbb\|^{/d'

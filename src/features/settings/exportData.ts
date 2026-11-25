@@ -23,6 +23,7 @@ export async function buildExport(repo: Repo): Promise<Blob> {
     pauses: await repo.listPauses(),
     importJobs: await repo.listJobs(),
     mealPlans: await repo.listMealPlans(),
+    usage: await repo.listMyUsage(),
     recommendationState: await repo.listRecommendationState(),
     activities,
   }

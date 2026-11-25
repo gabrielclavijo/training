@@ -37,6 +37,7 @@ import type {
   WeightEntry,
 } from './types'
 import { DEFAULT_NUTRITION } from './types'
+import type { AdminStats } from '../../supabase/functions/_shared/adminStats.ts'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Row = Record<string, any>
@@ -831,6 +832,35 @@ export class SupabaseRepo implements Repo {
   }
   async dismissRecommendation(ruleKey: string, reaction: RecommendationState['reaction'], until: string) {
     check(await this.sb.from('recommendation_state').upsert({ rule_key: ruleKey, reaction, dismissed_until: until }))
+  }
+
+  // ---- Uso y panel de administración
+  async trackUsage(seconds: number, newVisit: boolean) {
+    const { error } = await this.sb.rpc('track_usage', { p_seconds: Math.round(seconds), p_new_visit: newVisit })
+    if (error) throw new Error(error.message)
+  }
+  async listMyUsage() {
+    const rows = check(await this.sb.from('usage_daily').select('day, seconds, visits').order('day')) as Row[]
+    return rows.map((r) => ({ day: r.day, seconds: r.seconds, visits: r.visits }))
+  }
+  async isAdmin() {
+    try {
+      return (await this.fn<{ admin: boolean }>('admin-stats', { action: 'whoami' })).admin
+    } catch {
+      return false
+    }
+  }
+  async adminStats() {
+    return (await this.fn<{ stats: AdminStats }>('admin-stats', { action: 'stats' })).stats
+  }
+  async adminAddTopup(amountUsd: number, note: string | null, toppedOn: string) {
+    await this.fn('admin-stats', { action: 'topup', amountUsd, note, toppedOn })
+  }
+  async adminDeleteTopup(id: string) {
+    await this.fn('admin-stats', { action: 'deleteTopup', id })
+  }
+  async adminSetThreshold(usd: number) {
+    await this.fn('admin-stats', { action: 'threshold', thresholdUsd: usd })
   }
 
   // ---- Demo y cuenta

@@ -31,6 +31,7 @@ import type {
   MenuRequest,
   RecommendationState,
 } from './types'
+import type { AdminStats } from '../../supabase/functions/_shared/adminStats.ts'
 
 /**
  * Contrato de acceso a datos. Hay dos implementaciones:
@@ -131,6 +132,17 @@ export interface Repo {
   // Recomendaciones ocultadas por la persona
   listRecommendationState(): Promise<RecommendationState[]>
   dismissRecommendation(ruleKey: string, reaction: RecommendationState['reaction'], until: string): Promise<void>
+
+  // Uso de la app y panel de administración
+  /** Señal de uso (cada minuto con la app a la vista) */
+  trackUsage(seconds: number, newVisit: boolean): Promise<void>
+  /** Mis datos de uso (para «Exportar mis datos») */
+  listMyUsage(): Promise<{ day: string; seconds: number; visits: number }[]>
+  isAdmin(): Promise<boolean>
+  adminStats(): Promise<AdminStats>
+  adminAddTopup(amountUsd: number, note: string | null, toppedOn: string): Promise<void>
+  adminDeleteTopup(id: string): Promise<void>
+  adminSetThreshold(usd: number): Promise<void>
 
   // Datos de prueba y cuenta
   clearDemoData(): Promise<void>

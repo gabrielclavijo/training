@@ -228,6 +228,19 @@ No hace falta volver a publicar la app. Límite por persona: 3 menús y 15 cambi
 
 ---
 
+## 7.1 Panel de administración (solo para ti)
+
+Muestra usuarios registrados, conectados ahora (app abierta en los últimos 5 minutos), minutos de uso, consumo y costo de la IA y el saldo estimado. Nunca muestra el contenido de las personas (entrenamientos, salud, menús).
+
+1. En GitHub → **Settings → Secrets and variables → Actions → Variables → New repository variable**: nombre `ADMIN_EMAILS`, valor tu correo (el de tu cuenta en la app). Si son varios, sepáralos con comas.
+2. **Actions → «Configurar Supabase» → Run workflow.** El paso «Panel de administración» debe decir «Panel de administración activado».
+3. Recarga la app: en **Más** (o en el menú lateral) aparece **Administración**. Para las demás personas no aparece y el servidor les niega los datos.
+4. Anthropic no permite consultar el saldo automáticamente: en el panel, registra cada recarga que hagas en console.anthropic.com y el panel resta lo gastado (calculado con los tokens de cada petición a la tarifa de Claude Opus 5.5).
+
+Los datos de uso se guardan 12 meses y se avisan en la política de privacidad (versión 4).
+
+---
+
 ## 8. Cómo se cumplen los requisitos de la fase 1
 
 | Requisito | Cómo | Prueba automática |

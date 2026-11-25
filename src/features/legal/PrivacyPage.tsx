@@ -52,7 +52,7 @@ export function PrivacyPage() {
           </span>
           <div>
             <p className="help-ask">Tus datos, en tus manos</p>
-            <p className="muted">Última actualización: 25/11/2026 · Versión 3</p>
+            <p className="muted">Última actualización: 26/11/2026 · Versión 4</p>
           </div>
         </div>
 
@@ -155,6 +155,35 @@ export function PrivacyPage() {
               <dd>Solo para armar tu menú y tu lista de mercado. El menú queda guardado en tu cuenta y lo puedes borrar cuando quieras.</dd>
             </div>
           </dl>
+        </section>
+
+        <section className="card" aria-labelledby="pv-usage">
+          <h2 id="pv-usage" className="card-title-icon">
+            <TitleIcon name="clock" tone="soft" />
+            Estadísticas de uso
+          </h2>
+          <p>
+            Para saber si la app le sirve al grupo de prueba, mientras la tienes abierta y a la vista se cuenta el tiempo de uso (minutos y visitas
+            por día) y la hora de tu última conexión. También se cuenta cuántos menús pides a la IA y cuánto cuestan.
+          </p>
+          <div className="yes-no">
+            <div className="yes">
+              <h3>
+                <Icon name="check" /> Qué ve la persona que administra el grupo
+              </h3>
+              <p>
+                Tu nombre y correo, cuándo te registraste y si entraste con Google, tu última conexión, los minutos y días de uso, cuántas actividades
+                tienes y cuántos menús pediste con su costo.
+              </p>
+            </div>
+            <div className="no">
+              <h3>
+                <Icon name="alert" /> Qué no ve
+              </h3>
+              <p>El contenido: tus entrenamientos, recorridos, metas, datos de salud, exámenes, alimentación ni tus menús.</p>
+            </div>
+          </div>
+          <p className="muted">Estos datos de uso se borran a los 12 meses, van en «Exportar mis datos» y se eliminan si borras tu cuenta.</p>
         </section>
 
         <div className="info-grid">

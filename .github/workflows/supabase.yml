@@ -6,6 +6,7 @@
 #   Variables: SUPABASE_PROJECT_REF
 # Para Strava (opcional, ver README): variable STRAVA_CLIENT_ID y secreto STRAVA_CLIENT_SECRET
 # Para los menús con IA (opcional, ver README paso 7): secreto ANTHROPIC_API_KEY
+# Para el panel de administración (ver README paso 8): variable ADMIN_EMAILS
 name: Configurar Supabase
 
 on:
@@ -23,6 +24,7 @@ jobs:
       STRAVA_CLIENT_ID: ${{ vars.STRAVA_CLIENT_ID }}
       STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -71,6 +73,16 @@ jobs:
           supabase functions deploy health-crypto --project-ref "$PROJECT_REF" --yes
           supabase functions deploy account-delete --project-ref "$PROJECT_REF" --yes
           supabase functions deploy nutrition-menu --project-ref "$PROJECT_REF" --yes
+          supabase functions deploy admin-stats --project-ref "$PROJECT_REF" --yes
+      - name: Panel de administración
+        run: |
+          emails="$(printf '%s' "$ADMIN_EMAILS" | tr -d '[:space:]')"
+          if [ -z "$emails" ]; then
+            echo "Sin ADMIN_EMAILS: el panel de administración no se muestra a nadie."
+            exit 0
+          fi
+          supabase secrets set --project-ref "$PROJECT_REF" --yes ADMIN_EMAILS="$emails"
+          echo "Panel de administración activado."
       - name: Menús con IA (si está configurado)
         run: |
           key="$(printf '%s' "$ANTHROPIC_API_KEY" | tr -d '[:space:]')"

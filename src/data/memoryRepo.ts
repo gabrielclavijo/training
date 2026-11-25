@@ -6,6 +6,7 @@ import type { WeekDraft } from '../core/planner/plan'
 import { weekStart } from '../core/dates'
 import { LOCAL_MODEL, localMenu } from './localMenu'
 import { DEFAULT_NUTRITION } from './types'
+import { bogotaDay, buildStats } from '../../supabase/functions/_shared/adminStats.ts'
 import type {
   Availability,
   CurrentPlan,
@@ -74,6 +75,10 @@ interface State {
   recState: RecommendationState[]
   /** Foto de perfil como data URL (solo modo local) */
   avatar?: string | null
+  /** Uso de la app y recargas (modo local: el panel muestra solo a esta persona) */
+  usage?: { day: string; seconds: number; visits: number; lastSeenAt: string }[]
+  topups?: { id: string; amountUsd: number; note: string | null; toppedOn: string }[]
+  aiThreshold?: number
 }
 
 const now = () => new Date().toISOString()
@@ -530,6 +535,54 @@ export class MemoryRepo implements Repo {
   }
   async dismissRecommendation(ruleKey: string, reaction: RecommendationState['reaction'], until: string) {
     this.s.recState = [...(this.s.recState ?? []).filter((r) => r.ruleKey !== ruleKey), { ruleKey, reaction, dismissedUntil: until }]
+    await this.done(null)
+  }
+
+  // ---- Uso y panel (modo local: datos de esta persona)
+  async trackUsage(seconds: number, newVisit: boolean) {
+    const day = bogotaDay(new Date())
+    this.s.usage ??= []
+    const row = this.s.usage.find((u) => u.day === day)
+    const nowIso = new Date().toISOString()
+    if (!row) this.s.usage.push({ day, seconds: 0, visits: 1, lastSeenAt: nowIso })
+    else {
+      const elapsed = Math.max(0, (Date.now() - Date.parse(row.lastSeenAt)) / 1000)
+      row.seconds = Math.min(86400, row.seconds + Math.min(60, Math.max(0, seconds), elapsed))
+      row.visits += newVisit ? 1 : 0
+      row.lastSeenAt = nowIso
+    }
+    await this.done(null)
+  }
+  async listMyUsage() {
+    return (this.s.usage ?? []).map(({ day, seconds, visits }) => ({ day, seconds: Math.round(seconds), visits }))
+  }
+  async isAdmin() {
+    return true
+  }
+  async adminStats() {
+    const me = 'yo'
+    const plans = this.s.mealPlans ?? []
+    return buildStats({
+      now: new Date(),
+      users: [{ id: me, email: null, name: this.s.profile.displayName, provider: 'local', createdAt: this.s.jobs.at(-1)?.startedAt ?? new Date().toISOString(), lastSignInAt: null }],
+      usage: (this.s.usage ?? []).map((u) => ({ userId: me, day: u.day, seconds: u.seconds, visits: u.visits, lastSeenAt: u.lastSeenAt })),
+      ai: plans.map((p) => ({ userId: me, kind: 'menu' as const, createdAt: p.createdAt, costUsd: 0, inputTokens: 0, outputTokens: 0, counted: true, model: p.model })),
+      topups: this.s.topups ?? [],
+      thresholdUsd: this.s.aiThreshold ?? 2,
+      activitiesByUser: { [me]: this.s.activities.length },
+      stravaUsers: [],
+    })
+  }
+  async adminAddTopup(amountUsd: number, note: string | null, toppedOn: string) {
+    this.s.topups = [...(this.s.topups ?? []), { id: uid(), amountUsd, note, toppedOn }]
+    await this.done(null)
+  }
+  async adminDeleteTopup(id: string) {
+    this.s.topups = (this.s.topups ?? []).filter((x) => x.id !== id)
+    await this.done(null)
+  }
+  async adminSetThreshold(usd: number) {
+    this.s.aiThreshold = usd
     await this.done(null)
   }
 

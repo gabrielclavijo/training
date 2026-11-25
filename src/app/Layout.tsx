@@ -4,6 +4,8 @@ import { Icon, type IconName } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
 import { useAuth } from '../features/auth/AuthProvider'
 import { useStravaAutoSync } from '../features/strava/useStravaAutoSync'
+import { useUsageHeartbeat } from '../features/admin/useUsageHeartbeat'
+import { useIsAdmin } from '../features/admin/useIsAdmin'
 
 interface NavItem {
   to: string
@@ -34,13 +36,16 @@ export const SECONDARY: NavItem[] = [
   { to: '/privacidad', label: 'nav.privacy', icon: 'shield' },
 ]
 
-const SIDEBAR: NavItem[] = [...BOTTOM.filter((i) => i.to !== '/mas'), ...SECONDARY]
+export const ADMIN_ITEM: NavItem = { to: '/admin', label: 'nav.admin', icon: 'gauge' }
 
 export function Layout() {
   const { t } = useTranslation()
   const { mode } = useAuth()
   const location = useLocation()
   useStravaAutoSync()
+  useUsageHeartbeat()
+  const admin = useIsAdmin()
+  const SIDEBAR: NavItem[] = [...BOTTOM.filter((i) => i.to !== '/mas'), ...SECONDARY, ...(admin ? [ADMIN_ITEM] : [])]
   return (
     <div className="layout">
       {/* Con HashRouter un enlace "#ancla" cambiaría de página: movemos el foco a mano */}

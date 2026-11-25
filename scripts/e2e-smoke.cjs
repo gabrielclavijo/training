@@ -52,7 +52,7 @@ async function makeUploadFiles() {
   await p.getByRole('button', { name: 'Continuar' }).click();
   await p.getByRole('button', { name: 'Hacerlo después' }).click();
   await p.waitForURL(u => u.hash === '#/' );
-  const routes = ['/', '/plan', '/plan/disponibilidad', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/ayuda', '/ayuda?tema=pausa', '/ayuda?tema=meta', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva', '/nutricion', '/laboratorio', '/privacidad'];
+  const routes = ['/', '/plan', '/plan/disponibilidad', '/actividades', '/subir', '/metas', '/temporada', '/metricas', '/importacion', '/ayuda', '/ayuda?tema=pausa', '/ayuda?tema=meta', '/perfil', '/glosario', '/ajustes', '/mas', '/actividades/nueva', '/metas/nueva', '/nutricion', '/laboratorio', '/privacidad', '/admin'];
   for (const scheme of ['light']) {
     await p.emulateMedia({ colorScheme: scheme });
     for (const r of routes) {
@@ -169,6 +169,18 @@ async function makeUploadFiles() {
   if (after.some(r => /examen está fuera del rango/.test(r))) throw new Error('«Entendido» no ocultó la recomendación');
   console.log('recomendaciones tras «Entendido»:', after.join(' | ') || '(ninguna)');
   await p.screenshot({ path: out + 'e2e_inicio_recs.png', fullPage: true });
+
+  // Panel de administración (modo local: datos propios)
+  await p.goto(base + '#/mas'); await p.waitForTimeout(400);
+  if (!(await p.getByRole('link', { name: /Administración/ }).count())) throw new Error('Falta el panel en Más');
+  await p.goto(base + '#/admin'); await p.waitForTimeout(1200);
+  const adm = await p.locator('main').innerText();
+  for (const k of ['Registrados', 'Conectados ahora', 'Tiempo de uso', 'Saldo de la IA', 'Por persona']) if (!adm.includes(k)) throw new Error('Panel sin «' + k + '»');
+  await p.getByLabel('Monto (USD)').first().fill('5');
+  await p.getByRole('button', { name: 'Guardar recarga' }).click();
+  await p.getByText('Recarga guardada.').waitFor();
+  console.log('panel: KPIs, gráficas, personas y recarga de saldo');
+  await axe('panel de administración');
 
   // Privacidad con sesión: dentro de la app, con su menú
   await p.goto(base + '#/privacidad'); await p.waitForTimeout(500);
