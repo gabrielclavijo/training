@@ -7,7 +7,9 @@ import { formatClock, formatDistance, formatElevation } from '../../core/units'
 import { useGoals } from '../../data/hooks'
 import type { Goal } from '../../data/types'
 import { goalTotals } from './goalUtils'
-import { Icon } from '../../components/ui/Icon'
+import { Icon, type IconName } from '../../components/ui/Icon'
+import { Explainer } from '../../components/ui/Explainer'
+import { usePlan } from '../plan/usePlan'
 
 export function GoalsPage() {
   const { t } = useTranslation()
@@ -26,46 +28,135 @@ export function GoalsPage() {
       </Page>
     )
   }
+  const today = localDayKey(new Date())
+  const upcoming = goals.data.filter((g) => g.status === 'active' && g.eventDate >= today).sort((a, b) => (a.priority === b.priority ? a.eventDate.localeCompare(b.eventDate) : a.priority === 'primary' ? -1 : 1))
+  const past = goals.data.filter((g) => !upcoming.includes(g))
   return (
     <Page title={t('goals.title')} actions={actions}>
-      <p>
-        <Link to="/temporada">{t('season.title')} →</Link>
-      </p>
-      <ul className="activity-list">
-        {goals.data.map((g) => (
-          <GoalCard key={g.id} goal={g} />
+      <GoalsExplainer />
+      <ul className="goal-list">
+        {upcoming.map((g, i) => (
+          <GoalCard key={g.id} goal={g} index={i} />
         ))}
       </ul>
+      {past.length > 0 && (
+        <>
+          <h2 className="section-title goal-past-title">{t('goals.pastTitle')}</h2>
+          <ul className="goal-list">
+            {past.map((g, i) => (
+              <GoalCard key={g.id} goal={g} index={i} />
+            ))}
+          </ul>
+        </>
+      )}
+      <Link to="/temporada" className="goal-season-link">
+        <span className="icon-tile icon-tile-sky" aria-hidden="true">
+          <Icon name="calendar" />
+        </span>
+        <span>
+          <strong>{t('season.title')}</strong>
+          <span className="muted">{t('goals.seasonLink')}</span>
+        </span>
+        <Icon name="chevronRight" />
+      </Link>
     </Page>
   )
 }
 
-export function GoalCard({ goal: g }: { goal: Goal }) {
+export function GoalsExplainer() {
   const { t } = useTranslation()
+  return (
+    <Explainer
+      id="goals"
+      icon="flag"
+      title={t('goals.whatTitle')}
+      points={[
+        ['star', t('goals.whatPrimary')],
+        ['plan', t('goals.whatPlan')],
+        ['food', t('goals.whatFood')],
+      ]}
+    >
+      {t('goals.whatBody')}
+    </Explainer>
+  )
+}
+
+const SPORT_ICON: Record<string, IconName> = { cycling: 'bike', running: 'run', swimming: 'swim', strength: 'dumbbell', other: 'activity' }
+const DIAG = { on_track: 'good', tight: 'caution', behind: 'alert', past: 'good' } as const
+
+export function GoalCard({ goal: g, index = 0 }: { goal: Goal; index?: number }) {
+  const { t } = useTranslation()
+  const { derived } = usePlan()
   const today = localDayKey(new Date())
   const days = daysBetween(today, g.eventDate)
   const tot = goalTotals(g)
+  const primary = g.priority === 'primary' && days >= 0
+  const d = derived?.diagnoses.find((x) => x.goalId === g.id)?.diagnosis
+  const pct = d && d.targetCtl > 0 && d.status !== 'past' ? Math.round((d.currentCtl / d.targetCtl) * 100) : null
   return (
-    <li className="activity-item">
-      <Link to={`/metas/${g.id}`} className={`activity-link${g.priority === 'primary' && days >= 0 ? ' goal-hero' : ''}`}>
-        <span className={`icon-tile activity-tile${g.priority === 'primary' ? '' : ' icon-tile-soft'}`} aria-hidden="true">
-          <Icon name="flag" />
+    <li className="goal-item" style={{ animationDelay: `${index * 60}ms` }}>
+      <Link to={`/metas/${g.id}`} className={`goal-card goal-card-${g.sport}${primary ? ' is-primary' : ''}${days < 0 ? ' is-past' : ''}`}>
+        <span className="goal-card-top">
+          <span className="goal-card-icon" aria-hidden="true">
+            <Icon name={SPORT_ICON[g.sport] ?? 'activity'} />
+          </span>
+          <span className="goal-card-text">
+            <span className="goal-card-sport">
+              {t(`sports.${g.sport}`)}
+              {g.subSport && ` · ${t(`subSports.${g.subSport}`)}`} · {g.goalType === 'stage' ? t('goals.stagesCount', { count: g.stages.length }) : t('goals.single')}
+            </span>
+            <strong className="goal-card-name">{g.name}</strong>
+            <span className="goal-card-date">
+              <Icon name="calendar" /> {formatDate(`${g.eventDate}T12:00:00Z`)}
+            </span>
+          </span>
+          <span className="goal-card-count">
+            {days >= 0 ? (
+              <>
+                <strong className="num">{days}</strong>
+                <span>{t('goals.daysLeftShort', { count: days })}</span>
+              </>
+            ) : (
+              <span>{t('goals.past')}</span>
+            )}
+          </span>
         </span>
-        <span className="activity-sport">
-          {t(`sports.${g.sport}`)}
-          {g.subSport && ` · ${t(`subSports.${g.subSport}`)}`} · {g.goalType === 'stage' ? t('goals.stagesCount', { count: g.stages.length }) : t('goals.single')}
+        <span className="goal-card-chips">
+          {g.priority === 'primary' ? (
+            <span className="gchip gchip-star">
+              <Icon name="star" /> {t('goals.primary')}
+            </span>
+          ) : (
+            <span className="gchip">{t('goals.secondary')}</span>
+          )}
+          {tot.distanceM > 0 && (
+            <span className="gchip">
+              <Icon name="route" /> {formatDistance(tot.distanceM)}
+            </span>
+          )}
+          {tot.elevationGainM > 0 && (
+            <span className="gchip">
+              <Icon name="mountain" /> {formatElevation(tot.elevationGainM)}
+            </span>
+          )}
+          <span className="gchip">
+            <Icon name={g.objective === 'time' ? 'timer' : 'check'} />{' '}
+            {g.objective === 'time' && g.targetTimeS ? formatClock(g.targetTimeS) : t('goals.finishOnly')}
+          </span>
         </span>
-        <strong className="activity-title">{g.name}</strong>
-        <span>
-          {formatDate(`${g.eventDate}T12:00:00Z`)} · {days >= 0 ? t('goals.inDays', { count: days }) : t('goals.past')}
-        </span>
-        <span className="num">
-          {tot.distanceM > 0 && formatDistance(tot.distanceM)}
-          {tot.elevationGainM > 0 && ` · ↑ ${formatElevation(tot.elevationGainM)}`}
-        </span>
-        <span className="row" style={{ gap: 'var(--space-2)' }}>
-          <span className={`badge ${g.priority === 'primary' ? 'badge-info' : 'badge-neutral'}`}>{g.priority === 'primary' ? `★ ${t('goals.primary')}` : t('goals.secondary')}</span>
-          <span className="badge badge-neutral">{g.objective === 'time' && g.targetTimeS ? t('goals.targetTime', { time: formatClock(g.targetTimeS) }) : t('goals.finishOnly')}</span>
+        {pct !== null && d && (
+          <span className="goal-card-form">
+            <span className="goal-card-form-head">
+              <span>{t('goals.formShort', { pct })}</span>
+              <span className={`gstatus gstatus-${DIAG[d.status]}`}>{t(`diagnosis.status.${d.status}`)}</span>
+            </span>
+            <span className="goal-card-bar" aria-hidden="true">
+              <span className={`goal-card-fill fill-${DIAG[d.status]}`} style={{ width: `${Math.min(100, pct)}%` }} />
+            </span>
+          </span>
+        )}
+        <span className="goal-card-more">
+          {t('goals.seeDetail')} <Icon name="chevronRight" />
         </span>
       </Link>
     </li>

@@ -1,4 +1,4 @@
-import { TitleIcon } from '../../components/ui/Icon'
+import { Icon, TitleIcon, type IconName } from '../../components/ui/Icon'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BarChart } from '../../components/ui/Charts'
@@ -81,7 +81,7 @@ export function MetricsPage() {
               }
             }}
           >
-            {t(`sports.${s}`)}
+            <Icon name={TAB_ICON[s] ?? 'activity'} /> {t(`sports.${s}`)}
           </button>
         ))}
       </div>
@@ -89,6 +89,33 @@ export function MetricsPage() {
         <SportPanel key={sport} sport={sport} />
       </div>
     </Page>
+  )
+}
+
+const TAB_ICON: Record<string, IconName> = { cycling: 'bike', running: 'run', swimming: 'swim', strength: 'dumbbell', other: 'activity' }
+
+interface Tile {
+  icon: IconName
+  tone: 'mint' | 'sky' | 'amber' | 'coral' | 'soft'
+  label: string
+  value: string
+  help?: string
+  /** Valores por periodo para la mini gráfica */
+  spark?: number[]
+  /** Veces por semana (puntos de 7) */
+  dots?: number
+  muted?: boolean
+}
+
+/** Mini barras de los últimos periodos (decorativas: el dato está en la gráfica grande y su tabla). */
+function Spark({ values, label }: { values: number[]; label: string }) {
+  const max = Math.max(...values, 1)
+  return (
+    <span className="spark" aria-hidden="true" title={label}>
+      {values.map((v, i) => (
+        <i key={i} className={i === values.length - 1 ? 'is-last' : undefined} style={{ height: `${Math.max(6, (v / max) * 100)}%`, animationDelay: `${i * 25}ms` }} />
+      ))}
+    </span>
   )
 }
 
@@ -127,26 +154,27 @@ function SportPanel({ sport }: { sport: Sport }) {
     return <p className="muted card">{t('metrics.noActivities')}</p>
   }
 
-  const items: [string, string, string?][] = [
-    [t('metrics.sessions'), String(summary.count)],
-    [t('metrics.frequency'), t('metrics.perWeek', { value: formatNumber(summary.count / 12, 1) }), t('metrics.help.frequency')],
-    [t('metrics.hours'), formatDuration(summary.durationS), t('metrics.help.volume')],
+  const sp = (f: (p: (typeof filled)[number]) => number) => filled.map(f)
+  const tiles: Tile[] = [
+    { icon: 'calendar', tone: 'mint', label: t('metrics.sessions'), value: String(summary.count), spark: sp((p) => p.count) },
+    { icon: 'refresh', tone: 'sky', label: t('metrics.frequency'), value: t('metrics.perWeek', { value: formatNumber(summary.count / 12, 1) }), help: t('metrics.help.frequency'), dots: Math.round(summary.count / 12) },
+    { icon: 'clock', tone: 'amber', label: t('metrics.hours'), value: formatDuration(summary.durationS), help: t('metrics.help.volume'), spark: sp((p) => p.durationS) },
   ]
   if (sport !== 'strength') {
-    items.push([t('metrics.km'), formatDistance(summary.distanceM)])
-    if (sport !== 'swimming') items.push([t('metrics.elevation'), formatElevation(summary.elevationM)])
+    tiles.push({ icon: 'route', tone: 'mint', label: t('metrics.km'), value: formatDistance(summary.distanceM), spark: sp((p) => p.distanceM) })
+    if (sport !== 'swimming') tiles.push({ icon: 'mountain', tone: 'amber', label: t('metrics.elevation'), value: formatElevation(summary.elevationM), spark: sp((p) => p.elevationM) })
   }
   if (sport === 'cycling') {
-    if (summary.avgSpeedMs) items.push([t('metrics.avgSpeed'), formatSpeed(summary.avgSpeedMs), t('metrics.help.speed')])
+    if (summary.avgSpeedMs) tiles.push({ icon: 'gauge', tone: 'sky', label: t('metrics.avgSpeed'), value: formatSpeed(summary.avgSpeedMs), help: t('metrics.help.speed') })
     if (summary.avgPowerW) {
-      items.push([t('metrics.avgPower'), formatPower(summary.avgPowerW)])
-      items.push([t('metrics.wkg'), kg ? formatWattsPerKg(summary.avgPowerW, kg) : t('metrics.noWeightForWkg')])
-    } else items.push([t('metrics.avgPower'), t('metrics.noPower')])
+      tiles.push({ icon: 'bolt', tone: 'coral', label: t('metrics.avgPower'), value: formatPower(summary.avgPowerW) })
+      tiles.push({ icon: 'scale', tone: 'soft', label: t('metrics.wkg'), value: kg ? formatWattsPerKg(summary.avgPowerW, kg) : '—', help: kg ? undefined : t('metrics.noWeightForWkg') })
+    } else tiles.push({ icon: 'bolt', tone: 'soft', label: t('metrics.avgPower'), value: '—', help: t('metrics.noPower'), muted: true })
   }
-  if (sport === 'running' && summary.avgSpeedMs) items.push([t('metrics.pacePerKm'), formatPacePerKm(1000, 1000 / summary.avgSpeedMs), t('metrics.help.pace')])
+  if (sport === 'running' && summary.avgSpeedMs) tiles.push({ icon: 'timer', tone: 'coral', label: t('metrics.pacePerKm'), value: formatPacePerKm(1000, 1000 / summary.avgSpeedMs), help: t('metrics.help.pace') })
   if (sport === 'swimming' && summary.avgSpeedMs)
-    items.push([t('metrics.pacePer100'), formatPacePer100m(100, 100 / summary.avgSpeedMs), t('metrics.help.pace')])
-  if (summary.avgHr) items.push([t('metrics.avgHr'), formatHeartRate(summary.avgHr)])
+    tiles.push({ icon: 'timer', tone: 'sky', label: t('metrics.pacePer100'), value: formatPacePer100m(100, 100 / summary.avgSpeedMs), help: t('metrics.help.pace') })
+  if (summary.avgHr) tiles.push({ icon: 'heart', tone: 'coral', label: t('metrics.avgHr'), value: formatHeartRate(summary.avgHr) })
 
   return (
     <div className="stack">
@@ -184,15 +212,28 @@ function SportPanel({ sport }: { sport: Sport }) {
           <TitleIcon name="chart" />
           {t('metrics.last12w')}
         </h2>
-        <dl className="stat-grid">
-          {items.map(([k, v, help]) => (
-            <div key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
-              {help && <dd className="metric-help">{help}</dd>}
-            </div>
+        <ul className="mtiles">
+          {tiles.map((x, i) => (
+            <li key={x.label} className={`mtile kpi-${x.tone}${x.muted ? ' is-muted' : ''}`} style={{ animationDelay: `${i * 50}ms` }}>
+              <span className="mtile-head">
+                <span className="kpi-icon" aria-hidden="true">
+                  <Icon name={x.icon} />
+                </span>
+                <span className="kpi-label">{x.label}</span>
+              </span>
+              <strong className="mtile-value">{x.value}</strong>
+              {x.spark && x.spark.some((v) => v > 0) && <Spark values={x.spark} label={t(`metrics.${unit}`)} />}
+              {x.dots !== undefined && (
+                <span className="mtile-dots" aria-hidden="true">
+                  {Array.from({ length: 7 }, (_, k) => (
+                    <i key={k} className={k < x.dots! ? 'on' : undefined} />
+                  ))}
+                </span>
+              )}
+              {x.help && <span className="mtile-help">{x.help}</span>}
+            </li>
           ))}
-        </dl>
+        </ul>
       </section>
 
       <section className="card">

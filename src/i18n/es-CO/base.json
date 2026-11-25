@@ -61,6 +61,10 @@
     "uploaded_one": "Actividad subida",
     "uploaded_other": "{{count}} actividades subidas"
   },
+  "explainer": {
+    "hide": "Ocultar",
+    "show": "Ver"
+  },
   "cal": {
     "view": "Vista del calendario",
     "week": "Semana",

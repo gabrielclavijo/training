@@ -1,5 +1,14 @@
 {
   "goals": {
+    "whatTitle": "¿Qué es una meta?",
+    "whatBody": "Una meta es el evento para el que te preparas: una carrera, una salida larga o un reto por etapas. Con tus metas, la app arma el plan para que llegues en forma ese día.",
+    "whatPrimary": "Puedes tener varias; la marcada como «Principal» es la que más pesa en el plan.",
+    "whatPlan": "El plan ajusta la carga de cada semana: preparación, disminución previa y recuperación.",
+    "whatFood": "La alimentación usa ese plan para calcular lo que necesitas cada día.",
+    "pastTitle": "Metas pasadas",
+    "seasonLink": "Todas tus metas en el calendario",
+    "formShort": "Tu forma: {{pct}} % de la recomendada",
+    "seeDetail": "Ver detalle",
     "howGoing": "¿Cómo va tu forma?",
     "gaugeLabel": "Tu forma de hoy es {{now}}, el {{pct}} % de la recomendada ({{target}}). Si sigues el plan llegarás al {{event}} %.",
     "gaugeCaption": "de la forma recomendada para el evento",
@@ -76,6 +85,11 @@
   "season": {
     "title": "Temporada",
     "intro": "Tus metas en el calendario, con su preparación, la disminución de carga previa, el evento y la recuperación.",
+    "whatTitle": "¿Qué es una temporada?",
+    "whatBody": "Tu temporada es el año de entrenamiento visto completo: todas tus metas en el calendario, con su preparación, la disminución de carga antes del evento y la recuperación después.",
+    "whatMany": "Puedes agregar varias metas en la temporada (por ejemplo, una carrera de prueba y tu evento grande).",
+    "whatPrimary": "Marca una como «Principal»: el plan de entrenamiento y la alimentación se ajustan para que llegues en tu mejor forma a esa; las demás se integran como parte de la preparación.",
+    "whatBlocks": "Las pausas (viajes, enfermedad, vacaciones) también aparecen aquí y el plan se reacomoda solo.",
     "noGoals": "Crea una meta para ver tu temporada.",
     "blocks": {
       "build": "Preparación",

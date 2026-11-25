@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router'
 import { useToast } from '../../components/fx/Toast'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../components/ui/EmptyState'
+import { Explainer } from '../../components/ui/Explainer'
 import { NumberField, parseWhole } from '../../components/ui/Field'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
 import { daysBetween, formatDate, localDayKey } from '../../core/dates'
@@ -17,6 +18,24 @@ const fmt = (d: string) => formatDate(`${d}T12:00:00Z`)
 const BLOCK_ICON: Record<BlockKind, string> = { build: '▲', taper: '▽', event: '★', recovery: '◌' }
 
 export { PausesSection }
+
+function SeasonExplainer() {
+  const { t } = useTranslation()
+  return (
+    <Explainer
+      id="season"
+      icon="calendar"
+      title={t('season.whatTitle')}
+      points={[
+        ['flag', t('season.whatMany')],
+        ['star', t('season.whatPrimary')],
+        ['trend', t('season.whatBlocks')],
+      ]}
+    >
+      {t('season.whatBody')}
+    </Explainer>
+  )
+}
 
 export function SeasonPage() {
   const { t } = useTranslation()
@@ -41,6 +60,7 @@ export function SeasonPage() {
   if (active.length === 0) {
     return (
       <Page title={t('season.title')}>
+        <SeasonExplainer />
         <EmptyState icon="calendar" title={t('season.noGoals')} actionLabel={t('goals.new')} actionTo="/metas/nueva" />
         <PausesSection />
       </Page>
@@ -54,7 +74,7 @@ export function SeasonPage() {
 
   return (
     <Page title={t('season.title')}>
-      <p className="muted">{t('season.intro')}</p>
+      <SeasonExplainer />
 
       {season.warnings.map((w) => (
         <Alert key={w.goalId + w.kind} kind="warning">
