@@ -133,7 +133,8 @@ Solo necesitas **tu cuenta de Google** (no hace falta pagar ni poner tarjeta). E
    - Nombre de la app: `Entreno`. Correo de asistencia: el tuyo.
    - Tipo de usuario / Público: **Externo**.
    - Correo de contacto del desarrollador: el tuyo → **Guardar**.
-   - En **Usuarios de prueba** (o **Público → Test users**) agrega los correos de Gmail de las personas del grupo, incluido el tuyo. Mientras la app esté «en prueba», solo ellas pueden entrar con Google (hasta 100).
+   - En **Público** (Audience) pulsa **Publicar app** y confirma: queda **En producción** y cualquier cuenta de Google puede entrar, sin agregar correos uno por uno. La app solo pide correo, nombre y foto de Google (permisos básicos), así que Google no exige revisarla.
+   - La pantalla de Google mostrará «Continuar a TU-PROJECT-ID.supabase.co». Para que diga «Entreno» hace falta la verificación de marca (opcional, más adelante): dominio verificado en Google Search Console, página de inicio y política de privacidad.
 4. **APIs y servicios → Credenciales** (o **Clientes**) → **Crear credenciales → ID de cliente de OAuth**:
    - Tipo de aplicación: **Aplicación web**. Nombre: `Entreno web`.
    - **URI de redireccionamiento autorizados → Agregar URI:** `https://TU-PROJECT-ID.supabase.co/auth/v1/callback` (cambia `TU-PROJECT-ID` por tu Project ID de Supabase).
