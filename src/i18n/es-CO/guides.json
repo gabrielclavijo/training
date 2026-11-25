@@ -170,14 +170,28 @@
     },
     "reading": {
       "title": "Leer tus números",
-      "desc": "Qué significan los semáforos de Inicio.",
+      "desc": "Qué significan el medidor de Inicio y los semáforos.",
       "steps": [
-        "En Inicio, cada indicador tiene un semáforo: verde (bien), amarillo (atención) o rojo (alerta), con una frase que dice qué hacer.",
-        "La escala de colores muestra dónde estás; en la forma, la marca «Mejor» es tu mejor forma registrada.",
+        "En Inicio, el medidor «Estado de forma» muestra con una aguja si estás muy cansado (rojo), con cansancio acumulado (naranja) o en buen equilibrio (verde).",
+        "Debajo, Forma, Fatiga y Ritmo de aumento tienen una calificación: Excelente, Bien o Atención.",
+        "En Métricas está el detalle de cada indicador con su semáforo, su escala y una explicación; en la forma, la marca «Mejor» es tu mejor forma registrada.",
         "La tarjeta «Tu meta» compara tu forma de hoy con la recomendada para el evento.",
-        "¿Dudas con un término? Toca «¿Qué es?» en cada tarjeta o ve a «¿Qué significa?»."
+        "¿Dudas con un término? Ve a «¿Qué significa?»."
       ],
       "cta": "Ver ¿Qué significa?"
+    },
+    "kpis": {
+      "title": "Tu semana en cifras (▲ y ▼)",
+      "desc": "Qué significan las flechas y los colores de las cifras de Inicio.",
+      "steps": [
+        "Cada cifra compara hoy con hace 7 días. ▲ quiere decir que subió y ▼ que bajó; el número al lado es cuánto cambió.",
+        "Verde es buena señal. Por ejemplo, la forma sube o la fatiga baja.",
+        "Naranja es para vigilar. Por ejemplo, la forma baja o la fatiga sube; si sigue así varios días, revisa tu descanso.",
+        "Gris es solo informativo. Más o menos carga u horas no es bueno ni malo por sí solo: una semana suave de descarga también hace parte del plan.",
+        "Forma: tu base de entrenamiento de las últimas ~6 semanas. Fatiga: el cansancio de los últimos ~7 días. Carga y horas: lo que entrenaste en los últimos 7 días.",
+        "Debajo de cada cifra hay una frase corta que dice qué pasó, por ejemplo «Estás más descansado»."
+      ],
+      "cta": "Ver mis cifras"
     }
   },
   "settingsExtra": {

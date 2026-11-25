@@ -35,6 +35,18 @@
     "ratingRamp": "Ritmo de aumento",
     "kpiTitle": "Tu semana en cifras",
     "kpiVs": "vs. semana pasada",
+    "kpiHow": "¿Cómo leerlas?",
+    "legendUp": "subió",
+    "legendDown": "bajó frente a hace 7 días",
+    "legendGood": "buena señal",
+    "legendBad": "vigílalo",
+    "legendInfo": "solo informativo",
+    "hint": {
+      "kpiForm": { "up": "Estás ganando forma", "down": "Perdiste algo de forma", "same": "Tu forma se mantiene" },
+      "kpiFatigue": { "up": "Más cansancio acumulado", "down": "Estás más descansado", "same": "Igual de cansado" },
+      "kpiLoad": { "up": "Entrenaste más que la semana pasada", "down": "Entrenaste menos que la semana pasada", "same": "Igual que la semana pasada" },
+      "kpiHours": { "up": "Más horas que la semana pasada", "down": "Menos horas que la semana pasada", "same": "Igual que la semana pasada" }
+    },
     "kpiForm": "Forma",
     "kpiFatigue": "Fatiga",
     "kpiLoad": "Carga 7 días",

@@ -67,6 +67,7 @@ const TOPICS: Topic[] = [
   { id: 'alimentacion', key: 'nutrition', group: 'health', icon: 'food', tone: 'coral', cta: { to: '/nutricion' }, art: () => <ArtNutrition /> },
   { id: 'examenes', key: 'labs', group: 'health', icon: 'lab', tone: 'sky', cta: { to: '/laboratorio' }, art: () => <ArtLabs /> },
   { id: 'numeros', key: 'reading', group: 'health', icon: 'gauge', cta: { to: '/glosario' }, art: () => <ArtSemaphores /> },
+  { id: 'cifras', key: 'kpis', group: 'health', icon: 'trend', tone: 'sky', cta: { to: '/' }, art: () => <ArtKpis /> },
   { id: 'problemas', key: 'trouble', group: 'help', icon: 'alert', tone: 'coral' },
 ]
 
@@ -358,6 +359,27 @@ function ArtSemaphores() {
         <Semaphore level="good" label="Bien" />
         <Semaphore level="caution" label="Atención" />
         <Semaphore level="alert" label="Alerta" />
+      </div>
+    </figure>
+  )
+}
+
+function ArtKpis() {
+  const tiles: [string, string, string, string][] = [
+    ['Forma', '73', '▲ 3', 'good'],
+    ['Fatiga', '65', '▲ 8', 'bad'],
+    ['Carga 7 días', '486', '▼ 111', 'info'],
+  ]
+  return (
+    <figure className="art" aria-hidden="true">
+      <div className="art-kpis">
+        {tiles.map(([l, v, d, k]) => (
+          <div key={l} className="art-kpi">
+            <span className={`kpi-delta is-${k}`}>{d}</span>
+            <span className="kpi-label">{l}</span>
+            <strong className="num">{v}</strong>
+          </div>
+        ))}
       </div>
     </figure>
   )

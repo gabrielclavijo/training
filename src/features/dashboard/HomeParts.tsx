@@ -133,11 +133,12 @@ export function KpiTiles() {
   const prev7 = inRange(-14, -7)
   const load = (xs: typeof last7) => xs.reduce((a, l) => a + (l.load.load ?? 0), 0)
   const hours = (xs: typeof last7) => xs.reduce((a, l) => a + (l.activity.movingS || l.activity.elapsedS || 0), 0) / 3600
-  const tiles: { key: string; icon: IconName; tone: string; value: number; prev: number; decimals?: number; upIsGood: boolean }[] = [
+  // upIsGood: null = solo informativo (más o menos carga no es buena ni mala por sí sola)
+  const tiles: { key: string; icon: IconName; tone: string; value: number; prev: number; decimals?: number; upIsGood: boolean | null }[] = [
     { key: 'kpiForm', icon: 'trend', tone: 'mint', value: now.ctl, prev: ago.ctl, upIsGood: true },
     { key: 'kpiFatigue', icon: 'bolt', tone: 'coral', value: now.atl, prev: ago.atl, upIsGood: false },
-    { key: 'kpiLoad', icon: 'flame', tone: 'amber', value: load(last7), prev: load(prev7), upIsGood: true },
-    { key: 'kpiHours', icon: 'clock', tone: 'sky', value: hours(last7), prev: hours(prev7), decimals: 1, upIsGood: true },
+    { key: 'kpiLoad', icon: 'flame', tone: 'amber', value: load(last7), prev: load(prev7), upIsGood: null },
+    { key: 'kpiHours', icon: 'clock', tone: 'sky', value: hours(last7), prev: hours(prev7), decimals: 1, upIsGood: null },
   ]
   return (
     <section aria-labelledby="kpi-h" className="kpi-section">
@@ -145,14 +146,26 @@ export function KpiTiles() {
         <h2 id="kpi-h" className="section-title">
           {t('home.kpiTitle')}
         </h2>
-        <span className="muted small">{t('home.kpiVs')}</span>
+        <Link to="/ayuda?tema=cifras" className="small-link">
+          {t('home.kpiHow')}
+        </Link>
       </div>
+      <p className="kpi-legend">
+        <span>
+          <b aria-hidden="true">▲</b> {t('home.legendUp')} · <b aria-hidden="true">▼</b> {t('home.legendDown')}
+        </span>
+        <span className="kpi-legend-colors">
+          <i className="lg-good" aria-hidden="true" /> {t('home.legendGood')}
+          <i className="lg-bad" aria-hidden="true" /> {t('home.legendBad')}
+          <i className="lg-info" aria-hidden="true" /> {t('home.legendInfo')}
+        </span>
+      </p>
       <ul className="kpi-grid">
         {tiles.map((k, i) => {
           const d = k.value - k.prev
           const step = k.decimals ? 0.1 : 1
           const dir = Math.abs(d) < step / 2 ? 'same' : d > 0 ? 'up' : 'down'
-          const good = dir === 'same' ? null : (dir === 'up') === k.upIsGood
+          const good = dir === 'same' || k.upIsGood === null ? null : (dir === 'up') === k.upIsGood
           const fmt = (n: number) => formatNumber(n, k.decimals ?? 0)
           return (
             <li key={k.key} className={`kpi kpi-${k.tone}`} style={{ animationDelay: `${i * 60}ms` }}>
@@ -164,13 +177,17 @@ export function KpiTiles() {
                 <CountUp value={k.value} format={fmt} />
               </span>
               <span
-                className={`kpi-delta delta-${dir}${good === null ? '' : good ? ' is-good' : ' is-bad'}`}
+                className={`kpi-delta delta-${dir}${good === null ? ' is-info' : good ? ' is-good' : ' is-bad'}`}
                 style={{ animationDelay: `${700 + i * 80}ms` }}
                 aria-hidden="true"
               >
                 {dir === 'up' ? '▲' : dir === 'down' ? '▼' : '='} {dir === 'same' ? '' : fmt(Math.abs(d))}
               </span>
+              <span className="kpi-hint" aria-hidden="true">
+                {t(`home.hint.${k.key}.${dir}`)}
+              </span>
               <span className="visually-hidden">
+                {t(`home.hint.${k.key}.${dir}`)}.{' '}
                 {t('home.kpiDelta', { label: t(`home.${k.key}`), value: fmt(k.value), dir: t(`home.${dir}`), delta: dir === 'same' ? '' : fmt(Math.abs(d)) })}
               </span>
             </li>
