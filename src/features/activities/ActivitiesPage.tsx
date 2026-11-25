@@ -157,7 +157,7 @@ export function ActivitiesPage() {
                   to: `/actividades/${l.activity.id}`,
                 })),
                 total: list.length
-                  ? `${formatDuration(secs)} · ${t("activities.pts", { value: formatNumber(load) })}`
+                  ? `${(secs > 0 ? formatDuration(secs) : '0 h')} · ${t("activities.pts", { value: formatNumber(load) })}`
                   : undefined,
                 empty: { text: t("activities.noneThatDay"), icon: "bed" },
               };
@@ -174,7 +174,7 @@ export function ActivitiesPage() {
                 <>
                   <strong className="num">{list.length}</strong>{" "}
                   {t("activities.calCount", { count: list.length })} ·{" "}
-                  <strong className="num">{formatDuration(secs)}</strong>
+                  <strong className="num">{(secs > 0 ? formatDuration(secs) : '0 h')}</strong>
                 </>
               );
             }}

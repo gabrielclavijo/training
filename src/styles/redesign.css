@@ -91,7 +91,7 @@ a.card-link:hover {
 
 /* ---------- Encabezado ---------- */
 .topbar {
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  background: color-mix(in srgb, var(--bg) 97%, transparent);
   backdrop-filter: saturate(1.4) blur(12px);
   -webkit-backdrop-filter: saturate(1.4) blur(12px);
   border-bottom: none;
