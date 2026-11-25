@@ -91,3 +91,26 @@ export function fromText(text?: string | null): SportMapping {
   if (/strength|weight|gym|pesas|fuerza/.test(t)) return { sport: 'strength', subSport: null }
   return { sport: 'other', subSport: null }
 }
+
+/**
+ * Corrige el deporte cuando el archivo dice «gimnasio» u «otro» pero los datos
+ * muestran un desplazamiento real (p. ej. Strava guarda como «Workout» una
+ * salida en bici). Se decide por distancia y velocidad promedio:
+ *   - 45 km o más, o 14 km/h o más → ciclismo
+ *   - entre 6,5 y 14 km/h → running
+ *   - más lento (caminata, senderismo) o menos de 3 km → se deja como venía
+ */
+export function reconcileSport(
+  m: SportMapping,
+  a: { distanceM: number | null; movingS: number | null; elapsedS: number },
+): SportMapping {
+  if (m.sport !== 'strength' && m.sport !== 'other') return m
+  const km = (a.distanceM ?? 0) / 1000
+  if (km < 3) return m
+  // Si el tiempo en movimiento es raro (menos del 30 % del total), se usa el total
+  const secs = a.movingS && a.movingS >= 0.3 * a.elapsedS ? a.movingS : a.elapsedS
+  const kmh = secs > 0 ? km / (secs / 3600) : 0
+  if (km >= 45 || kmh >= 14) return { sport: 'cycling', subSport: null }
+  if (kmh >= 6.5) return { sport: 'running', subSport: 'road' }
+  return m
+}

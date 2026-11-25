@@ -1,4 +1,4 @@
-import { fromStravaType, type SportMapping } from '../activity/sport'
+import { fromStravaType, reconcileSport, type SportMapping } from '../activity/sport'
 import { emptySummary, type ParsedActivity } from '../activity/types'
 import { parseCsv } from './csv'
 
@@ -98,5 +98,8 @@ export function manualFromStravaRow(row: StravaExportRow): ParsedActivity | null
     elevationGainM: row.elevationGainM,
     rpe: row.rpe,
   })
+  const fixed = reconcileSport({ sport: summary.sport, subSport: summary.subSport }, summary)
+  summary.sport = fixed.sport
+  summary.subSport = fixed.subSport
   return { summary, streams: null, format: 'manual', originHint: 'strava_export' }
 }

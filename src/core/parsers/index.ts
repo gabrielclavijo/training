@@ -1,4 +1,5 @@
 import { gunzipSync, unzipSync } from 'fflate'
+import { reconcileSport } from '../activity/sport'
 import type { SportMapping } from '../activity/sport'
 import type { OriginHint, ParsedActivity } from '../activity/types'
 import { ImportError } from './errors'
@@ -51,7 +52,16 @@ export function parseActivityFile(entry: FileEntry, hint?: SportMapping, originH
     if (hint.subSport) parsed.summary.subSport = hint.subSport
   }
   parsed.originHint = originHint
+  applyReconcile(parsed)
   return parsed
+}
+
+/** Ajusta el deporte si el archivo dice «gimnasio/otro» pero hubo desplazamiento. */
+export function applyReconcile(parsed: ParsedActivity) {
+  const s = parsed.summary
+  const fixed = reconcileSport({ sport: s.sport, subSport: s.subSport }, s)
+  s.sport = fixed.sport
+  s.subSport = fixed.subSport
 }
 
 /**

@@ -1,4 +1,4 @@
-import { fromStravaType } from '../activity/sport'
+import { fromStravaType, reconcileSport } from '../activity/sport'
 import type { ParsedActivity, Sample } from '../activity/types'
 import { buildParsed } from './build'
 import { ImportError } from './errors'
@@ -90,5 +90,8 @@ export function parseStravaApi(payload: StravaInboxPayload): ParsedActivity {
   // Sin series (ej. actividad manual en Strava): el pulso promedio basta para la carga
   if (samples.length < 2 && a.average_heartrate) parsed.summary.hasHr = true
   if (a.perceived_exertion && a.perceived_exertion >= 1 && a.perceived_exertion <= 10) parsed.summary.rpe = Math.round(a.perceived_exertion)
+  const fixed = reconcileSport({ sport: parsed.summary.sport, subSport: parsed.summary.subSport }, parsed.summary)
+  parsed.summary.sport = fixed.sport
+  parsed.summary.subSport = fixed.subSport
   return parsed
 }
