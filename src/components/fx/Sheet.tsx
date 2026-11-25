@@ -16,7 +16,7 @@ export function Sheet({
 }: {
   open: boolean
   onClose: () => void
-  side: 'left' | 'bottom'
+  side: 'left' | 'bottom' | 'center'
   label: string
   children: ReactNode
   className?: string
@@ -84,7 +84,7 @@ export function Sheet({
         ref={panel}
         className="sheet-panel"
         onPointerDown={(e) => {
-          if (e.pointerType === 'mouse') return
+          if (e.pointerType === 'mouse' || side === 'center') return
           // Abajo: solo se arrastra desde la manija o el título (el contenido puede tener scroll)
           if (side === 'bottom' && !(e.target as Element).closest('.sheet-grip, .sheet-head')) return
           drag.current = { x: e.clientX, y: e.clientY, d: 0 }

@@ -54,7 +54,7 @@ const QUICK: { key: string; icon: IconName; to: string; state?: Record<string, u
   { key: 'upload', icon: 'upload', to: '/subir' },
   { key: 'manual', icon: 'edit', to: '/actividades/nueva' },
   { key: 'checkin', icon: 'heart', to: '/', state: { checkin: true } },
-  { key: 'pause', icon: 'moon', to: '/temporada', state: { newPause: true } },
+  { key: 'pause', icon: 'pause', to: '/temporada', state: { newPause: true } },
   { key: 'menu', icon: 'food', to: '/nutricion' },
 ]
 
@@ -87,6 +87,7 @@ function Shell() {
   useUsageHeartbeat()
   const admin = useIsAdmin()
   const [open, setOpen] = useState<Open>(null)
+  const [pageTitle, setPageTitle] = useState<string | null>(null)
   const path = location.pathname
   const ready = Boolean(profile.data?.onboardingDone)
 
@@ -126,8 +127,8 @@ function Shell() {
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={28} height={28} />
           {t('app.name')}
         </Link>
-        <p className="topbar-title" key={path === '/' ? 'home' : section?.to}>
-          {path === '/' ? (name ? t('nav.hello', { name }) : t('nav.helloAnon')) : section ? t(section.label) : t('app.name')}
+        <p className="topbar-title" key={path === '/' ? 'home' : (pageTitle ?? section?.to)}>
+          {path === '/' ? (name ? t('nav.hello', { name }) : t('nav.helloAnon')) : (pageTitle ?? (section ? t(section.label) : t('app.name')))}
         </p>
         <div className="topbar-actions">
           {ready && <BellButton open={open === 'bell'} onOpen={() => setOpen('bell')} />}
@@ -158,7 +159,7 @@ function Shell() {
         {mode === 'local' && <p className="local-banner">{t('local.banner')}</p>}
         {/* Cada pantalla entra con una animación suave (se desactiva con «reducir movimiento») */}
         <div className="page-enter" key={path}>
-          <HeaderTitle.Provider value={path === '/' ? null : section ? t(section.label) : null}>
+          <HeaderTitle.Provider value={setPageTitle}>
             <Outlet />
           </HeaderTitle.Provider>
         </div>

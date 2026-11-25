@@ -158,8 +158,8 @@ export function SeasonPage() {
   )
 }
 
-const PAUSE_ICON: Record<PauseKind, IconName> = { illness: 'heart', injury: 'alert', travel: 'route', vacation: 'sun', other: 'moon' }
-const AVAIL_ICON: Record<string, IconName> = { bike: 'bike', run: 'run', gym: 'dumbbell', pool: 'swim', none: 'moon' }
+const PAUSE_ICON: Record<PauseKind, IconName> = { illness: 'heart', injury: 'alert', travel: 'route', vacation: 'sun', other: 'pause' }
+const AVAIL_ICON: Record<string, IconName> = { bike: 'bike', run: 'run', gym: 'dumbbell', pool: 'swim', none: 'bed' }
 
 const KINDS: PauseKind[] = ['illness', 'injury', 'travel', 'vacation', 'other']
 const AVAILABLE: PauseAvailability[] = ['bike', 'run', 'gym', 'pool']
@@ -205,7 +205,7 @@ function PausesSection() {
     if (to && to < from) return setError(t('activities.mustBePositive'))
     setError(null)
     await save.mutateAsync(undefined)
-    toast(t('season.pauseSaved'), { icon: 'moon' })
+    toast(t('season.pauseSaved'), { icon: 'pause' })
     if (details.current) details.current.open = false
     setTo('')
     setAvailable([])
@@ -216,7 +216,7 @@ function PausesSection() {
   return (
     <section className="card" aria-labelledby="pauses-h">
       <h2 id="pauses-h" className="card-title-icon">
-        <TitleIcon name="moon" tone="soft" />
+        <TitleIcon name="pause" tone="soft" />
         {t('season.pauses')}
       </h2>
       <p className="muted">{t('season.pausePhase2')}</p>
@@ -266,7 +266,7 @@ function PausesSection() {
                     </>
                   ) : (
                     <li className="chip">
-                      <Icon name="moon" /> {t('season.pauseNone')}
+                      <Icon name="bed" /> {t('season.pauseNone')}
                     </li>
                   )}
                 </ul>
@@ -277,7 +277,7 @@ function PausesSection() {
       </ul>
       <details className="add-toggle" id="nueva-pausa" ref={details}>
         <summary className="btn btn-primary">
-          <Icon name="moon" /> {t('season.addPause')}
+          <Icon name="pause" /> {t('season.addPause')}
         </summary>
         <form onSubmit={onSubmit} noValidate className="pause-form">
           {error && <Alert kind="error">{error}</Alert>}

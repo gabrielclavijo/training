@@ -61,6 +61,18 @@
     "uploaded_one": "Actividad subida",
     "uploaded_other": "{{count}} actividades subidas"
   },
+  "cal": {
+    "view": "Vista del calendario",
+    "week": "Semana",
+    "month": "Mes",
+    "prevWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "prevMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "today": "Hoy",
+    "total": "Total",
+    "nothing": "Nada este día"
+  },
   "charts": {
     "explore": "Toca la gráfica o usa las flechas para ver cada día."
   },

@@ -38,6 +38,13 @@ async function makeUploadFiles() {
   const errors = [];
   p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   p.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  const axe = async (name) => {
+    const r = await new AxeBuilder({ page: p }).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
+    const sw = await p.evaluate(() => document.documentElement.scrollWidth);
+    console.log(name, r.violations.map(v => `${v.id}(${v.nodes.length}): ${v.nodes[0].target}`).join(' | ') || 'ok', sw > 360 ? 'OVERFLOW ' + sw : '');
+    if (sw > 360) console.log(await p.evaluate(() => [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > 360.5).slice(0, 8).map((e) => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))));
+    if (r.violations.length || sw > 360) throw new Error('Problemas de accesibilidad o desborde en ' + name);
+  };
   await p.goto(base);
   await p.getByRole('button', { name: 'Probar en modo local' }).click();
   await p.waitForURL(/bienvenida/);
@@ -74,8 +81,16 @@ async function makeUploadFiles() {
   console.log('subida:', summary.join(' | ').replace(/\n/g, ' '));
   if (!/2 nuevas/.test(summary.join(' '))) throw new Error('La subida de archivos no importó las 2 actividades');
   await p.getByRole('link', { name: 'Ver mis actividades' }).click();
+  // Calendario: el día de hoy abre el detalle con la actividad subida
+  await p.locator('.cal-day.is-today').click();
+  await p.locator('dialog[open]').getByRole('link', { name: /Prueba de subida/ }).first().waitFor();
+  await axe('detalle del día en el calendario');
+  await p.keyboard.press('Escape'); await p.waitForTimeout(400);
+  console.log('subida: la actividad aparece en el calendario');
+  await p.getByRole('button', { name: /Lista/ }).click();
   await p.getByRole('link', { name: /Prueba de subida/ }).first().waitFor();
   console.log('subida: la actividad aparece en la lista');
+  await p.getByRole('button', { name: /Calendario/ }).click();
 
   // Fase 2: plan, sesión y diagnóstico
   await p.goto(base + '#/plan'); await p.waitForTimeout(800);
@@ -95,13 +110,6 @@ async function makeUploadFiles() {
   await p.screenshot({ path: out + 'e2e_plan.png', fullPage: true });
 
   // Fase 3: alimentación (menú de ejemplo en modo local), exámenes y recomendaciones
-  const axe = async (name) => {
-    const r = await new AxeBuilder({ page: p }).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
-    const sw = await p.evaluate(() => document.documentElement.scrollWidth);
-    console.log(name, r.violations.map(v => `${v.id}(${v.nodes.length}): ${v.nodes[0].target}`).join(' | ') || 'ok', sw > 360 ? 'OVERFLOW ' + sw : '');
-    if (sw > 360) console.log(await p.evaluate(() => [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > 360.5).slice(0, 8).map((e) => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))));
-    if (r.violations.length || sw > 360) throw new Error('Problemas de accesibilidad o desborde en ' + name);
-  };
   await p.goto(base + '#/nutricion'); await p.waitForTimeout(800);
   if (!/no reemplaza a un nutricionista/.test(await p.locator('main').innerText())) throw new Error('Falta el aviso en alimentación');
   await p.getByLabel('Alergias e intolerancias de comida').fill('maní, mariscos');
@@ -190,6 +198,7 @@ async function makeUploadFiles() {
 
   // detalle de la actividad fusionada
   await p.goto(base + '#/actividades'); await p.waitForTimeout(400);
+  await p.getByRole('button', { name: /Lista/ }).click();
   await p.getByRole('link', { name: /Gravel por la Sabana con el parche/ }).first().click();
   await p.waitForTimeout(500);
   const res = await new AxeBuilder({ page: p }).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();

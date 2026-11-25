@@ -1,5 +1,14 @@
 {
   "goals": {
+    "howGoing": "¿Cómo va tu forma?",
+    "gaugeLabel": "Tu forma de hoy es {{now}}, el {{pct}} % de la recomendada ({{target}}). Si sigues el plan llegarás al {{event}} %.",
+    "gaugeCaption": "de la forma recomendada para el evento",
+    "daysLeftShort_one": "día",
+    "daysLeftShort_other": "días",
+    "stagesCount_one": "{{count}} etapa",
+    "stagesCount_other": "{{count}} etapas",
+    "elevationGain": "Altimetría",
+    "estimatedShort": "Tiempo estimado",
     "title": "Metas",
     "new": "Nueva meta",
     "edit": "Editar meta",

@@ -1,18 +1,36 @@
 import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react'
 
-/** Título que ya muestra el encabezado (si coincide, el <h1> de la página no se repite a la vista). */
-export const HeaderTitle = createContext<string | null>(null)
+/** El encabezado muestra el título de la página; el <h1> queda para lectores de pantalla. */
+export const HeaderTitle = createContext<((title: string | null) => void) | null>(null)
 import { useTranslation } from 'react-i18next'
 
 /**
  * Encabezado de página: actualiza el título de la pestaña y mueve el foco al
  * <h1> al cambiar de ruta, para que los lectores de pantalla anuncien la página.
  */
-export function Page({ title, children, actions, hideTitle = false }: { title: string; children: ReactNode; actions?: ReactNode; hideTitle?: boolean }) {
+export function Page({
+  title,
+  children,
+  actions,
+  hideTitle = false,
+  headerTitle,
+}: {
+  title: string
+  children: ReactNode
+  actions?: ReactNode
+  hideTitle?: boolean
+  /** Texto del encabezado si debe ser distinto del título (p. ej. la sección) */
+  headerTitle?: string
+}) {
   const { t } = useTranslation()
   const h1 = useRef<HTMLHeadingElement>(null)
-  const header = useContext(HeaderTitle)
-  if (header && header === title) hideTitle = true
+  const setHeader = useContext(HeaderTitle)
+  if (setHeader) hideTitle = true
+  const shown = headerTitle ?? title
+  useEffect(() => {
+    setHeader?.(shown)
+  }, [setHeader, shown])
+  useEffect(() => () => setHeader?.(null), [setHeader])
 
   useEffect(() => {
     document.title = `${title} · ${t('app.name')}`

@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
 import { celebrateOnce } from '../../components/fx/motion'
-import { Icon, TitleIcon } from '../../components/ui/Icon'
+import { Icon, TitleIcon, type IconName } from '../../components/ui/Icon'
+import { ArcGauge, CountUp, Semaphore } from '../../components/ui/Status'
+import { usePlan } from '../plan/usePlan'
+import type { Goal } from '../../data/types'
 import { useToast } from '../../components/fx/Toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -8,10 +11,117 @@ import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
 import { addDays, daysBetween, formatDate, localDayKey } from '../../core/dates'
-import { formatClock, formatDistance, formatElevation } from '../../core/units'
+import { formatClock, formatDistance, formatElevation, formatNumber } from '../../core/units'
 import { useRepo } from '../../data/RepoProvider'
 import { DiagnosisCard } from './DiagnosisCard'
 import { goalEstimatedHours, goalTotals } from './goalUtils'
+
+const SPORT_ICON: Record<string, IconName> = { cycling: 'bike', running: 'run', swimming: 'swim', strength: 'dumbbell', other: 'activity' }
+
+function Tile({ icon, tone, label, value }: { icon: IconName; tone: string; label: string; value: string }) {
+  return (
+    <li className={`goal-tile kpi-${tone}`}>
+      <span className="kpi-icon" aria-hidden="true">
+        <Icon name={icon} />
+      </span>
+      <span className="kpi-label">{label}</span>
+      <strong className="goal-tile-value">{value}</strong>
+    </li>
+  )
+}
+
+/** Encabezado de la meta: deporte, nombre, fecha y cuenta regresiva. */
+function GoalHero({ goal: g, days }: { goal: Goal; days: number }) {
+  const { t } = useTranslation()
+  return (
+    <section className={`goal-hero goal-hero-${g.sport}`} aria-label={g.name}>
+      <span className="goal-hero-icon" aria-hidden="true">
+        <Icon name={SPORT_ICON[g.sport] ?? 'activity'} />
+      </span>
+      <div className="goal-hero-text">
+        <span className="goal-hero-sport">
+          {t(`sports.${g.sport}`)}
+          {g.subSport && ` · ${t(`subSports.${g.subSport}`)}`}
+          {g.goalType === 'stage' && ` · ${t('goals.stagesCount', { count: g.stages.length })}`}
+        </span>
+        <p className="goal-hero-name">{g.name}</p>
+        <span className="goal-hero-date">
+          <Icon name="calendar" /> {formatDate(`${g.eventDate}T12:00:00Z`)}
+          {g.priority === 'primary' && <span className="goal-hero-chip">★ {t('goals.primary')}</span>}
+        </span>
+      </div>
+      <div className="goal-countdown" aria-label={days >= 0 ? t('goals.inDays', { count: days }) : t('goals.past')}>
+        {days >= 0 ? (
+          <>
+            <strong className="num">
+              <CountUp value={days} format={(n) => String(Math.round(n))} />
+            </strong>
+            <span>{t('goals.daysLeftShort', { count: days })}</span>
+          </>
+        ) : (
+          <span>{t('goals.past')}</span>
+        )}
+      </div>
+    </section>
+  )
+}
+
+const DIAG_LEVEL = { on_track: 'good', tight: 'caution', behind: 'alert', past: 'good' } as const
+
+/** Medidor: forma de hoy frente a la recomendada para el evento. */
+function FormToGoal({ goalId }: { goalId: string }) {
+  const { t } = useTranslation()
+  const { derived } = usePlan()
+  const d = derived?.diagnoses.find((x) => x.goalId === goalId)
+  if (!d || d.diagnosis.status === 'past' || d.diagnosis.targetCtl <= 0) return null
+  const x = d.diagnosis
+  const pctNow = Math.round((x.currentCtl / x.targetCtl) * 100)
+  const pctEvent = Math.round((x.projectedCtl / x.targetCtl) * 100)
+  return (
+    <section className="card form-card goal-form" aria-labelledby="gform-h">
+      <div className="row-between">
+        <h2 id="gform-h" className="card-title-icon">
+          <span className="icon-tile">
+            <Icon name="gauge" />
+          </span>
+          {t('goals.howGoing')}
+        </h2>
+        <Semaphore level={DIAG_LEVEL[x.status]} label={t(`diagnosis.status.${x.status}`)} />
+      </div>
+      <ArcGauge
+        scale={{
+          min: 0,
+          max: x.targetCtl * 1.2,
+          zones: [
+            { to: x.targetCtl * 0.6, level: 'alert' },
+            { to: x.targetCtl * 0.9, level: 'caution' },
+            { to: x.targetCtl * 1.2, level: 'good' },
+          ],
+        }}
+        value={x.currentCtl}
+        label={t('goals.gaugeLabel', { now: formatNumber(x.currentCtl), target: formatNumber(x.targetCtl), pct: pctNow, event: pctEvent })}
+      >
+        <p className="form-state num">{pctNow} %</p>
+        <p className="form-value">{t('goals.gaugeCaption')}</p>
+      </ArcGauge>
+      <ul className="rating-row">
+        <li className="rating">
+          <span className="rating-label">{t('fitness.goalFormNow')}</span>
+          <span className="rating-value num">{formatNumber(x.currentCtl)}</span>
+        </li>
+        <li className="rating">
+          <span className="rating-label">{t('fitness.goalFormProjected')}</span>
+          <span className="rating-value num">{formatNumber(x.projectedCtl)}</span>
+        </li>
+        <li className="rating">
+          <span className="rating-label">{t('fitness.goalFormTarget')}</span>
+          <span className="rating-value num">{formatNumber(x.targetCtl)}</span>
+        </li>
+      </ul>
+      <p className="form-verdict">{t(`diagnosis.statusHelp.${x.status}`)}</p>
+    </section>
+  )
+}
 
 export function GoalDetailPage() {
   const { id = '' } = useParams()
@@ -66,54 +176,25 @@ export function GoalDetailPage() {
   }
 
   return (
-    <Page title={g.name}>
-      <p className="muted">
-        {t(`sports.${g.sport}`)}
-        {g.subSport && ` · ${t(`subSports.${g.subSport}`)}`} · {g.priority === 'primary' ? `★ ${t('goals.primary')}` : t('goals.secondary')}
-      </p>
-      <section className="card">
-        <dl className="stat-grid">
-          <div>
-            <dt>{g.goalType === 'stage' ? t('goals.dateFirstStage') : t('goals.date')}</dt>
-            <dd>{formatDate(`${g.eventDate}T12:00:00Z`)}</dd>
-          </div>
-          <div>
-            <dt>&nbsp;</dt>
-            <dd>{days >= 0 ? t('goals.inDays', { count: days }) : t('goals.past')}</dd>
-          </div>
-          {tot.distanceM > 0 && (
-            <div>
-              <dt>{t('activities.distance')}</dt>
-              <dd>{formatDistance(tot.distanceM)}</dd>
-            </div>
-          )}
-          {tot.elevationGainM > 0 && (
-            <div>
-              <dt>{t('activities.elevation')}</dt>
-              <dd>{formatElevation(tot.elevationGainM)}</dd>
-            </div>
-          )}
-          {g.terrain && (
-            <div>
-              <dt>{t('goals.terrain')}</dt>
-              <dd>{t(`terrain.${g.terrain}`)}</dd>
-            </div>
-          )}
-          {g.maxAltitudeM && (
-            <div>
-              <dt>{t('goals.maxAltitude')}</dt>
-              <dd>{formatElevation(g.maxAltitudeM)}</dd>
-            </div>
-          )}
-          <div>
-            <dt>{t('goals.objective')}</dt>
-            <dd>{g.objective === 'time' && g.targetTimeS ? t('goals.targetTime', { time: formatClock(g.targetTimeS) }) : t('goals.finishOnly')}</dd>
-          </div>
-        </dl>
-        <p className="muted" style={{ marginTop: 'var(--space-3)' }}>
-          {g.objective === 'time' ? t('goals.estimatedHelp') : `${t('goals.estimated', { time: formatClock(est * 3600) })}. ${t('goals.estimatedHelp')}`}
-        </p>
-      </section>
+    <Page title={g.name} headerTitle={t('goals.title')}>
+      <GoalHero goal={g} days={days} />
+
+      <ul className="goal-tiles">
+        {tot.distanceM > 0 && <Tile icon="route" tone="mint" label={t('activities.distance')} value={formatDistance(tot.distanceM)} />}
+        {tot.elevationGainM > 0 && <Tile icon="mountain" tone="amber" label={t('goals.elevationGain')} value={`↑ ${formatElevation(tot.elevationGainM)}`} />}
+        {g.maxAltitudeM ? <Tile icon="flag" tone="sky" label={t('goals.maxAltitude')} value={formatElevation(g.maxAltitudeM)} /> : null}
+        {g.terrain && <Tile icon="leaf" tone="soft" label={t('goals.terrain')} value={t(`terrain.${g.terrain}`)} />}
+        <Tile
+          icon={g.objective === 'time' ? 'timer' : 'check'}
+          tone="coral"
+          label={t('goals.objective')}
+          value={g.objective === 'time' && g.targetTimeS ? formatClock(g.targetTimeS) : t('goals.finishOnly')}
+        />
+        {g.objective !== 'time' && <Tile icon="clock" tone="soft" label={t('goals.estimatedShort')} value={formatClock(est * 3600)} />}
+      </ul>
+      <p className="muted small">{t('goals.estimatedHelp')}</p>
+
+      <FormToGoal goalId={g.id} />
 
       {g.goalType === 'stage' && (
         <section className="card" aria-labelledby="stages-h">

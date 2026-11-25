@@ -83,6 +83,11 @@
       "openers": "Dos días antes del evento",
       "day_before": "Víspera del evento"
     },
+    "calendar": "Calendario del plan",
+    "calTotal": "{{value}} puntos de carga",
+    "calPause": "Pausa: descanso",
+    "calWeekLoad": "Carga hecha / planeada:",
+    "calMonthLoad": "Carga del mes:",
     "status": {
       "pending": "Pendiente",
       "done": "Hecha",

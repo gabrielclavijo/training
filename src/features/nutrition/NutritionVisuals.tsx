@@ -8,26 +8,29 @@ import { formatNumber } from '../../core/units'
 import type { MenuMeal } from '../../data/types'
 import type { DayRow } from './useWeekNeeds'
 
-const LETTER = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 export const SPORT_ICON: Record<string, IconName> = { cycling: 'bike', running: 'run', swimming: 'swim', strength: 'dumbbell', other: 'activity' }
-export const DAY_ICON: Record<DayType, IconName> = { rest: 'moon', light: 'leaf', moderate: 'activity', hard: 'bolt', long: 'mountain' }
+export const DAY_ICON: Record<DayType, IconName> = { rest: 'bed', light: 'leaf', moderate: 'activity', hard: 'flame', long: 'route' }
 
-/** Semana como 7 botones con la barra de calorías de cada día. */
+const DOW = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+/** Semana como calendario: cada día con su ícono (deporte o descanso), fecha y calorías. */
 export function WeekDays({ days, selected, onSelect, today }: { days: DayRow[]; selected: string; onSelect: (d: string) => void; today: string }) {
   const { t } = useTranslation()
   const max = Math.max(...days.map((d) => d.needs.kcal))
   const min = Math.min(...days.map((d) => d.needs.kcal)) * 0.85
+  const types = [...new Set(days.map((d) => d.needs.dayType))]
   return (
     <div className="nday-wrap">
       <p className="toolbar-label">{t('nutrition.pickDay')}</p>
-      <ul className="nday-strip">
+      <ul className="ncal">
         {days.map((d, i) => {
-          const h = 25 + ((d.needs.kcal - min) / Math.max(1, max - min)) * 75
+          const h = 20 + ((d.needs.kcal - min) / Math.max(1, max - min)) * 80
+          const icon: IconName = d.sessions.length ? (SPORT_ICON[d.sessions[0].sport] ?? 'activity') : 'bed'
           return (
-            <li key={d.date}>
+            <li key={d.date} style={{ animationDelay: `${i * 40}ms` }}>
               <button
                 type="button"
-                className={`nday nday-${d.needs.dayType}${d.date === selected ? ' nday-on' : ''}${d.date === today ? ' nday-today' : ''}`}
+                className={`ncal-day ncal-${d.needs.dayType}${d.date === selected ? ' is-on' : ''}${d.date === today ? ' is-today' : ''}`}
                 aria-pressed={d.date === selected}
                 aria-label={t('nutrition.dayButton', {
                   date: formatLongDate(`${d.date}T12:00:00Z`),
@@ -36,22 +39,33 @@ export function WeekDays({ days, selected, onSelect, today }: { days: DayRow[]; 
                 })}
                 onClick={() => onSelect(d.date)}
               >
-                <span className="nday-letter" aria-hidden="true">
-                  {LETTER[i]}
+                <span className="ncal-dow" aria-hidden="true">
+                  {DOW[i]}
                 </span>
-                <span className="nday-bar" aria-hidden="true">
-                  <span style={{ height: `${h}%`, animationDelay: `${i * 50}ms` }} />
+                <span className="ncal-num" aria-hidden="true">
+                  {Number(d.date.slice(8))}
                 </span>
-                <span className="nday-kcal num" aria-hidden="true">
+                <span className="ncal-icon" aria-hidden="true">
+                  <Icon name={icon} />
+                </span>
+                <span className="ncal-bar" aria-hidden="true">
+                  <span style={{ width: `${h}%`, animationDelay: `${200 + i * 50}ms` }} />
+                </span>
+                <span className="ncal-kcal num" aria-hidden="true">
                   {formatNumber(d.needs.kcal / 1000, 1)}k
-                </span>
-                <span className="nday-icon" aria-hidden="true">
-                  <Icon name={DAY_ICON[d.needs.dayType]} />
                 </span>
               </button>
             </li>
           )
         })}
+      </ul>
+      <ul className="ncal-legend" aria-label={t('nutrition.legend')}>
+        {types.map((k) => (
+          <li key={k} className={`daytype daytype-${k}`}>
+            <Icon name={DAY_ICON[k]} /> {t(`nutrition.dayType.${k}`)}
+          </li>
+        ))}
+        <li className="ncal-legend-note">{t('nutrition.legendKcal')}</li>
       </ul>
     </div>
   )
@@ -219,7 +233,7 @@ export function mealIcon(m: Pick<MenuMeal, 'label' | 'time'>): IconName {
   if (/post|despu|recupera/.test(l)) return 'refresh'
   if (/desayuno/.test(l)) return 'sunrise'
   if (/almuerzo/.test(l)) return 'sun'
-  if (/cena|comida/.test(l)) return 'moon'
+  if (/cena|comida/.test(l)) return 'cup'
   if (/media|algo|merienda|snack|refrigerio|onces/.test(l)) return 'apple'
   const h = Number((m.time.match(/\d{1,2}/) ?? ['12'])[0])
   return h < 10 ? 'sunrise' : h < 15 ? 'sun' : h < 18 ? 'apple' : 'moon'

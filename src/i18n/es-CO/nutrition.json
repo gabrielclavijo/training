@@ -61,6 +61,8 @@
     "grams": "{{value}} g",
     "kcalValue": "{{value}} kcal",
     "rest": "Descanso",
+    "legend": "Tipos de día",
+    "legendKcal": "La barra y el número: calorías del día (k = miles)",
     "dayType": {
       "rest": "Descanso",
       "light": "Día suave",

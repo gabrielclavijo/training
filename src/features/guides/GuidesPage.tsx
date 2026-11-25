@@ -62,7 +62,7 @@ const TOPICS: Topic[] = [
   { id: 'meta', key: 'goal', group: 'train', icon: 'flag', tone: 'coral', cta: { to: '/metas/nueva' }, art: () => <ArtGoal /> },
   { id: 'plan', key: 'plan', group: 'train', icon: 'plan', cta: { to: '/plan' }, art: () => <ArtWeek /> },
   { id: 'tiempo', key: 'availability', group: 'train', icon: 'clock', tone: 'sky', cta: { to: '/plan/disponibilidad' }, art: () => <ArtMinutes /> },
-  { id: 'pausa', key: 'pause', group: 'train', icon: 'moon', tone: 'soft', cta: { to: '/temporada' }, art: () => <ArtPauses /> },
+  { id: 'pausa', key: 'pause', group: 'train', icon: 'pause', tone: 'soft', cta: { to: '/temporada' }, art: () => <ArtPauses /> },
   { id: 'temporada', key: 'season', group: 'train', icon: 'calendar', tone: 'sky', cta: { to: '/temporada' }, art: () => <ArtSeason /> },
   { id: 'alimentacion', key: 'nutrition', group: 'health', icon: 'food', tone: 'coral', cta: { to: '/nutricion' }, art: () => <ArtNutrition /> },
   { id: 'examenes', key: 'labs', group: 'health', icon: 'lab', tone: 'sky', cta: { to: '/laboratorio' }, art: () => <ArtLabs /> },
@@ -213,11 +213,11 @@ function ArtGoal() {
 
 function ArtWeek() {
   const days: [string, IconName, string][] = [
-    ['L', 'moon', ''],
+    ['L', 'bed', ''],
     ['M', 'check', 'done'],
     ['X', 'activity', ''],
     ['J', 'check', 'done'],
-    ['V', 'moon', ''],
+    ['V', 'bed', ''],
     ['S', 'mountain', 'today'],
     ['D', 'flag', 'event'],
   ]
@@ -330,7 +330,7 @@ function ArtNutrition() {
             <Icon name="sun" /> Almuerzo
           </span>
           <span>
-            <Icon name="moon" /> Comida
+            <Icon name="cup" /> Comida
           </span>
         </div>
       </div>

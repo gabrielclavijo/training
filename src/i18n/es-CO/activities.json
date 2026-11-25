@@ -1,5 +1,12 @@
 {
   "activities": {
+    "viewLabel": "Ver como",
+    "view": { "cal": "Calendario", "list": "Lista" },
+    "calendar": "Calendario de actividades",
+    "pts": "{{value}} pts",
+    "noneThatDay": "Sin actividades: día de descanso",
+    "calCount_one": "actividad",
+    "calCount_other": "actividades",
     "title": "Actividades",
     "filterSport": "Deporte",
     "all": "Todos",

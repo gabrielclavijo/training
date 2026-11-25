@@ -274,7 +274,7 @@ function DayDetail({ day, weightKg }: { day: DayRow; weightKg: number }) {
       {day.sessions.length === 0 ? (
         <p className="fuel-none">
           <span className="icon-tile icon-tile-soft" aria-hidden="true">
-            <Icon name="moon" />
+            <Icon name="bed" />
           </span>
           {t('nutrition.fuelingNone')}
         </p>
