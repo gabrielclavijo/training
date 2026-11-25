@@ -3,7 +3,7 @@ import { pairKey } from '../core/dedupe'
 import type { Repo } from './repo'
 import type { PlanChange } from '../core/planner/adapt'
 import type { WeekDraft } from '../core/planner/plan'
-import { weekStart } from '../core/dates'
+import { addDays, localDayKey, weekStart } from '../core/dates'
 import { LOCAL_MODEL, localMenu } from './localMenu'
 import { DEFAULT_NUTRITION } from './types'
 import { bogotaDay, buildStats } from '../../supabase/functions/_shared/adminStats.ts'
@@ -33,6 +33,7 @@ import type {
   MealPlan,
   MenuRequest,
   RecommendationState,
+  DailyCheckin,
   Pause,
   PhysiologyEntry,
   Profile,
@@ -79,6 +80,7 @@ interface State {
   usage?: { day: string; seconds: number; visits: number; lastSeenAt: string }[]
   topups?: { id: string; amountUsd: number; note: string | null; toppedOn: string }[]
   aiThreshold?: number
+  checkins?: DailyCheckin[]
 }
 
 const now = () => new Date().toISOString()
@@ -535,6 +537,20 @@ export class MemoryRepo implements Repo {
   }
   async dismissRecommendation(ruleKey: string, reaction: RecommendationState['reaction'], until: string) {
     this.s.recState = [...(this.s.recState ?? []).filter((r) => r.ruleKey !== ruleKey), { ruleKey, reaction, dismissedUntil: until }]
+    await this.done(null)
+  }
+
+  // ---- «¿Cómo te sientes hoy?»
+  async listCheckins(days?: number) {
+    const from = days ? addDays(localDayKey(new Date()), -(days - 1)) : ''
+    return [...(this.s.checkins ?? [])].filter((c) => c.day >= from).sort((a, b) => a.day.localeCompare(b.day))
+  }
+  async saveCheckin(c: Omit<DailyCheckin, 'updatedAt'>) {
+    this.s.checkins = [...(this.s.checkins ?? []).filter((x) => x.day !== c.day), { ...c, tags: [...c.tags], updatedAt: now() }]
+    await this.done(null)
+  }
+  async deleteCheckin(day: string) {
+    this.s.checkins = (this.s.checkins ?? []).filter((x) => x.day !== day)
     await this.done(null)
   }
 

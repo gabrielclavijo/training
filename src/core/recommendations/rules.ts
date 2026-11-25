@@ -12,7 +12,7 @@ export interface Recommendation {
   key: string
   severity: Severity
   params: Record<string, string | number>
-  link?: { to: string; label: 'plan' | 'availability' | 'profile' | 'guides' | 'nutrition' | 'labs' | 'goal' }
+  link?: { to: string; label: 'plan' | 'availability' | 'profile' | 'guides' | 'nutrition' | 'labs' | 'goal' | 'season' }
 }
 
 export interface RecContext {
@@ -40,6 +40,8 @@ export interface RecContext {
   weight: { latestKg: number; previousKg: number; days: number } | null
   /** Exámenes cuyo último resultado está fuera del rango */
   labsOutOfRange: string[]
+  /** «¿Cómo te sientes hoy?» de los últimos días (opcional) */
+  checkins?: { day: string; feeling: number; tags: string[] }[]
 }
 
 const ORDER: Record<Severity, number> = { high: 0, medium: 1, low: 2 }
@@ -51,9 +53,36 @@ const completeWeeks = (c: RecContext) => {
   return current && addDays(current, 6) >= c.today ? c.weeks.slice(0, -1) : c.weeks
 }
 
+/** Registro del día `day`, si lo hay */
+const checkinOn = (c: RecContext, day: string) => c.checkins?.find((x) => x.day === day)
+const feelsLow = (x: { feeling: number; tags: string[] } | undefined) => Boolean(x && (x.feeling <= 2 || x.tags.includes('tired_legs')))
+
 const rules: Rule[] = [
+  // Te sientes enfermo (hoy o ayer): mejor una pausa
+  (c) => {
+    const x = checkinOn(c, c.today) ?? checkinOn(c, addDays(c.today, -1))
+    return x?.tags.includes('sick') ? { key: 'feel_sick', severity: 'high', params: {}, link: { to: '/temporada', label: 'season' } } : null
+  },
+
+  // Tres días seguidos con piernas cansadas o ánimo bajo: día suave
+  (c) => {
+    const days = [0, -1, -2].map((d) => checkinOn(c, addDays(c.today, d)))
+    if (!days.every(feelsLow)) return null
+    if (days.some((x) => x!.tags.includes('sick'))) return null
+    return { key: 'feel_low_streak', severity: 'medium', params: { days: 3 }, link: { to: '/plan', label: 'plan' } }
+  },
+
   // Fatiga muy alta
   (c) => (c.snapshot && c.snapshot.historyDays >= 28 && c.snapshot.tsb < -30 ? { key: 'very_tired', severity: 'high', params: { tsb: Math.round(c.snapshot.tsb) }, link: { to: '/plan', label: 'plan' } } : null),
+
+  // Te sientes bien pero la fatiga es alta: cuida el descanso
+  (c) => {
+    const x = checkinOn(c, c.today)
+    if (!x || x.feeling < 4 || !c.snapshot || c.snapshot.historyDays < 28) return null
+    return c.snapshot.tsb < -20 && c.snapshot.tsb >= -30
+      ? { key: 'feel_good_tired', severity: 'low', params: { tsb: Math.round(c.snapshot.tsb) }, link: { to: '/plan', label: 'plan' } }
+      : null
+  },
 
   // La forma sube demasiado rápido
   (c) =>

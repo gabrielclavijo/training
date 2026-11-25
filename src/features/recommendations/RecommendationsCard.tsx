@@ -7,7 +7,7 @@ import { addDays } from '../../core/dates'
 import { effectiveRange, labStatus } from '../../core/labs/catalog'
 import { DISMISS_DAYS, evaluate, visible, type RecContext, type Recommendation } from '../../core/recommendations/rules'
 import { physiologyOn } from '../../data/analysis'
-import { useFitness, useGoals, useHealth, usePhysiology, useProfile, useRepoMutation, useWeights } from '../../data/hooks'
+import { useCheckins, useFitness, useGoals, useHealth, usePhysiology, useProfile, useRepoMutation, useWeights } from '../../data/hooks'
 import { groupLabs } from '../../data/labs'
 import { useRepo } from '../../data/RepoProvider'
 import type { Goal, PhysiologyEntry, WeightEntry } from '../../data/types'
@@ -55,6 +55,7 @@ export function useRecommendations() {
   const weights = useWeights()
   const health = useHealth()
   const profile = useProfile()
+  const checkins = useCheckins(7)
   const derived = plan.derived
 
   return useMemo(() => {
@@ -90,9 +91,10 @@ export function useRecommendations() {
       hrRest: hrRestTrend(phys.data, today),
       weight: weightTrend(weights.data, today),
       labsOutOfRange: labsOut,
+      checkins: checkins.data ?? [],
     }
     return { today, all: evaluate(ctx) }
-  }, [fit.loaded, fit.overview, fit.today, goals.data, phys.data, weights.data, health.data, profile.data, derived, t])
+  }, [fit.loaded, fit.overview, fit.today, goals.data, phys.data, weights.data, health.data, profile.data, derived, checkins.data, t])
 }
 
 export function RecommendationsCard() {

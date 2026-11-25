@@ -5,7 +5,7 @@ import { pairKey } from '../core/dedupe'
 import type { Repo } from './repo'
 import type { PlanChange } from '../core/planner/adapt'
 import type { WeekDraft } from '../core/planner/plan'
-import { weekStart } from '../core/dates'
+import { addDays, localDayKey, weekStart } from '../core/dates'
 import type {
   Availability,
   CurrentPlan,
@@ -29,6 +29,7 @@ import type {
   MealPlan,
   MenuRequest,
   RecommendationState,
+  DailyCheckin,
   Pause,
   PhysiologyEntry,
   Profile,
@@ -832,6 +833,20 @@ export class SupabaseRepo implements Repo {
   }
   async dismissRecommendation(ruleKey: string, reaction: RecommendationState['reaction'], until: string) {
     check(await this.sb.from('recommendation_state').upsert({ rule_key: ruleKey, reaction, dismissed_until: until }))
+  }
+
+  // ---- «¿Cómo te sientes hoy?»
+  async listCheckins(days?: number) {
+    let q = this.sb.from('daily_checkins').select('day, feeling, tags, updated_at').order('day')
+    if (days) q = q.gte('day', addDays(localDayKey(new Date()), -(days - 1)))
+    const rows = check(await q) as Row[]
+    return rows.map((r) => ({ day: r.day, feeling: r.feeling, tags: r.tags ?? [], updatedAt: r.updated_at }))
+  }
+  async saveCheckin(c: Omit<DailyCheckin, 'updatedAt'>) {
+    check(await this.sb.from('daily_checkins').upsert({ day: c.day, feeling: c.feeling, tags: c.tags }, { onConflict: 'user_id,day' }))
+  }
+  async deleteCheckin(day: string) {
+    check(await this.sb.from('daily_checkins').delete().eq('day', day))
   }
 
   // ---- Uso y panel de administración

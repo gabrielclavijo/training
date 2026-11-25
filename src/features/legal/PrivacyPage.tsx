@@ -33,6 +33,12 @@ const STORED: [IconName, string, string, ('coral' | 'sky' | 'soft')?][] = [
   ],
   ['flag', 'Metas y temporada', 'Lo que escribas sobre tus eventos y tus pausas.', 'soft'],
   [
+    'heart',
+    '¿Cómo te sientes hoy?',
+    'Si lo usas: cómo te sentiste cada día (de 1 a 5) y las etiquetas que marques (dormí mal, piernas cansadas, estrés, con energía, enfermo). Solo sirve para tus recomendaciones; no va a la IA ni lo ve la persona que administra el grupo.',
+    'coral',
+  ],
+  [
     'food',
     'Alimentación',
     'Tu perfil de alimentación (objetivo, tipo de alimentación, alergias e intolerancias de comida, alimentos que no comes o tienes en casa, comidas al día, tiempo de cocina y presupuesto) y los menús que pidas.',
@@ -52,7 +58,7 @@ export function PrivacyPage() {
           </span>
           <div>
             <p className="help-ask">Tus datos, en tus manos</p>
-            <p className="muted">Última actualización: 26/11/2026 · Versión 4</p>
+            <p className="muted">Última actualización: 27/11/2026 · Versión 5</p>
           </div>
         </div>
 
@@ -137,7 +143,7 @@ export function PrivacyPage() {
                 <Icon name="alert" /> Qué nunca se envía
               </h3>
               <p>
-                Tus actividades, recorridos, pulso o potencia; nada que venga de Strava o Garmin; tus exámenes, medicamentos u otros datos de salud; tu nombre,
+                Tus actividades, recorridos, pulso o potencia; cómo te sientes cada día; nada que venga de Strava o Garmin; tus exámenes, medicamentos u otros datos de salud; tu nombre,
                 correo, edad o peso.
               </p>
             </div>
@@ -180,7 +186,7 @@ export function PrivacyPage() {
               <h3>
                 <Icon name="alert" /> Qué no ve
               </h3>
-              <p>El contenido: tus entrenamientos, recorridos, metas, datos de salud, exámenes, alimentación ni tus menús.</p>
+              <p>El contenido: tus entrenamientos, recorridos, metas, cómo te sientes, datos de salud, exámenes, alimentación ni tus menús.</p>
             </div>
           </div>
           <p className="muted">Estos datos de uso se borran a los 12 meses, van en «Exportar mis datos» y se eliminan si borras tu cuenta.</p>

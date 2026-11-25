@@ -93,4 +93,14 @@ describe('recomendaciones por reglas', () => {
     const v = visible(all, [{ ruleKey: 'very_tired', dismissedUntil: '2026-12-01' }, { ruleKey: 'ramp_high', dismissedUntil: '2026-11-20' }], c.today)
     expect(v.map((r) => r.key)).toEqual(['ramp_high', 'lab_out_of_range', 'hr_rest_high'])
   })
+
+  it('registro diario: enfermo → pausa; 3 días cansado → día suave; bien con fatiga alta → descanso', () => {
+    expect(keys(base({ checkins: [{ day: '2026-11-24', feeling: 2, tags: ['sick'] }] }))).toEqual(['feel_sick'])
+    const tired = [0, 1, 2].map((d) => ({ day: `2026-11-2${5 - d}`, feeling: 3, tags: d === 1 ? [] : ['tired_legs'] }))
+    tired[1].feeling = 2
+    expect(keys(base({ checkins: tired }))).toEqual(['feel_low_streak'])
+    expect(keys(base({ checkins: tired.slice(0, 2) }))).toEqual([])
+    const good = base({ snapshot: { tsb: -25, rampPerWeek: 2, historyDays: 120 }, checkins: [{ day: '2026-11-25', feeling: 5, tags: ['energized'] }] })
+    expect(keys(good)).toEqual(['feel_good_tired'])
+  })
 })

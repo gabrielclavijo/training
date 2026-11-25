@@ -305,3 +305,14 @@ export interface RecommendationState {
   reaction: 'ok' | 'not_applicable'
   dismissedUntil: string
 }
+
+/** «¿Cómo te sientes hoy?»: un registro por día (solo lo ve la persona; nunca va a la IA) */
+export const CHECKIN_TAGS = ['slept_bad', 'tired_legs', 'stress', 'energized', 'sick'] as const
+export type CheckinTag = (typeof CHECKIN_TAGS)[number]
+export interface DailyCheckin {
+  day: string
+  /** 1 = muy mal … 5 = muy bien */
+  feeling: 1 | 2 | 3 | 4 | 5
+  tags: CheckinTag[]
+  updatedAt: string
+}

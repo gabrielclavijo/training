@@ -20,6 +20,7 @@ export const keys = {
   goal: (id: string) => ['goal', id] as const,
   pauses: ['pauses'] as const,
   jobs: ['jobs'] as const,
+  checkins: ['checkins'] as const,
 }
 
 export function useProfile() {
@@ -79,6 +80,12 @@ export function usePauses() {
 export function useJobs() {
   const repo = useRepo()
   return useQuery({ queryKey: keys.jobs, queryFn: () => repo.listJobs() })
+}
+
+/** «¿Cómo te sientes hoy?» de los últimos `days` días */
+export function useCheckins(days = 14) {
+  const repo = useRepo()
+  return useQuery({ queryKey: [...keys.checkins, days], queryFn: () => repo.listCheckins(days) })
 }
 
 /** Actividades con su carga calculada y la forma física de hoy. */

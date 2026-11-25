@@ -30,6 +30,7 @@ import type {
   MealPlan,
   MenuRequest,
   RecommendationState,
+  DailyCheckin,
 } from './types'
 import type { AdminStats } from '../../supabase/functions/_shared/adminStats.ts'
 
@@ -132,6 +133,12 @@ export interface Repo {
   // Recomendaciones ocultadas por la persona
   listRecommendationState(): Promise<RecommendationState[]>
   dismissRecommendation(ruleKey: string, reaction: RecommendationState['reaction'], until: string): Promise<void>
+
+  // «¿Cómo te sientes hoy?»
+  /** Registros de los últimos `days` días (por defecto, todos) */
+  listCheckins(days?: number): Promise<DailyCheckin[]>
+  saveCheckin(c: Omit<DailyCheckin, 'updatedAt'>): Promise<void>
+  deleteCheckin(day: string): Promise<void>
 
   // Uso de la app y panel de administración
   /** Señal de uso (cada minuto con la app a la vista) */

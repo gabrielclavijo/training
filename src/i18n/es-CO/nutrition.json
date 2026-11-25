@@ -205,7 +205,23 @@
       "guides": "Cómo medirlo",
       "nutrition": "Ver alimentación",
       "labs": "Ver exámenes",
-      "goal": "Ver la meta"
+      "goal": "Ver la meta",
+      "season": "Registrar una pausa"
+    },
+    "feel_sick": {
+      "title": "Si estás enfermo, descansa",
+      "body": "Registra una pausa en Temporada: el plan se ajusta solo y retomas con calma cuando te sientas bien.",
+      "why": "en tu registro diario marcaste «enfermo»."
+    },
+    "feel_low_streak": {
+      "title": "Hoy mejor un día suave",
+      "body": "Cambia la sesión de hoy por algo suave o descansa. Tu cuerpo te está avisando.",
+      "why": "llevas {{days}} días seguidos con piernas cansadas o sintiéndote mal."
+    },
+    "feel_good_tired": {
+      "title": "Te sientes bien, pero cuida el descanso",
+      "body": "Aprovecha el buen día sin pasarte: respeta las sesiones suaves y duerme bien.",
+      "why": "tu fatiga acumulada es alta (estado de forma {{tsb}}), aunque hoy te sientes bien."
     },
     "very_tired": {
       "title": "Toca bajar la carga unos días",

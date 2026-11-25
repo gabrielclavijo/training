@@ -24,13 +24,14 @@ export async function buildExport(repo: Repo): Promise<Blob> {
     importJobs: await repo.listJobs(),
     mealPlans: await repo.listMealPlans(),
     usage: await repo.listMyUsage(),
+    dailyCheckins: await repo.listCheckins(),
     recommendationState: await repo.listRecommendationState(),
     activities,
   }
   const files: Record<string, Uint8Array> = {
     'LEEME.txt': strToU8(
       'Exportación de tus datos.\n\n' +
-        'datos.json: todo tu perfil, metas, pausas, datos de salud (incluidos exámenes), menús y el resumen de cada actividad.\n' +
+        'datos.json: todo tu perfil, metas, pausas, cómo te sentiste cada día, datos de salud (incluidos exámenes), menús y el resumen de cada actividad.\n' +
         'actividades.csv: una fila por actividad (se abre con Excel o Google Sheets).\n' +
         'series/: las series detalladas (pulso, potencia, GPS) de las actividades de los últimos 12 meses.\n' +
         'Unidades: metros, segundos, kilogramos, vatios. Fechas en UTC.\n',
