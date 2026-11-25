@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NumberField, SelectField, parseNum } from '../../components/ui/Field'
+import { NumberField, SelectField, parseWhole } from '../../components/ui/Field'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
 import type { Availability, Weekday } from '../../core/planner/plan'
 import { formatDuration } from '../../core/units'
@@ -29,14 +29,14 @@ export function AvailabilityPage() {
   }, [derived, mins])
 
   if (isLoading || !mins) return <Page title={t('plan.availability.title')}><Spinner full /></Page>
-  const total = DAYS.reduce((s, d) => s + (parseNum(mins[d]) || 0), 0)
+  const total = DAYS.reduce((s, d) => s + (parseWhole(mins[d]) || 0), 0)
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     const errs: Record<number, string> = {}
     const out = {} as Availability['minutesByDay']
     for (const d of DAYS) {
-      const v = parseNum(mins![d])
+      const v = parseWhole(mins![d])
       if (v === null || Number.isNaN(v) || v < 0 || v > 600) errs[d] = '0–600'
       else out[d] = Math.round(v)
     }

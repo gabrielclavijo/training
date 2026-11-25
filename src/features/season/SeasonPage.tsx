@@ -3,7 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../components/ui/EmptyState'
-import { NumberField, parseNum } from '../../components/ui/Field'
+import { NumberField, parseWhole } from '../../components/ui/Field'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
 import { daysBetween, formatDate, localDayKey } from '../../core/dates'
 import { buildSeason, type BlockKind } from '../../core/season'
@@ -182,7 +182,7 @@ function PausesSection() {
         endsOn: to || null,
         canTrain,
         available: canTrain ? available : ['none'],
-        minutesPerDay: canTrain ? parseNum(minutes) : 0,
+        minutesPerDay: canTrain ? parseWhole(minutes) : 0,
         notes: null,
       }),
     [keys.pauses, ['plan']],

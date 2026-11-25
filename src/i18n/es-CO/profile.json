@@ -80,7 +80,8 @@
       "too_big": "La foto pesa más de 15 MB. Elige una más liviana.",
       "unreadable": "No pudimos leer esa imagen. Prueba con otra foto o con formato JPG.",
       "generic": "No pudimos guardar la foto. Revisa tu conexión e intenta de nuevo."
-    }
+    },
+    "clockHint": "Escribe solo los números: 510 queda 5:10."
   },
   "onboarding": {
     "title": "Primeros pasos",

@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { NumberField, SelectField, TextField, parseNum } from '../../components/ui/Field'
+import { NumberField, SelectField, TextField, parseNum, parseWhole } from '../../components/ui/Field'
 import { Alert, Page } from '../../components/ui/Page'
 import type { Sport, SubSport } from '../../core/activity/types'
 import { emptySummary } from '../../core/activity/types'
@@ -37,14 +37,14 @@ export function ManualActivityPage() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     const errs: Record<string, string> = {}
-    const min = parseNum(minutes)
+    const min = parseWhole(minutes)
     if (min === null) errs.minutes = t('activities.required')
     else if (Number.isNaN(min) || min <= 0 || min > 24 * 60) errs.minutes = t('activities.mustBePositive')
     const dist = parseNum(km)
     if (dist !== null && (Number.isNaN(dist) || dist < 0)) errs.km = t('activities.mustBePositive')
-    const up = parseNum(elev)
+    const up = parseWhole(elev)
     if (up !== null && (Number.isNaN(up) || up < 0)) errs.elev = t('activities.mustBePositive')
-    const avgHr = parseNum(hr)
+    const avgHr = parseWhole(hr)
     if (avgHr !== null && (Number.isNaN(avgHr) || avgHr < 40 || avgHr > 230)) errs.hr = '40–230'
     setErrors(errs)
     if (Object.keys(errs).length) return

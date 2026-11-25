@@ -133,15 +133,52 @@ export function parseNum(v: string): number | null {
   return Number.isFinite(n) ? n : NaN
 }
 
-/** "5:10" → 310 s; "15:00" (h:mm) → 54.000 s según `unit`. */
+/**
+ * Da formato a lo que se escribe en un campo de tiempo, para poder usar el
+ * teclado numérico del celular (que no tiene «:»): «510» → «5:10»,
+ * «5.10», «5,10» o «5 10» → «5:10».
+ */
+export function formatClockInput(raw: string): string {
+  const s = raw.replace(/[.,;'\s]/g, ':')
+  if (s.includes(':')) return s.replace(/[^\d:]/g, '').replace(/:+/g, ':').slice(0, 6)
+  const d = s.replace(/\D/g, '').slice(0, 5)
+  return d.length <= 2 ? d : `${d.slice(0, -2)}:${d.slice(-2)}`
+}
+
+/**
+ * Número entero (metros, minutos, pulso, vatios, cm). Acepta separador de miles
+ * como se escribe en Colombia: «2.200» o «2,200» → 2200.
+ */
+export function parseWhole(v: string): number | null {
+  const s = v.trim().replace(/\s/g, '')
+  if (/^\d{1,3}([.,]\d{3})+$/.test(s)) return Number(s.replace(/[.,]/g, ''))
+  return parseNum(s)
+}
+
+/** "5:10" → 310 s; "15:00" (h:mm) → 54.000 s según `unit`. Acepta «510», «5.10» o solo «5» (= 5:00). */
 export function parseClock(v: string, unit: 'mm:ss' | 'hh:mm'): number | null {
-  const s = v.trim()
+  const s = formatClockInput(v.trim())
   if (s === '') return null
-  const m = /^(\d{1,3}):([0-5]\d)$/.exec(s)
+  const m = /^(\d{1,3})(?::([0-5]\d))?$/.exec(s)
   if (!m) return NaN
   const a = Number(m[1])
-  const b = Number(m[2])
+  const b = Number(m[2] ?? 0)
   return unit === 'mm:ss' ? a * 60 + b : a * 3600 + b * 60
+}
+
+/** Campo de tiempo (mm:ss o h:mm) con teclado numérico; los dos puntos se ponen solos. */
+export function ClockField({ onChange, ...rest }: BaseProps & InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <TextField
+      {...rest}
+      inputMode="numeric"
+      autoComplete="off"
+      onChange={(e) => {
+        e.target.value = formatClockInput(e.target.value)
+        onChange?.(e)
+      }}
+    />
+  )
 }
 
 export function toClock(seconds: number | null | undefined, unit: 'mm:ss' | 'hh:mm') {

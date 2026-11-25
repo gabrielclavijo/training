@@ -61,7 +61,8 @@
     "requiredDistance": "Escribe la distancia.",
     "estimated": "Duración estimada: {{time}}",
     "estimatedHelp": "Estimación general por distancia, desnivel y terreno (sirve para planear la recuperación). El tiempo calculado con tus salidas y tu forma está en el diagnóstico.",
-    "diagnosisSoon": ""
+    "diagnosisSoon": "",
+    "clockHint": "Horas y minutos. Escribe solo los números: 1500 queda 15:00."
   },
   "season": {
     "title": "Temporada",

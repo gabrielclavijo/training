@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
-import { NumberField, RadioGroup, SelectField, TextField } from '../../components/ui/Field'
+import { NumberField, RadioGroup, SelectField, TextField, parseWhole } from '../../components/ui/Field'
 import { addDays, formatDate, formatDateTime, formatLongDate, localDayKey, weekStart as weekOf } from '../../core/dates'
 import { formatNumber } from '../../core/units'
 import { keys, useNutrition, useRepoMutation } from '../../data/hooks'
@@ -141,14 +141,14 @@ export function NutritionForm({ prefs, onSaved }: { prefs: NutritionPrefs | null
         excludedFoods: splitList(excluded).slice(0, 30),
         pantry: splitList(pantry).slice(0, 40),
         mealsPerDay: Number(meals),
-        cookingMinutes: Number(minutes),
+        cookingMinutes: parseWhole(minutes) ?? 0,
         budget,
       }),
     [keys.nutrition],
   )
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    const m = Number(minutes)
+    const m = parseWhole(minutes) ?? NaN
     if (!Number.isInteger(m) || m < 5 || m > 180) return setError(t('activities.mustBePositive'))
     setError(null)
     await save.mutateAsync(undefined)

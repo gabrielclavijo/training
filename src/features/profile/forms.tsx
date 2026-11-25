@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from '../../components/ui/Page'
-import { NumberField, RadioGroup, TextField, parseClock, parseNum, toClock } from '../../components/ui/Field'
+import { ClockField, NumberField, RadioGroup, TextField, parseClock, parseNum, parseWhole, toClock } from '../../components/ui/Field'
 import { formatDate, localDayKey } from '../../core/dates'
 import { formatWeight } from '../../core/units'
 import { keys, usePhysiology, useProfile, useRepoMutation, useWeights } from '../../data/hooks'
@@ -40,7 +40,7 @@ export function BasicsForm({ onSaved, submitLabel, askWeight = false }: { onSave
         displayName: name.trim() || null,
         birthDate: birth || null,
         sexForFormulas: sex === 'none' ? null : sex,
-        heightCm: parseNum(height),
+        heightCm: parseWhole(height),
         adultConfirmed: adult,
       })
       const w = parseNum(weight)
@@ -54,7 +54,7 @@ export function BasicsForm({ onSaved, submitLabel, askWeight = false }: { onSave
     const errs: Record<string, string> = {}
     if (!name.trim()) errs.name = t('activities.required')
     if (!adult) errs.adult = t('profile.adultRequired')
-    const h = parseNum(height)
+    const h = parseWhole(height)
     if (h !== null && (Number.isNaN(h) || h < 100 || h > 250)) errs.height = t('activities.mustBePositive')
     const w = parseNum(weight)
     if (w !== null && (Number.isNaN(w) || w < 25 || w > 350)) errs.weight = t('activities.mustBePositive')
@@ -89,7 +89,7 @@ export function BasicsForm({ onSaved, submitLabel, askWeight = false }: { onSave
           { value: 'none', label: t('profile.sexNone') },
         ]}
       />
-      <NumberField label={t('profile.height')} optional value={height} onChange={(e) => setHeight(e.target.value)} error={errors.height} />
+      <NumberField inputMode="numeric" label={t('profile.height')} optional value={height} onChange={(e) => setHeight(e.target.value)} error={errors.height} />
       {askWeight && <NumberField label={t('profile.weightKg')} optional value={weight} onChange={(e) => setWeight(e.target.value)} error={errors.weight} />}
       <div className="field">
         <label className="choice">
@@ -150,7 +150,7 @@ export function PhysiologyForm({ onSaved, submitLabel }: { onSaved?: () => void;
     const errs: Record<string, string> = {}
     const nums: Record<string, number | null> = {}
     for (const k of Object.keys(ranges) as (keyof typeof ranges)[]) {
-      const v = parseNum(f[k])
+      const v = parseWhole(f[k])
       if (v !== null && (Number.isNaN(v) || v < ranges[k][0] || v > ranges[k][1])) errs[k] = `${ranges[k][0]}–${ranges[k][1]}`
       nums[k] = v
     }
@@ -181,12 +181,12 @@ export function PhysiologyForm({ onSaved, submitLabel }: { onSaved?: () => void;
       {save.isError && <Alert kind="error">{t('errors.generic')}</Alert>}
       {saved && !onSaved && <Alert kind="success">{t('common.saved')}</Alert>}
       <div className="grid-2">
-        <NumberField label={t('profile.hrRest')} hint={t('profile.hrRestHelp')} optional value={f.hrRest} onChange={set('hrRest')} error={errors.hrRest} />
-        <NumberField label={t('profile.hrMax')} hint={t('profile.hrMaxHelp')} optional value={f.hrMax} onChange={set('hrMax')} error={errors.hrMax} />
-        <NumberField label={t('profile.hrThreshold')} hint={t('profile.hrThresholdHelp')} optional value={f.hrThreshold} onChange={set('hrThreshold')} error={errors.hrThreshold} />
-        <NumberField label={t('profile.ftp')} hint={t('profile.ftpHelp')} optional value={f.ftp} onChange={set('ftp')} error={errors.ftp} />
-        <TextField label={t('profile.runPace')} optional placeholder={t('profile.pacePlaceholder')} value={f.run} onChange={set('run')} error={errors.run} inputMode="numeric" />
-        <TextField label={t('profile.swimPace')} optional placeholder="1:50" value={f.swim} onChange={set('swim')} error={errors.swim} inputMode="numeric" />
+        <NumberField inputMode="numeric" label={t('profile.hrRest')} hint={t('profile.hrRestHelp')} optional value={f.hrRest} onChange={set('hrRest')} error={errors.hrRest} />
+        <NumberField inputMode="numeric" label={t('profile.hrMax')} hint={t('profile.hrMaxHelp')} optional value={f.hrMax} onChange={set('hrMax')} error={errors.hrMax} />
+        <NumberField inputMode="numeric" label={t('profile.hrThreshold')} hint={t('profile.hrThresholdHelp')} optional value={f.hrThreshold} onChange={set('hrThreshold')} error={errors.hrThreshold} />
+        <NumberField inputMode="numeric" label={t('profile.ftp')} hint={t('profile.ftpHelp')} optional value={f.ftp} onChange={set('ftp')} error={errors.ftp} />
+        <ClockField label={t('profile.runPace')} hint={t('profile.clockHint')} optional placeholder={t('profile.pacePlaceholder')} value={f.run} onChange={set('run')} error={errors.run} />
+        <ClockField label={t('profile.swimPace')} hint={t('profile.clockHint')} optional placeholder="1:50" value={f.swim} onChange={set('swim')} error={errors.swim} />
       </div>
       <div className="field">
         <label htmlFor="eff-from">{t('profile.effectiveFrom')}</label>

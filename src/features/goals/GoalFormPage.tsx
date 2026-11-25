@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { NumberField, RadioGroup, SelectField, TextField, parseClock, parseNum, toClock } from '../../components/ui/Field'
+import { ClockField, NumberField, RadioGroup, SelectField, TextField, parseClock, parseNum, parseWhole, toClock } from '../../components/ui/Field'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
 import type { Sport, SubSport } from '../../core/activity/types'
 import { computeStats } from '../../core/activity/summarize'
@@ -75,7 +75,7 @@ function GoalForm({ initial }: { initial: Goal | null }) {
       if (goalType === 'single') {
         const d = parseNum(km)
         if (d === null || Number.isNaN(d) || d <= 0) e.km = t('goals.requiredDistance')
-        const up = parseNum(elev)
+        const up = parseWhole(elev)
         if (up !== null && (Number.isNaN(up) || up < 0)) e.elev = t('activities.mustBePositive')
       } else {
         stages.forEach((st, i) => {
@@ -134,7 +134,7 @@ function GoalForm({ initial }: { initial: Goal | null }) {
             stageNumber: i + 1,
             dayOffset: i,
             distanceM: (parseNum(s.km) ?? 0) * 1000,
-            elevationGainM: parseNum(s.elev) ?? 0,
+            elevationGainM: parseWhole(s.elev) ?? 0,
             terrain: s.terrain || null,
             targetTimeS: objective === 'time' ? parseClock(s.time, 'hh:mm') : null,
           }))
@@ -153,9 +153,9 @@ function GoalForm({ initial }: { initial: Goal | null }) {
         objective,
         targetTimeS: objective === 'time' ? total : null,
         distanceM: goalType === 'single' ? (parseNum(km) ?? 0) * 1000 : stageList.reduce((a, s) => a + s.distanceM, 0),
-        elevationGainM: goalType === 'single' ? parseNum(elev) : stageList.reduce((a, s) => a + s.elevationGainM, 0),
+        elevationGainM: goalType === 'single' ? parseWhole(elev) : stageList.reduce((a, s) => a + s.elevationGainM, 0),
         terrain: terrain || null,
-        maxAltitudeM: parseNum(maxAlt),
+        maxAltitudeM: parseWhole(maxAlt),
         gpxPath: initial?.gpxPath ?? null,
         notes: notes.trim() || null,
         status: initial?.status ?? 'active',
@@ -171,7 +171,7 @@ function GoalForm({ initial }: { initial: Goal | null }) {
     }
   }
 
-  const stageTotals = stages.reduce((a, s) => ({ d: a.d + (parseNum(s.km) || 0) * 1000, e: a.e + (parseNum(s.elev) || 0) }), { d: 0, e: 0 })
+  const stageTotals = stages.reduce((a, s) => ({ d: a.d + (parseNum(s.km) || 0) * 1000, e: a.e + (parseWhole(s.elev) || 0) }), { d: 0, e: 0 })
   const titles = [t('goals.typeStep'), t('goals.dataStep'), t('goals.objectiveStep'), t('goals.gpxStep')]
 
   return (
@@ -332,17 +332,16 @@ function GoalForm({ initial }: { initial: Goal | null }) {
             />
             {objective === 'time' && (
               <>
-                <TextField label={t('goals.targetTotal')} placeholder={t('goals.timePlaceholder')} inputMode="numeric" value={target} onChange={(e) => setTarget(e.target.value)} error={errors.target} optional={goalType === 'stage'} />
+                <ClockField label={t('goals.targetTotal')} hint={t('goals.clockHint')} placeholder={t('goals.timePlaceholder')} value={target} onChange={(e) => setTarget(e.target.value)} error={errors.target} optional={goalType === 'stage'} />
                 {goalType === 'stage' && (
                   <fieldset>
                     <legend className="legend">{t('goals.targetPerStage')}</legend>
                     <div className="grid-3">
                       {stages.map((s, i) => (
-                        <TextField
+                        <ClockField
                           key={i}
                           label={t('goals.stageN', { n: i + 1 })}
                           placeholder="4:30"
-                          inputMode="numeric"
                           value={s.time}
                           error={errors[`time-${i}`]}
                           onChange={(e) => setStages(stages.map((x, j) => (j === i ? { ...x, time: e.target.value } : x)))}
