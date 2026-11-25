@@ -104,6 +104,7 @@
       "none": "nada"
     },
     "addPause": "Registrar una pausa",
+    "pauseSaved": "Pausa registrada",
     "pauseKind": "Tipo de pausa",
     "pauseStart": "Desde",
     "pauseEnd": "Hasta",

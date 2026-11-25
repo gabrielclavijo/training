@@ -1,6 +1,7 @@
 import { Icon, TitleIcon, type IconName } from '../../components/ui/Icon'
-import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { Link, useLocation } from 'react-router'
+import { useToast } from '../../components/fx/Toast'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { NumberField, parseWhole } from '../../components/ui/Field'
@@ -174,6 +175,16 @@ function PausesSection() {
   const [available, setAvailable] = useState<PauseAvailability[]>([])
   const [minutes, setMinutes] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const toast = useToast()
+  const details = useRef<HTMLDetailsElement>(null)
+  const location = useLocation()
+  // Desde el botón «+» → «Registrar pausa»: abre el formulario y lleva el foco ahí
+  useEffect(() => {
+    if (!(location.state as { newPause?: boolean } | null)?.newPause || !details.current) return
+    details.current.open = true
+    details.current.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    details.current.querySelector<HTMLInputElement>('input[name="pkind"]:checked')?.focus({ preventScroll: true })
+  }, [location.state, pauses.data])
   const save = useRepoMutation(
     () =>
       repo.savePause({
@@ -194,6 +205,8 @@ function PausesSection() {
     if (to && to < from) return setError(t('activities.mustBePositive'))
     setError(null)
     await save.mutateAsync(undefined)
+    toast(t('season.pauseSaved'), { icon: 'moon' })
+    if (details.current) details.current.open = false
     setTo('')
     setAvailable([])
     setMinutes('')
@@ -262,7 +275,7 @@ function PausesSection() {
           )
         })}
       </ul>
-      <details className="add-toggle">
+      <details className="add-toggle" id="nueva-pausa" ref={details}>
         <summary className="btn btn-primary">
           <Icon name="moon" /> {t('season.addPause')}
         </summary>

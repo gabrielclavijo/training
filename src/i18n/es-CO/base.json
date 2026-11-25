@@ -21,7 +21,38 @@
     "settings": "Ajustes",
     "glossary": "¿Qué significa?",
     "privacy": "Privacidad",
-    "admin": "Administración"
+    "admin": "Administración",
+    "openMenu": "Abrir el menú",
+    "closeMenu": "Cerrar el menú",
+    "menuTitle": "Todas las secciones",
+    "quick": "Registrar",
+    "quickTitle": "¿Qué quieres registrar?",
+    "openQuick": "Abrir acciones rápidas",
+    "closeQuick": "Cerrar acciones rápidas",
+    "bell": "Recomendaciones",
+    "bellCount_one": "{{count}} recomendación",
+    "bellCount_other": "{{count}} recomendaciones",
+    "bellNew": "nuevas",
+    "hello": "Hola, {{name}}",
+    "helloAnon": "Hola",
+    "close": "Cerrar",
+    "groups": {
+      "train": "Entrenamiento",
+      "body": "Cuerpo y salud",
+      "app": "Cuenta y ayuda"
+    },
+    "actions": {
+      "upload": "Subir archivo",
+      "uploadHint": ".FIT, .GPX, .TCX o exportación",
+      "manual": "Registrar a mano",
+      "manualHint": "Una actividad sin archivo",
+      "checkin": "¿Cómo te sientes hoy?",
+      "checkinHint": "Tu ánimo y tu cuerpo en 5 segundos",
+      "pause": "Registrar pausa",
+      "pauseHint": "Viaje, enfermedad o descanso",
+      "menu": "Generar menú",
+      "menuHint": "Tu menú de la semana"
+    }
   },
   "common": {
     "loading": "Cargando…",

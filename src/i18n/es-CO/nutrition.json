@@ -194,6 +194,7 @@
   },
   "recs": {
     "title": "Recomendaciones",
+    "none": "Todo en orden: no hay recomendaciones por ahora.",
     "why": "Por qué: ",
     "ok": "Entendido",
     "notApplicable": "No aplica",

@@ -9,6 +9,7 @@ import '@fontsource/commissioner/latin-600.css'
 import '@fontsource/reddit-mono/latin-500.css'
 import '@fontsource/reddit-mono/latin-600.css'
 import './styles/global.css'
+import './styles/redesign.css'
 import { App } from './app/App'
 
 createRoot(document.getElementById('root')!).render(

@@ -1,4 +1,4 @@
-import { TitleIcon } from '../../components/ui/Icon'
+import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { useMemo } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -97,8 +97,8 @@ export function useRecommendations() {
   }, [fit.loaded, fit.overview, fit.today, goals.data, phys.data, weights.data, health.data, profile.data, derived, checkins.data, t])
 }
 
-export function RecommendationsCard() {
-  const { t } = useTranslation()
+/** Recomendaciones visibles hoy (sin las ocultadas), con la acción de ocultar. */
+export function useVisibleRecs() {
   const repo = useRepo()
   const recs = useRecommendations()
   const state = useQuery({ queryKey: ['recState'], queryFn: () => repo.listRecommendationState() })
@@ -107,30 +107,51 @@ export function RecommendationsCard() {
       repo.dismissRecommendation(key, reaction, addDays(today, DISMISS_DAYS)),
     [['recState']],
   )
-  if (!recs || !state.data) return null
-  const shown = visible(recs.all, state.data, recs.today)
-  if (shown.length === 0) return null
+  const shown = recs && state.data ? visible(recs.all, state.data, recs.today) : null
+  return { shown, today: recs?.today ?? '', dismiss }
+}
+
+export function RecommendationsCard({ bare = false }: { bare?: boolean }) {
+  const { t } = useTranslation()
+  const { shown, today, dismiss } = useVisibleRecs()
+  if (!shown) return null
+  if (shown.length === 0) {
+    return bare ? (
+      <p className="recs-empty">
+        <span className="recs-empty-icon" aria-hidden="true">
+          <Icon name="check" />
+        </span>
+        {t('recs.none')}
+      </p>
+    ) : null
+  }
+  const list = (
+    <>
+      <ul className="plain-list recs">
+        {shown.map((r, i) => (
+          <RecItem key={r.key} rec={r} index={i} onDismiss={(reaction) => dismiss.mutate({ key: r.key, reaction, today })} busy={dismiss.isPending} />
+        ))}
+      </ul>
+      <p className="muted">{t('recs.hiddenFor')}</p>
+    </>
+  )
+  if (bare) return list
   return (
-    <section className="card" aria-labelledby="recs-h">
+    <section className="card" aria-labelledby="recs-h" id="recomendaciones">
       <h2 id="recs-h" className="card-title-icon">
         <TitleIcon name="bulb" tone="coral" />
         {t('recs.title')}
       </h2>
-      <ul className="plain-list recs">
-        {shown.map((r) => (
-          <RecItem key={r.key} rec={r} onDismiss={(reaction) => dismiss.mutate({ key: r.key, reaction, today: recs.today })} busy={dismiss.isPending} />
-        ))}
-      </ul>
-      <p className="muted">{t('recs.hiddenFor')}</p>
+      {list}
     </section>
   )
 }
 
-function RecItem({ rec, onDismiss, busy }: { rec: Recommendation; onDismiss: (r: 'ok' | 'not_applicable') => void; busy: boolean }) {
+function RecItem({ rec, index = 0, onDismiss, busy }: { rec: Recommendation; index?: number; onDismiss: (r: 'ok' | 'not_applicable') => void; busy: boolean }) {
   const { t } = useTranslation()
   const id = `rec-${rec.key}`
   return (
-    <li className={`rec rec-${rec.severity}`}>
+    <li className={`rec rec-${rec.severity}`} style={{ animationDelay: `${index * 60}ms` }}>
       <h3 id={id}>
         {rec.severity === 'high' && '⚠ '}
         {t(`recs.${rec.key}.title`)}
