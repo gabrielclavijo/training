@@ -1,4 +1,7 @@
+import { useEffect } from 'react'
+import { celebrateOnce } from '../../components/fx/motion'
 import { Icon, TitleIcon } from '../../components/ui/Icon'
+import { useToast } from '../../components/fx/Toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -13,10 +16,21 @@ import { goalEstimatedHours, goalTotals } from './goalUtils'
 export function GoalDetailPage() {
   const { id = '' } = useParams()
   const { t } = useTranslation()
+  const toast = useToast()
   const repo = useRepo()
   const qc = useQueryClient()
   const navigate = useNavigate()
   const q = useQuery({ queryKey: ['goal', id], queryFn: () => repo.getGoal(id) })
+  // Celebración (una vez) cuando llega o acaba de pasar el día de la meta
+  const eventDate = q.data?.eventDate
+  useEffect(() => {
+    if (!eventDate || q.data?.status === 'cancelled') return
+    const since = daysBetween(eventDate, localDayKey(new Date()))
+    if (since >= 0 && since <= 7) {
+      const tm = setTimeout(() => celebrateOnce(`meta-${id}`), 600)
+      return () => clearTimeout(tm)
+    }
+  }, [eventDate, id, q.data?.status])
 
   if (q.isLoading)
     return (
@@ -47,6 +61,7 @@ export function GoalDetailPage() {
     if (!window.confirm(t('goals.deleteConfirm'))) return
     await repo.deleteGoal(g!.id)
     await qc.invalidateQueries()
+    toast(t('toast.goalDeleted'), { icon: 'trash' })
     navigate('/metas')
   }
 

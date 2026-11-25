@@ -3,6 +3,7 @@ import { NavLink, Outlet, Link, useLocation, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Icon, type IconName } from '../components/ui/Icon'
 import { Avatar } from '../components/ui/Avatar'
+import { HeaderTitle } from '../components/ui/Page'
 import { Sheet } from '../components/fx/Sheet'
 import { ToastProvider } from '../components/fx/Toast'
 import { haptic } from '../components/fx/motion'
@@ -157,7 +158,9 @@ function Shell() {
         {mode === 'local' && <p className="local-banner">{t('local.banner')}</p>}
         {/* Cada pantalla entra con una animación suave (se desactiva con «reducir movimiento») */}
         <div className="page-enter" key={path}>
-          <Outlet />
+          <HeaderTitle.Provider value={path === '/' ? null : section ? t(section.label) : null}>
+            <Outlet />
+          </HeaderTitle.Provider>
         </div>
       </main>
 

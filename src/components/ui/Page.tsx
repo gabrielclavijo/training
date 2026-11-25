@@ -1,4 +1,7 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react'
+
+/** Título que ya muestra el encabezado (si coincide, el <h1> de la página no se repite a la vista). */
+export const HeaderTitle = createContext<string | null>(null)
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -8,6 +11,8 @@ import { useTranslation } from 'react-i18next'
 export function Page({ title, children, actions, hideTitle = false }: { title: string; children: ReactNode; actions?: ReactNode; hideTitle?: boolean }) {
   const { t } = useTranslation()
   const h1 = useRef<HTMLHeadingElement>(null)
+  const header = useContext(HeaderTitle)
+  if (header && header === title) hideTitle = true
 
   useEffect(() => {
     document.title = `${title} · ${t('app.name')}`
@@ -16,8 +21,8 @@ export function Page({ title, children, actions, hideTitle = false }: { title: s
 
   return (
     <>
-      <div className={hideTitle ? 'visually-hidden' : 'row page-head'} style={hideTitle ? undefined : { justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
-        <h1 ref={h1} tabIndex={-1} style={{ margin: 0 }}>
+      <div className={hideTitle ? 'page-head page-head-quiet' : 'row page-head'} style={hideTitle ? undefined : { justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+        <h1 ref={h1} tabIndex={-1} className={hideTitle ? 'visually-hidden' : undefined} style={{ margin: 0 }}>
           {title}
         </h1>
         {actions}

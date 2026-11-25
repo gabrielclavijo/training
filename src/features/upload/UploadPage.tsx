@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { useToast } from '../../components/fx/Toast'
 import { useRef, useState, type DragEvent } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -50,6 +51,7 @@ function kindFor(files: File[]): ImportKind {
 
 export function UploadPage() {
   const { t } = useTranslation()
+  const toast = useToast()
   const repo = useRepo()
   const qc = useQueryClient()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -127,6 +129,8 @@ export function UploadPage() {
       setRows(seen)
       setProgress({ ...result.progress, total: result.progress.processed })
       setPhase(workerFailed ? 'error' : abort.signal.aborted ? 'cancelled' : 'done')
+      if (!workerFailed && !abort.signal.aborted && result.progress.imported + result.progress.merged > 0)
+        toast(t('toast.uploaded', { count: result.progress.imported + result.progress.merged }), { icon: 'upload' })
     } catch (e) {
       console.error(e)
       setPhase('error')

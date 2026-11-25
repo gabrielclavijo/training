@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useToast } from '../../components/fx/Toast'
 import { useTranslation } from 'react-i18next'
 import { Alert } from '../../components/ui/Page'
 import { ClockField, NumberField, RadioGroup, TextField, parseClock, parseNum, parseWhole, toClock } from '../../components/ui/Field'
@@ -23,6 +24,7 @@ export function BasicsForm({ onSaved, submitLabel, askWeight = false }: { onSave
   const [adult, setAdult] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     const p = profile.data
@@ -63,6 +65,7 @@ export function BasicsForm({ onSaved, submitLabel, askWeight = false }: { onSave
     if (Object.keys(errs).length) return
     await save.mutateAsync(undefined)
     setSaved(true)
+    toast(t('common.saved'))
     onSaved?.()
   }
 
@@ -125,6 +128,7 @@ export function PhysiologyForm({ onSaved, submitLabel }: { onSaved?: () => void;
   const [f, setF] = useState({ hrRest: '', hrMax: '', hrThreshold: '', ftp: '', run: '', swim: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     if (!last) return
@@ -171,6 +175,7 @@ export function PhysiologyForm({ onSaved, submitLabel }: { onSaved?: () => void;
       swimThresholdSPer100m: swim,
     })
     setSaved(true)
+    toast(t('common.saved'))
     onSaved?.()
   }
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value })

@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { useToast } from '../../components/fx/Toast'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +18,7 @@ const BOGOTA_OFFSET_H = 5
 /** Registro manual: para el gimnasio o actividades sin reloj. */
 export function ManualActivityPage() {
   const { t } = useTranslation()
+  const toast = useToast()
   const repo = useRepo()
   const qc = useQueryClient()
   const navigate = useNavigate()
@@ -70,6 +72,7 @@ export function ManualActivityPage() {
     try {
       const r = await importOne(repo, { name: t('activities.manualTitle'), parsed: { summary, streams: null, format: 'manual', originHint: 'other' }, sha256: null }, { jobId: null })
       await qc.invalidateQueries()
+      toast(t('toast.activitySaved'), { icon: 'activity' })
       navigate(`/actividades/${r.activityId}`)
     } catch {
       setFailed(true)

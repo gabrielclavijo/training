@@ -1160,13 +1160,14 @@ html.has-sheet {
   margin: var(--space-4) 0 var(--space-3);
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-2);
 }
 .rating {
+  min-width: 0;
   display: grid;
   gap: 2px;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2) 10px;
   border-radius: 14px;
   background: var(--surface-low);
   animation: fade-up 320ms var(--ease) both;
@@ -1177,7 +1178,9 @@ html.has-sheet {
   font-weight: 600;
 }
 .rating-value {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
   align-items: center;
   gap: 6px;
   font-weight: 700;
@@ -1398,3 +1401,74 @@ html.has-sheet {
 .sk-pill { height: 46px; border-radius: 14px; }
 .sk-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .sk-kpi { height: 110px; }
+
+/* Cuando el título ya está en el encabezado: solo quedan las acciones, a la derecha */
+.page-head-quiet {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.page-head-quiet:not(:has(> :not(h1))) {
+  margin: 0;
+}
+
+/* Administración */
+.admin-kpis {
+  grid-template-columns: 1fr 1fr;
+}
+.admin-kpi {
+  position: relative;
+}
+.admin-kpi .metric-value {
+  font-size: 1.5rem;
+}
+.admin-kpi:nth-child(2) .metric-detail:first-of-type,
+.admin-kpi .chips {
+  font-size: 0.8125rem;
+}
+.admin-balance {
+  grid-column: 1 / -1;
+}
+.admin-balance .arc-gauge {
+  max-width: 260px;
+}
+.admin-balance .arc-center {
+  display: grid;
+  margin-top: -6px;
+}
+.admin-delta {
+  top: var(--space-4);
+  right: var(--space-4);
+}
+.admin-delta.delta-up {
+  background: var(--success-bg);
+  color: #0f5e2c;
+}
+.admin-delta.delta-down {
+  background: var(--warning-bg);
+  color: #7a3800;
+}
+@media (min-width: 900px) {
+  .admin-kpis {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Plan y metas */
+.plan-week-progress {
+  margin-bottom: var(--space-3);
+}
+.plan-week-progress .week-pct {
+  margin: 0;
+}
+.plan-week-progress .prog {
+  margin: var(--space-2) 0 0;
+}
+.diagnosis .arc-gauge {
+  margin: var(--space-2) auto var(--space-4);
+  max-width: 260px;
+}
+.diagnosis .form-state {
+  color: var(--primary);
+}

@@ -6,7 +6,7 @@ import { BarChart } from '../../components/ui/Charts'
 import { NumberField, TextField, parseNum } from '../../components/ui/Field'
 import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
-import { CountUp, Progress, Semaphore } from '../../components/ui/Status'
+import { ArcGauge, CountUp, Semaphore } from '../../components/ui/Status'
 import { formatDate, localDayKey } from '../../core/dates'
 import { formatNumber } from '../../core/units'
 import { useRepo } from '../../data/RepoProvider'
@@ -82,7 +82,24 @@ export function AdminPage() {
 
 function Kpis({ s }: { s: AdminStats }) {
   const { t } = useTranslation()
-  const balPct = s.ai.toppedUpUsd > 0 ? (s.ai.balanceUsd / s.ai.toppedUpUsd) * 100 : 0
+  // Cambio frente a los 7 días anteriores (de la serie de 30 días)
+  const sum = (from: number, to: number, f: (d: AdminStats['series'][number]) => number) => s.series.slice(from, to).reduce((a, d) => a + f(d), 0)
+  const n = s.series.length
+  const minNow = sum(n - 7, n, (d) => d.minutes)
+  const minPrev = sum(n - 14, n - 7, (d) => d.minutes)
+  const aiNow = sum(n - 7, n, (d) => d.aiRequests)
+  const aiPrev = sum(n - 14, n - 7, (d) => d.aiRequests)
+  const top = s.ai.toppedUpUsd
+  const thr = Math.min(top, s.ai.thresholdUsd)
+  const balScale = {
+    min: 0,
+    max: Math.max(top, 0.01),
+    zones: [
+      { to: thr * 0.5, level: 'alert' as const },
+      { to: thr, level: 'caution' as const },
+      { to: Math.max(top, 0.01), level: 'good' as const },
+    ],
+  }
   return (
     <section aria-label={t('adminPage.title')} className="admin-kpis">
       <div className="card admin-kpi">
@@ -118,6 +135,7 @@ function Kpis({ s }: { s: AdminStats }) {
 
       <div className="card admin-kpi">
         <TitleIcon name="clock" tone="soft" />
+        <Delta now={minNow} prev={minPrev} />
         <span className="metric-value">{duration(s.activity.minutes7d)}</span>
         <span className="metric-label">{t('adminPage.kpi.time')}</span>
         <p className="metric-detail">{t('adminPage.kpi.timeAvg', { avg: duration(s.activity.avgMinutesPerActive7d), visits: s.activity.visits7d })}</p>
@@ -125,6 +143,7 @@ function Kpis({ s }: { s: AdminStats }) {
 
       <div className="card admin-kpi">
         <TitleIcon name="sparkles" tone="coral" />
+        <Delta now={aiNow} prev={aiPrev} unit={t('adminPage.kpi.requests')} />
         <span className="metric-value">{usd(s.ai.monthCostUsd)}</span>
         <span className="metric-label">{t('adminPage.kpi.aiMonth')}</span>
         <p className="metric-detail">{t('adminPage.kpi.aiMonthDetail', { menus: s.ai.monthMenus, swaps: s.ai.monthSwaps, failed: s.ai.monthFailed })}</p>
@@ -135,19 +154,43 @@ function Kpis({ s }: { s: AdminStats }) {
           <TitleIcon name="coins" />
           <Semaphore level={s.ai.level} label={t(`adminPage.level.${s.ai.level}`)} />
         </div>
-        <span className="metric-value">{usd(s.ai.balanceUsd)}</span>
-        <span className="metric-label">{t('adminPage.kpi.balance')}</span>
         {s.ai.toppedUpUsd > 0 ? (
           <>
-            <Progress pct={balPct} level={s.ai.level} label={t('adminPage.kpi.balanceOf', { spent: usd(s.ai.totalCostUsd), topped: usd(s.ai.toppedUpUsd) })} />
+            <ArcGauge scale={balScale} value={s.ai.balanceUsd} label={t('adminPage.kpi.balanceGauge', { balance: usd(s.ai.balanceUsd), topped: usd(s.ai.toppedUpUsd) })}>
+              <span className="metric-value">{usd(s.ai.balanceUsd)}</span>
+              <span className="metric-label">{t('adminPage.kpi.balance')}</span>
+            </ArcGauge>
             <p className="metric-detail">{t('adminPage.kpi.balanceOf', { spent: usd(s.ai.totalCostUsd), topped: usd(s.ai.toppedUpUsd) })}</p>
             {s.ai.daysLeft !== null && <p className="metric-detail">{t('adminPage.kpi.daysLeft', { count: s.ai.daysLeft })}</p>}
           </>
         ) : (
-          <p className="metric-detail">{t('adminPage.kpi.noTopups')}</p>
+          <>
+            <span className="metric-value">{usd(s.ai.balanceUsd)}</span>
+            <span className="metric-label">{t('adminPage.kpi.balance')}</span>
+            <p className="metric-detail">{t('adminPage.kpi.noTopups')}</p>
+          </>
         )}
       </div>
     </section>
+  )
+}
+
+/** Cambio frente a los 7 días anteriores: ▲ / ▼ con el porcentaje. */
+function Delta({ now, prev, unit }: { now: number; prev: number; unit?: string }) {
+  const { t } = useTranslation()
+  if (prev <= 0 && now <= 0) return null
+  const pct = prev > 0 ? Math.round(((now - prev) / prev) * 100) : null
+  const dir = pct === null ? 'up' : pct > 0 ? 'up' : pct < 0 ? 'down' : 'same'
+  const text = pct === null ? t('adminPage.kpi.new') : `${dir === 'up' ? '▲' : dir === 'down' ? '▼' : '='} ${Math.abs(pct)} %`
+  return (
+    <span className={`kpi-delta admin-delta delta-${dir}`} title={t('adminPage.kpi.vsWeek')}>
+      {text}
+      <span className="visually-hidden">
+        {' '}
+        {t('adminPage.kpi.vsWeek')}
+        {unit ? ` (${unit})` : ''}
+      </span>
+    </span>
   )
 }
 

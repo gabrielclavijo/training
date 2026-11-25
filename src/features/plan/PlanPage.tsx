@@ -11,6 +11,7 @@ import type { StoredSession } from '../../data/types'
 import type { MatchResult } from '../../core/planner/adapt'
 import { LegalNotice, SessionCard, ZonesNotice } from './SessionView'
 import { usePlan } from './usePlan'
+import { Progress } from '../../components/ui/Status'
 import { PausesSection } from '../season/SeasonPage'
 
 const fmt = (d: string) => formatDate(`${d}T12:00:00Z`)
@@ -158,9 +159,12 @@ function WeekStrip({
   return (
     <div className="week-strip-wrap">
       {pct !== null && (
-        <p className="week-pct">
-          <span className="badge badge-soft num">{pct}%</span> <span className="muted">{t('fitness.heroWeek')}</span>
-        </p>
+        <div className="plan-week-progress">
+          <p className="week-pct">
+            <strong className="num">{pct} %</strong> <span className="muted">{t('fitness.heroWeek')}</span>
+          </p>
+          <Progress pct={pct} level="good" label={`${pct} % ${t('fitness.heroWeek')}`} />
+        </div>
       )}
       <ul className="week-strip">
         {days.map((d, i) => {

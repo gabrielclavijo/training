@@ -99,6 +99,7 @@ async function makeUploadFiles() {
     const r = await new AxeBuilder({ page: p }).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
     const sw = await p.evaluate(() => document.documentElement.scrollWidth);
     console.log(name, r.violations.map(v => `${v.id}(${v.nodes.length}): ${v.nodes[0].target}`).join(' | ') || 'ok', sw > 360 ? 'OVERFLOW ' + sw : '');
+    if (sw > 360) console.log(await p.evaluate(() => [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > 360.5).slice(0, 8).map((e) => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))));
     if (r.violations.length || sw > 360) throw new Error('Problemas de accesibilidad o desborde en ' + name);
   };
   await p.goto(base + '#/nutricion'); await p.waitForTimeout(800);

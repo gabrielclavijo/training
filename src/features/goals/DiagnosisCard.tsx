@@ -1,6 +1,6 @@
 import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { useTranslation } from 'react-i18next'
-import { Progress, Semaphore } from '../../components/ui/Status'
+import { ArcGauge, Progress, Semaphore } from '../../components/ui/Status'
 import { formatClock, formatNumber } from '../../core/units'
 import { usePlan } from '../plan/usePlan'
 import { LegalNotice } from '../plan/SessionView'
@@ -24,6 +24,24 @@ export function DiagnosisCard({ goalId }: { goalId: string }) {
         <Semaphore level={LEVEL[x.status]} label={t(`diagnosis.status.${x.status}`)} />
       </p>
       <p>{t(`diagnosis.statusHelp.${x.status}`)}</p>
+      {x.targetCtl > 0 && (
+        <ArcGauge
+          scale={{
+            min: 0,
+            max: x.targetCtl * 1.25,
+            zones: [
+              { to: x.targetCtl * 0.6, level: 'alert' },
+              { to: x.targetCtl * 0.9, level: 'caution' },
+              { to: x.targetCtl * 1.25, level: 'good' },
+            ],
+          }}
+          value={x.projectedCtl}
+          label={t('diagnosis.gaugeLabel', { projected: formatNumber(x.projectedCtl), target: formatNumber(x.targetCtl) })}
+        >
+          <p className="form-state num">{Math.round((x.projectedCtl / x.targetCtl) * 100)} %</p>
+          <p className="form-value">{t('diagnosis.gaugeCaption')}</p>
+        </ArcGauge>
+      )}
       <dl className="stat-grid">
         <div>
           <dt>{t('diagnosis.current')}</dt>

@@ -139,6 +139,8 @@
     }
   },
   "diagnosis": {
+    "gaugeLabel": "Forma prevista para el evento: {{projected}} de {{target}} recomendada",
+    "gaugeCaption": "de la forma recomendada el día del evento",
     "title": "Diagnóstico",
     "status": {
       "on_track": "Vas bien",

@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useToast } from '../../components/fx/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -34,6 +35,7 @@ export function GoalFormPage() {
 
 function GoalForm({ initial }: { initial: Goal | null }) {
   const { t } = useTranslation()
+  const toast = useToast()
   const repo = useRepo()
   const qc = useQueryClient()
   const navigate = useNavigate()
@@ -163,6 +165,7 @@ function GoalForm({ initial }: { initial: Goal | null }) {
         stages: stageList,
       })
       await qc.invalidateQueries()
+      toast(t('toast.goalSaved'), { icon: 'flag' })
       navigate(`/metas/${id}`)
     } catch (err) {
       console.error(err)

@@ -54,6 +54,13 @@
       "menuHint": "Tu menú de la semana"
     }
   },
+  "toast": {
+    "activitySaved": "Actividad registrada",
+    "goalSaved": "Meta guardada",
+    "goalDeleted": "Meta eliminada",
+    "uploaded_one": "Actividad subida",
+    "uploaded_other": "{{count}} actividades subidas"
+  },
   "charts": {
     "explore": "Toca la gráfica o usa las flechas para ver cada día."
   },
