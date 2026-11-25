@@ -21,6 +21,7 @@ import {
 import { latestWeight, sportSummary, volumeBy } from '../../data/analysis'
 import { useFitness, useWeights } from '../../data/hooks'
 import { SUBSPORTS } from '../activities/sports'
+import { FitnessCards } from '../dashboard/FitnessDetails'
 
 const TABS: Sport[] = ['cycling', 'running', 'swimming', 'strength']
 
@@ -59,6 +60,7 @@ export function MetricsPage() {
 
   return (
     <Page title={t('metrics.title')}>
+      <FitnessCards />
       <div role="tablist" aria-label={t('activities.sport')} className="tabs">
         {TABS.map((s) => (
           <button

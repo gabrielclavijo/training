@@ -1,22 +1,23 @@
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { LoadBadge } from '../../components/ui/Badges'
 import { BarChart, LineChart } from '../../components/ui/Charts'
 import { EmptyState } from '../../components/ui/EmptyState'
-import { Alert, Page, Spinner } from '../../components/ui/Page'
-import { daysBetween, formatDate, formatLongDate, localDayKey, weekStart } from '../../core/dates'
-import type { LoadMethod } from '../../core/load'
+import { Alert, Page } from '../../components/ui/Page'
+import { daysBetween, formatDate, localDayKey, weekStart } from '../../core/dates'
 import { formatClock, formatNumber } from '../../core/units'
-import { fatigueStatus, fitnessVsBest, formStatus, rampStatus, type IndicatorStatus } from '../../core/fitness/status'
-import { CountUp, Gauge, Progress, Semaphore } from '../../components/ui/Status'
+import { CountUp, Progress, Semaphore } from '../../components/ui/Status'
 import { useFitness, useGoals } from '../../data/hooks'
 import { ActivityRow } from '../activities/ActivitiesPage'
-import { TodayCard } from '../plan/TodayCard'
 import { usePlan } from '../plan/usePlan'
-import { Icon, type IconName, TitleIcon } from '../../components/ui/Icon'
+import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { RecommendationsCard } from '../recommendations/RecommendationsCard'
+import { CheckinCard } from './CheckinCard'
+import { FormGaugeCard, Greeting, HomeSkeleton, KpiTiles, PullToRefresh, WeekBar } from './HomeParts'
 
 const dayLabel = (d: string) => formatDate(`${d}T12:00:00Z`).slice(0, 5)
+const SHORT = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+/** «25 nov» */
+export const shortDay = (d: string) => SHORT.format(new Date(`${d}T12:00:00Z`)).replace('.', '')
 
 export function tsbState(tsb: number) {
   if (tsb > 5) return 'tsbFresh'
@@ -32,7 +33,7 @@ export function HomePage() {
   if (isLoading)
     return (
       <Page title={t('nav.home')}>
-        <Spinner full />
+        <HomeSkeleton />
       </Page>
     )
   if (error)
@@ -43,20 +44,18 @@ export function HomePage() {
     )
 
   const pending = loaded?.filter((l) => l.load.method === 'none' && l.day >= daysAgo(today, 41)) ?? []
+  const has = Boolean(loaded && loaded.length > 0)
 
   return (
-    <Page title={t('nav.home')}>
-      <p className="muted capitalize-first">{formatLongDate(new Date())}</p>
-
-      <HeroTop />
-
-      <TodayCard />
-
+    <Page title={t('nav.home')} hideTitle>
+      <PullToRefresh />
+      <Greeting />
+      <CheckinCard />
+      {has && overview?.snapshot && <FormGaugeCard />}
+      {has && overview?.snapshot && <KpiTiles />}
+      <WeekBar />
       <GoalOverview />
-
-      <RecommendationsCard />
-
-      {!loaded || loaded.length === 0 ? (
+      {!has ? (
         <EmptyState
           icon="activity"
           title={t('empty.activities.title')}
@@ -71,16 +70,16 @@ export function HomePage() {
               <Link to={`/actividades/${pending[0].activity.id}`}>{t('rpe.pending', { count: pending.length })}</Link>
             </Alert>
           )}
-          <FitnessCards />
           {overview && overview.series.length > 1 && <Trend />}
           {overview && overview.weeks.length > 0 && <WeeklyLoad />}
+          <RecommendationsCard />
           <section className="card" aria-labelledby="recent-h">
             <h2 id="recent-h" className="card-title-icon">
               <TitleIcon name="activity" tone="sky" />
               {t('fitness.recent')}
             </h2>
             <ul className="activity-list">
-              {loaded.slice(0, 5).map((l) => (
+              {loaded!.slice(0, 5).map((l) => (
                 <ActivityRow key={l.activity.id} item={l} />
               ))}
             </ul>
@@ -88,6 +87,7 @@ export function HomePage() {
           </section>
         </>
       )}
+      {!has && <RecommendationsCard />}
     </Page>
   )
 }
@@ -96,89 +96,6 @@ function daysAgo(today: string, n: number) {
   const d = new Date(`${today}T12:00:00Z`)
   d.setUTCDate(d.getUTCDate() - n)
   return d.toISOString().slice(0, 10)
-}
-
-function FitnessCards() {
-  const { t } = useTranslation()
-  const { overview } = useFitness()
-  const s = overview?.snapshot
-  if (!overview || !s) return <Alert kind="info">{t('fitness.noData')}</Alert>
-  const form = formStatus(s.tsb)
-  const fat = fatigueStatus(s.atl, s.ctl)
-  const ramp = rampStatus(s.rampPerWeek)
-  const best = fitnessVsBest(s.ctl, overview.series)
-  return (
-    <section aria-labelledby="fitness-h">
-      <h2 id="fitness-h" className="visually-hidden">
-        {t('fitness.title')}
-      </h2>
-      {s.warming && <Alert kind="info">{t('fitness.warming', { days: s.historyDays })}</Alert>}
-      <div className="metric-grid">
-        <Metric
-          icon="trend"
-          label={t('fitness.ctl')}
-          value={s.ctl}
-          status={best}
-          verdict={t(`fitness.verdict.${best.verdict}`)}
-          detail={
-            best.bestDay && best.best >= 10
-              ? t('fitness.vsBest', { pct: best.pct, best: formatNumber(best.best), date: formatDate(`${best.bestDay}T12:00:00Z`) })
-              : undefined
-          }
-          gaugeLabel={t('fitness.gaugeFitness', { value: formatNumber(s.ctl), pct: best.pct, best: formatNumber(best.best) })}
-          gaugeTicks={[{ value: 100, label: t('fitness.bestTick') }]}
-          help={t('fitness.ctlHelp')}
-        />
-        <Metric
-          icon="bolt"
-          tile="coral"
-          label={t('fitness.atl')}
-          value={s.atl}
-          status={fat}
-          verdict={t(`fitness.verdict.${fat.verdict}`, { pct: fat.ratio ? Math.round(fat.ratio * 100) : 0 })}
-          gaugeLabel={t('fitness.gaugeFatigue', { value: formatNumber(s.atl), verdict: t(`fitness.level.${fat.level}`) })}
-          help={t('fitness.atlHelp')}
-        />
-        <Metric
-          icon="gauge"
-          tile="sky"
-          label={t('fitness.tsb')}
-          value={s.tsb}
-          status={form}
-          verdict={t(`fitness.verdict.${form.verdict}`)}
-          gaugeLabel={t('fitness.gaugeForm', { value: formatNumber(s.tsb), verdict: t(`fitness.level.${form.level}`) })}
-          gaugeEnds={[t('fitness.scaleBad'), t('fitness.scaleGood')]}
-          help={t('fitness.tsbHelp')}
-        />
-        <Metric
-          icon="chart"
-          tile="soft"
-          label={t('fitness.ramp')}
-          value={s.rampPerWeek}
-          decimals={1}
-          signed
-          unit={t('fitness.rampValue', { value: '' }).trim()}
-          status={ramp}
-          verdict={t(`fitness.verdict.${ramp.verdict}`, { value: formatNumber(s.rampPerWeek, 1) })}
-          gaugeLabel={t('fitness.gaugeRamp', { value: formatNumber(s.rampPerWeek, 1), verdict: t(`fitness.level.${ramp.level}`) })}
-          help={t('fitness.rampHelp')}
-        />
-      </div>
-      {overview.missingRecent > 0 && <Alert kind="warning">{t('fitness.missing', { count: overview.missingRecent })}</Alert>}
-      <p className="muted">
-        {t('fitness.methodsUsed')}:{' '}
-        {(Object.entries(overview.methods) as [LoadMethod, number][]).map(([m, n], i) => (
-          <span key={m}>
-            {i > 0 && ' · '}
-            <LoadBadge method={m} confidence={null} /> {n}
-          </span>
-        ))}
-      </p>
-      <p>
-        <Link to="/glosario">{t('nav.glossary')}</Link>
-      </p>
-    </section>
-  )
 }
 
 const DIAG_LEVEL = { on_track: 'good', tight: 'caution', behind: 'alert', past: 'good' } as const
@@ -257,138 +174,6 @@ function GoalOverview() {
   )
 }
 
-function HeroTop() {
-  const { t } = useTranslation()
-  const { overview } = useFitness()
-  const s = overview?.snapshot
-  if (!s) return null
-  return <FitnessHero state={t(`fitness.${tsbState(s.tsb)}`)} ctl={s.ctl} atl={s.atl} tsb={s.tsb} />
-}
-
-/** Tarjeta héroe: estado de forma y anillo con la carga hecha de la semana frente a la planeada. */
-function FitnessHero({ state, ctl, atl, tsb }: { state: string; ctl: number; atl: number; tsb: number }) {
-  const { t } = useTranslation()
-  const { derived } = usePlan()
-  const { loaded, today } = useFitness()
-  const ws = weekStart(today)
-  const week = derived?.plan.weeks.find((w) => w.weekStart === ws)
-  const done = (loaded ?? []).filter((l) => l.day >= ws && l.day <= today).reduce((a, l) => a + (l.load.load ?? 0), 0)
-  const pct = week && week.targetLoad > 0 ? Math.round((done / week.targetLoad) * 100) : null
-  return (
-    <div className="card card-hero hero">
-      <div className="hero-text">
-        <span className="eyebrow">
-          <Icon name="trend" /> {t('fitness.heroEyebrow')}
-        </span>
-        <p className="hero-title">{state}</p>
-        <p className="hero-verdict">
-          <Semaphore level={formStatus(tsb).level} label={t(`fitness.level.${formStatus(tsb).level}`)} />
-        </p>
-        <p className="hero-sub">{t('fitness.heroSummary', { ctl: formatNumber(ctl), atl: formatNumber(atl), tsb: formatNumber(tsb) })}</p>
-      </div>
-      {pct !== null && week && (
-        <Ring
-          pct={pct}
-          label={t('fitness.heroRingLabel', { pct, done: formatNumber(done), planned: formatNumber(week.targetLoad) })}
-          caption={t('fitness.heroWeekShort')}
-        />
-      )}
-    </div>
-  )
-}
-
-function Ring({ pct, label, caption }: { pct: number; label: string; caption: string }) {
-  const r = 40
-  const shown = Math.min(100, Math.max(0, pct))
-  return (
-    <div className="ring" role="img" aria-label={label}>
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r={r} className="ring-track" />
-        <circle
-          cx="50"
-          cy="50"
-          r={r}
-          className="ring-value"
-          pathLength={100}
-          strokeDasharray={`${shown} 100`}
-          style={{ '--ring': shown } as React.CSSProperties}
-          transform="rotate(-90 50 50)"
-        />
-      </svg>
-      <span className="ring-text">
-        <strong className="num">{pct}%</strong>
-        <span>{caption}</span>
-      </span>
-    </div>
-  )
-}
-
-function Metric({
-  label,
-  value,
-  decimals = 0,
-  signed = false,
-  unit,
-  help,
-  icon,
-  tile,
-  status,
-  verdict,
-  detail,
-  gaugeLabel,
-  gaugeTicks,
-  gaugeEnds,
-}: {
-  label: string
-  value: number
-  decimals?: number
-  signed?: boolean
-  unit?: string
-  help: string
-  icon: IconName
-  tile?: 'coral' | 'sky' | 'soft'
-  status: IndicatorStatus
-  verdict: string
-  detail?: string
-  gaugeLabel: string
-  gaugeTicks?: { value: number; label: string }[]
-  gaugeEnds?: [string, string]
-}) {
-  const { t } = useTranslation()
-  const fmt = (n: number) => `${signed && n > 0 ? '+' : ''}${formatNumber(n, decimals)}`
-  return (
-    <div className={`metric card metric-${status.level}`}>
-      <div className="row-between metric-head">
-        <span className={`icon-tile${tile ? ` icon-tile-${tile}` : ''}`}>
-          <Icon name={icon} />
-        </span>
-        <Semaphore level={status.level} label={t(`fitness.level.${status.level}`)} />
-      </div>
-      <span className="metric-value">
-        <span aria-hidden="true">
-          <CountUp value={value} format={fmt} />
-        </span>
-        <span className="visually-hidden">{fmt(value)}</span>
-        {unit && <span className="metric-unit"> {unit}</span>}
-      </span>
-      <span className="metric-label">{label}</span>
-      <p className={`metric-verdict verdict-${status.level}`}>{verdict}</p>
-      {detail && <p className="metric-detail">{detail}</p>}
-      <Gauge scale={status.scale} value={status.marker} label={gaugeLabel} ticks={gaugeTicks} />
-      {gaugeEnds && (
-        <span className="gauge-ends" aria-hidden="true">
-          <span>{gaugeEnds[0]}</span>
-          <span>{gaugeEnds[1]}</span>
-        </span>
-      )}
-      <details className="metric-more">
-        <summary>{t('fitness.whatIsIt')}</summary>
-        <p className="metric-help">{help}</p>
-      </details>
-    </div>
-  )
-}
-
 function Trend() {
   const { t } = useTranslation()
   const { overview } = useFitness()
@@ -405,12 +190,11 @@ function Trend() {
           ctlStart: formatNumber(series[0].ctl),
         })}
         labels={series.map((p) => p.day)}
-        formatLabel={dayLabel}
-        zeroLine
+        formatLabel={shortDay}
+        formatValue={(v) => formatNumber(v)}
         series={[
           { name: t('fitness.ctlShort'), values: series.map((p) => p.ctl), className: 'line-ctl' },
-          { name: t('fitness.atlShort'), values: series.map((p) => p.atl), className: 'line-atl', dash: '4 3' },
-          { name: t('fitness.tsbShort'), values: series.map((p) => p.tsb), className: 'line-tsb', dash: '1 3' },
+          { name: t('fitness.atlShort'), values: series.map((p) => p.atl), className: 'line-atl', dash: '5 4' },
         ]}
       />
     </section>

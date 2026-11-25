@@ -54,6 +54,9 @@
       "menuHint": "Tu menú de la semana"
     }
   },
+  "charts": {
+    "explore": "Toca la gráfica o usa las flechas para ver cada día."
+  },
   "common": {
     "loading": "Cargando…",
     "save": "Guardar",

@@ -6,7 +6,7 @@ import { zoneTarget, type ZoneSet } from '../../core/planner/zones'
 import type { StoredSession } from '../../data/types'
 import { Icon, type IconName } from '../../components/ui/Icon'
 
-const SESSION_ICON: Record<string, IconName> = { cycling: 'bike', running: 'run', swimming: 'swim', strength: 'dumbbell', other: 'activity' }
+export const SESSION_ICON: Record<string, IconName> = { cycling: 'bike', running: 'run', swimming: 'swim', strength: 'dumbbell', other: 'activity' }
 const STATUS_ICON: Record<string, string> = { done: '✓', partial: '◐', harder: '▲', missed: '✗', pending: '○', rest: '–' }
 
 export function StatusBadge({ status }: { status: MatchResult['status'] }) {

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
  * Encabezado de página: actualiza el título de la pestaña y mueve el foco al
  * <h1> al cambiar de ruta, para que los lectores de pantalla anuncien la página.
  */
-export function Page({ title, children, actions }: { title: string; children: ReactNode; actions?: ReactNode }) {
+export function Page({ title, children, actions, hideTitle = false }: { title: string; children: ReactNode; actions?: ReactNode; hideTitle?: boolean }) {
   const { t } = useTranslation()
   const h1 = useRef<HTMLHeadingElement>(null)
 
@@ -16,7 +16,7 @@ export function Page({ title, children, actions }: { title: string; children: Re
 
   return (
     <>
-      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+      <div className={hideTitle ? 'visually-hidden' : 'row page-head'} style={hideTitle ? undefined : { justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
         <h1 ref={h1} tabIndex={-1} style={{ margin: 0 }}>
           {title}
         </h1>

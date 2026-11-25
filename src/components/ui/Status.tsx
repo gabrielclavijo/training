@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { scalePct, type Level, type Scale } from '../../core/fitness/status'
 
 const reduceMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -99,4 +99,48 @@ export function CountUp({ value, format, duration = 800 }: { value: number; form
     return () => cancelAnimationFrame(id)
   }, [value, duration])
   return <>{format(n)}</>
+}
+
+const arcPt = (f: number, r: number) => {
+  const a = Math.PI * (1 - f)
+  return { x: 100 + r * Math.cos(a), y: 100 - r * Math.sin(a) }
+}
+const arc = (f0: number, f1: number, r: number) => {
+  const a = arcPt(f0, r)
+  const b = arcPt(f1, r)
+  return `M${a.x.toFixed(2)},${a.y.toFixed(2)}A${r},${r} 0 0 1 ${b.x.toFixed(2)},${b.y.toFixed(2)}`
+}
+
+/**
+ * Medidor semicircular: zonas de color (bien / atención / alerta) y una aguja
+ * que se mueve con un pequeño rebote hasta el valor. El texto central lo da `children`.
+ */
+export function ArcGauge({ scale, value, label, children }: { scale: Scale; value: number; label: string; children?: ReactNode }) {
+  const target = scalePct(value, scale) / 100
+  const [shown, setShown] = useState(() => (reduceMotion() ? target : 0))
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShown(target))
+    return () => cancelAnimationFrame(id)
+  }, [target])
+  let from = scale.min
+  const GAP = 0.012
+  return (
+    <div className="arc-gauge" role="img" aria-label={label}>
+      <svg viewBox="0 0 200 112" aria-hidden="true">
+        <path d={arc(0, 1, 80)} className="arc-track" />
+        {scale.zones.map((z, i) => {
+          const f0 = scalePct(from, scale) / 100
+          const f1 = scalePct(Math.min(z.to, scale.max), scale) / 100
+          from = z.to
+          if (f1 - f0 <= GAP * 2) return null
+          return <path key={i} d={arc(f0 + (i ? GAP : 0), f1 - (i < scale.zones.length - 1 ? GAP : 0), 80)} className={`arc-zone arc-${z.level}`} style={{ animationDelay: `${i * 90}ms` }} />
+        })}
+        <g className="arc-needle" style={{ transform: `rotate(${shown * 180 - 90}deg)` }}>
+          <path d="M100,100 L96.5,98 L100,34 L103.5,98 Z" />
+        </g>
+        <circle cx="100" cy="100" r="8" className="arc-hub" />
+      </svg>
+      {children && <div className="arc-center">{children}</div>}
+    </div>
+  )
 }
