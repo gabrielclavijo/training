@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { BusyButton } from '../../components/ui/Busy'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from '../../components/ui/Page'
@@ -10,9 +11,11 @@ export function DemoDataButton({ withClear = false }: { withClear?: boolean }) {
   const repo = useRepo()
   const qc = useQueryClient()
   const [state, setState] = useState<'idle' | 'loading' | 'loaded' | 'cleared' | 'error'>('idle')
+  const [which, setWhich] = useState<'load' | 'clear' | null>(null)
   const [progress, setProgress] = useState({ processed: 0, total: 0 })
 
   async function load() {
+    setWhich('load')
     setState('loading')
     try {
       // Se carga aparte para no sumar el generador al paquete principal
@@ -26,6 +29,7 @@ export function DemoDataButton({ withClear = false }: { withClear?: boolean }) {
     }
   }
   async function clear() {
+    setWhich('clear')
     setState('loading')
     try {
       await repo.clearDemoData()
@@ -45,13 +49,27 @@ export function DemoDataButton({ withClear = false }: { withClear?: boolean }) {
         {state === 'error' && <Alert kind="error">{t('errors.generic')}</Alert>}
       </div>
       <div className="row">
-        <button type="button" className="btn btn-secondary" onClick={load} disabled={state === 'loading'}>
+        <BusyButton
+          type="button"
+          className="btn btn-secondary"
+          onClick={load}
+          busy={state === 'loading' && which === 'load'}
+          busyLabel={t('common.loading')}
+          disabled={state === 'loading'}
+        >
           {t('settingsExtra.demoLoad')}
-        </button>
+        </BusyButton>
         {withClear && (
-          <button type="button" className="btn btn-secondary" onClick={clear} disabled={state === 'loading'}>
+          <BusyButton
+            type="button"
+            className="btn btn-secondary"
+            onClick={clear}
+            busy={state === 'loading' && which === 'clear'}
+            busyLabel={t('common.deleting')}
+            disabled={state === 'loading'}
+          >
             {t('settingsExtra.demoClear')}
-          </button>
+          </BusyButton>
         )}
       </div>
     </div>

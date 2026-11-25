@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { BusyButton } from '../../components/ui/Busy'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from '../../components/ui/Page'
@@ -59,13 +60,20 @@ export function StravaConnection({ connection }: { connection: Connection | unde
           {connection?.lastSyncAt && <p className="muted">{t('strava.lastSync', { date: formatDateTime(connection.lastSyncAt) })}</p>}
           {connection?.lastError && <Alert kind="warning">{t(`strava.errors.${connection.lastError}`, { defaultValue: connection.lastError })}</Alert>}
           <div className="row">
-            <button type="button" className="btn btn-secondary" onClick={sync} disabled={busy !== null}>
-              {busy === 'sync' ? t('strava.syncing') : t('strava.syncNow')}
-            </button>
+            <BusyButton
+              type="button"
+              className="btn btn-secondary"
+              onClick={sync}
+              busy={busy === 'sync'}
+              busyLabel={t('strava.syncing')}
+              disabled={busy !== null}
+            >
+              {t('strava.syncNow')}
+            </BusyButton>
             <button type="button" className="btn btn-secondary" onClick={startStravaConnect} disabled={busy !== null}>
               {t('strava.reconnect')}
             </button>
-            <button type="button" className="btn-link" onClick={disconnect} disabled={busy !== null}>
+            <button type="button" className="btn-link" onClick={disconnect} disabled={busy !== null} aria-busy={busy === 'disconnect' || undefined}>
               {t('strava.disconnect')}
             </button>
           </div>

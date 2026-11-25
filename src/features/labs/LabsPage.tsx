@@ -1,4 +1,6 @@
 import { Icon, TitleIcon } from '../../components/ui/Icon'
+import { useToast } from '../../components/fx/Toast'
+import { BusyButton } from '../../components/ui/Busy'
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -67,12 +69,17 @@ function rangeText(t: TFunction, range: { low: number | null; high: number | nul
   return range.low !== null ? t('labs.rangeFrom', { low: range.low }) : t('labs.rangeTo', { high: range.high })
 }
 
-const STATUS_ICON: Record<LabStatus, string> = { low: '▼', in_range: '✓', high: '▲', unknown: '•' }
+const STATUS_ICON: Record<LabStatus, string> = {
+  low: '▼',
+  in_range: '✓',
+  high: '▲',
+  unknown: '•',
+}
 
 function LabCard({ group, sex }: { group: LabGroup; sex: 'female' | 'male' | null }) {
   const { t } = useTranslation()
   const repo = useRepo()
-  const del = useRepoMutation((id: string) => repo.deleteHealth(id), 'all')
+  const del = useRepoMutation((id: string) => repo.deleteHealth(id), 'all', { success: t('toast.deleted'), icon: 'trash' })
   const last = group.results[group.results.length - 1]
   const { range, source } = effectiveRange(last.data, sex)
   const status = labStatus(last.data.value!, range)
@@ -89,20 +96,39 @@ function LabCard({ group, sex }: { group: LabGroup; sex: 'female' | 'male' | nul
         </span>
       </div>
       <p>
-        <strong>{t('labs.latest', { value: last.data.value, unit: last.data.unit ?? '', date: d(last.recordedOn!) })}</strong>
+        <strong>
+          {t('labs.latest', {
+            value: last.data.value,
+            unit: last.data.unit ?? '',
+            date: d(last.recordedOn!),
+          })}
+        </strong>
         <br />
         <span className="muted">
-          {t('labs.range', { range: rangeText(t, range), unit: last.data.unit ?? '' })}
+          {t('labs.range', {
+            range: rangeText(t, range),
+            unit: last.data.unit ?? '',
+          })}
           {source && ` (${t(source === 'lab' ? 'labs.rangeLab' : 'labs.rangeGeneral')})`}
         </span>
       </p>
       {group.results.length >= 2 && (
         <LineChart
           title={t('labs.chartTitle', { name: group.name })}
-          summary={t('labs.chartSummary', { count: group.results.length, value: last.data.value, unit: last.data.unit ?? '' })}
+          summary={t('labs.chartSummary', {
+            count: group.results.length,
+            value: last.data.value,
+            unit: last.data.unit ?? '',
+          })}
           labels={group.results.map((r) => r.recordedOn!)}
           formatLabel={(l) => d(l)}
-          series={[{ name: group.name, values: group.results.map((r) => r.data.value!), className: 'line-ctl' }]}
+          series={[
+            {
+              name: group.name,
+              values: group.results.map((r) => r.data.value!),
+              className: 'line-ctl',
+            },
+          ]}
           tableEvery={1}
         />
       )}
@@ -119,8 +145,13 @@ function LabCard({ group, sex }: { group: LabGroup; sex: 'female' | 'male' | nul
             <button
               type="button"
               className="btn-link"
+              disabled={del.isPending}
+              aria-busy={(del.isPending && del.variables === r.id) || undefined}
               onClick={() => del.mutate(r.id)}
-              aria-label={t('labs.deleteLabel', { name: group.name, date: d(r.recordedOn!) })}
+              aria-label={t('labs.deleteLabel', {
+                name: group.name,
+                date: d(r.recordedOn!),
+              })}
             >
               {t('labs.delete')}
             </button>
@@ -133,6 +164,7 @@ function LabCard({ group, sex }: { group: LabGroup; sex: 'female' | 'male' | nul
 
 function AddLabForm() {
   const { t } = useTranslation()
+  const toast = useToast()
   const repo = useRepo()
   const today = localDayKey(new Date())
   const [key, setKey] = useState(LAB_CATALOG[0].key)
@@ -188,6 +220,7 @@ function AddLabForm() {
     setLow('')
     setHigh('')
     setSaved(true)
+    toast(t('common.saved'))
   }
 
   return (
@@ -223,9 +256,9 @@ function AddLabForm() {
         <NumberField label={t('labs.refLow')} optional value={low} onChange={(e) => setLow(e.target.value)} error={errors.low} />
         <NumberField label={t('labs.refHigh')} optional value={high} onChange={(e) => setHigh(e.target.value)} error={errors.high} />
       </div>
-      <button type="submit" className="btn btn-primary" disabled={save.isPending}>
-        {save.isPending ? t('common.saving') : t('labs.save')}
-      </button>
+      <BusyButton type="submit" className="btn btn-primary" busy={save.isPending}>
+        {t('labs.save')}
+      </BusyButton>
     </form>
   )
 }

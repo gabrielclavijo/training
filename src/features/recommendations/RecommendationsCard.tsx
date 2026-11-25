@@ -99,6 +99,7 @@ export function useRecommendations() {
 
 /** Recomendaciones visibles hoy (sin las ocultadas), con la acción de ocultar. */
 export function useVisibleRecs() {
+  const { t } = useTranslation()
   const repo = useRepo()
   const recs = useRecommendations()
   const state = useQuery({ queryKey: ['recState'], queryFn: () => repo.listRecommendationState() })
@@ -106,6 +107,7 @@ export function useVisibleRecs() {
     ({ key, reaction, today }: { key: string; reaction: 'ok' | 'not_applicable'; today: string }) =>
       repo.dismissRecommendation(key, reaction, addDays(today, DISMISS_DAYS)),
     [['recState']],
+    { success: t('toast.recHidden'), icon: 'check' },
   )
   const shown = recs && state.data ? visible(recs.all, state.data, recs.today) : null
   return { shown, today: recs?.today ?? '', dismiss }
@@ -129,7 +131,14 @@ export function RecommendationsCard({ bare = false }: { bare?: boolean }) {
     <>
       <ul className="plain-list recs">
         {shown.map((r, i) => (
-          <RecItem key={r.key} rec={r} index={i} onDismiss={(reaction) => dismiss.mutate({ key: r.key, reaction, today })} busy={dismiss.isPending} />
+          <RecItem
+            key={r.key}
+            rec={r}
+            index={i}
+            onDismiss={(reaction) => dismiss.mutate({ key: r.key, reaction, today })}
+            busy={dismiss.isPending}
+            working={dismiss.isPending && dismiss.variables?.key === r.key ? dismiss.variables.reaction : null}
+          />
         ))}
       </ul>
       <p className="muted">{t('recs.hiddenFor')}</p>
@@ -147,7 +156,19 @@ export function RecommendationsCard({ bare = false }: { bare?: boolean }) {
   )
 }
 
-function RecItem({ rec, index = 0, onDismiss, busy }: { rec: Recommendation; index?: number; onDismiss: (r: 'ok' | 'not_applicable') => void; busy: boolean }) {
+function RecItem({
+  rec,
+  index = 0,
+  onDismiss,
+  busy,
+  working = null,
+}: {
+  rec: Recommendation
+  index?: number
+  onDismiss: (r: 'ok' | 'not_applicable') => void
+  busy: boolean
+  working?: 'ok' | 'not_applicable' | null
+}) {
   const { t } = useTranslation()
   const id = `rec-${rec.key}`
   return (
@@ -167,6 +188,7 @@ function RecItem({ rec, index = 0, onDismiss, busy }: { rec: Recommendation; ind
           type="button"
           className="btn btn-secondary btn-small"
           disabled={busy}
+          aria-busy={working === 'ok' || undefined}
           onClick={() => onDismiss('ok')}
           aria-label={`${t('recs.ok')}: ${t(`recs.${rec.key}.title`)}`}
         >
@@ -176,6 +198,7 @@ function RecItem({ rec, index = 0, onDismiss, busy }: { rec: Recommendation; ind
           type="button"
           className="btn-link"
           disabled={busy}
+          aria-busy={working === 'not_applicable' || undefined}
           onClick={() => onDismiss('not_applicable')}
           aria-label={`${t('recs.notApplicable')}: ${t(`recs.${rec.key}.title`)}`}
         >

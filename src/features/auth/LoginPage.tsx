@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { BusyButton } from '../../components/ui/Busy'
 import { Link, Navigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
@@ -21,6 +22,7 @@ export function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({})
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [viaGoogle, setViaGoogle] = useState(false)
   const h1 = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
@@ -68,6 +70,7 @@ export function LoginPage() {
     ev.preventDefault()
     setNotice(null)
     if (!validate()) return
+    setViaGoogle(false)
     setBusy(true)
     try {
       if (mode === 'signIn') {
@@ -93,6 +96,7 @@ export function LoginPage() {
   }
 
   async function google() {
+    setViaGoogle(true)
     setBusy(true)
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
@@ -120,9 +124,16 @@ export function LoginPage() {
 
         {mode !== 'forgot' && GOOGLE_ENABLED && (
           <>
-            <button type="button" className="btn btn-secondary btn-block" onClick={google} disabled={busy}>
+            <BusyButton
+              type="button"
+              className="btn btn-secondary btn-block"
+              onClick={google}
+              busy={busy && viaGoogle}
+              busyLabel={t('common.loading')}
+              disabled={busy}
+            >
               <GoogleMark /> {t('auth.google')}
-            </button>
+            </BusyButton>
             <p className="divider">{t('auth.or')}</p>
           </>
         )}
@@ -170,9 +181,9 @@ export function LoginPage() {
             </div>
           )}
 
-          <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
+          <BusyButton type="submit" className="btn btn-primary btn-block" busy={busy && !viaGoogle} busyLabel={t('common.loading')} disabled={busy}>
             {submitLabel}
-          </button>
+          </BusyButton>
         </form>
 
         <div className="stack" style={{ marginTop: 'var(--space-4)', gap: 0 }}>

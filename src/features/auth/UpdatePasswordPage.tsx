@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { BusyButton } from '../../components/ui/Busy'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Alert, Page } from '../../components/ui/Page'
@@ -12,11 +13,14 @@ export function UpdatePasswordPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+  const [busy, setBusy] = useState(false)
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     if (password.length < 8) return setError(t('auth.passwordShort'))
+    setBusy(true)
     const { error: err } = await requireSupabase().auth.updateUser({ password })
+    setBusy(false)
     if (err) return setError(t('errors.generic'))
     setDone(true)
     clearRecovering()
@@ -42,9 +46,9 @@ export function UpdatePasswordPage() {
             {t('auth.passwordHint')}
           </span>
         </div>
-        <button className="btn btn-primary" type="submit">
+        <BusyButton type="submit" busy={busy}>
           {t('auth.updatePassword')}
-        </button>
+        </BusyButton>
       </form>
     </Page>
   )

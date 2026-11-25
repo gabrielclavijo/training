@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { BusyButton } from '../../components/ui/Busy'
 import { useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '../../components/ui/Icon'
@@ -104,9 +105,9 @@ export function CheckinCard() {
             </div>
           </fieldset>
           <div className="row">
-            <button type="submit" className="btn btn-primary" disabled={!feeling || save.isPending}>
-              {save.isPending ? t('common.saving') : t('checkin.save')}
-            </button>
+            <BusyButton type="submit" disabled={!feeling} busy={save.isPending}>
+              {t('checkin.save')}
+            </BusyButton>
             {editing && (
               <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>
                 {t('common.cancel')}

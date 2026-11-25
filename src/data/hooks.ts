@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { localDayKey } from '../core/dates'
 import { useRepo } from './RepoProvider'
+import { notify } from '../components/fx/Toast'
+import type { IconName } from '../components/ui/Icon'
+import i18n from '../i18n'
 import { fitnessOverview, loadsFor } from './analysis'
 
 /** Consultas compartidas (con caché) sobre el repositorio activo. */
@@ -113,13 +116,24 @@ export function useInvalidateAll() {
   return () => qc.invalidateQueries()
 }
 
-export function useRepoMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>, invalidate: readonly (readonly string[])[] | 'all') {
+export function useRepoMutation<TArgs>(
+  fn: (args: TArgs) => Promise<unknown>,
+  invalidate: readonly (readonly string[])[] | 'all',
+  /** Aviso al terminar bien (p. ej. «Guardado», «Eliminado»); con él, si falla también se avisa */
+  opts: { success?: string; icon?: IconName } = {},
+) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: fn,
-    onSuccess: () => {
-      if (invalidate === 'all') return qc.invalidateQueries()
-      return Promise.all(invalidate.map((k) => qc.invalidateQueries({ queryKey: k })))
+    onSuccess: async () => {
+      if (invalidate === 'all') await qc.invalidateQueries()
+      else await Promise.all(invalidate.map((k) => qc.invalidateQueries({ queryKey: k })))
+      if (opts.success) notify(opts.success, { icon: opts.icon ?? 'check' })
+    },
+    onError: (e) => {
+      console.error(e)
+      // Solo si la pantalla no muestra su propio error
+      if (opts.success) notify(i18n.t('errors.saveFailed'), { icon: 'alert' })
     },
   })
 }

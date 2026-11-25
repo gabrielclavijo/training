@@ -1,4 +1,6 @@
 import { TitleIcon } from '../../components/ui/Icon'
+import { SignOutButton } from '../profile/SignOutButton'
+import { BusyButton } from '../../components/ui/Busy'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -62,9 +64,7 @@ export function SettingsPage() {
           {t('settings.account')}
         </h2>
         {mode === 'local' ? <p className="muted">{t('local.banner')}</p> : user?.email && <p className="muted">{user.email}</p>}
-        <button type="button" className="btn btn-secondary" onClick={() => void signOut()}>
-          {t('settings.signOut')}
-        </button>
+        <SignOutButton signOut={signOut}>{t('settings.signOut')}</SignOutButton>
       </section>
     </Page>
   )
@@ -98,9 +98,9 @@ function ExportButton() {
       <h3>{t('settingsExtra.export')}</h3>
       <p className="muted">{t('settingsExtra.exportHelp')}</p>
       {error && <Alert kind="error">{t('errors.generic')}</Alert>}
-      <button type="button" className="btn btn-secondary" onClick={run} disabled={busy} aria-busy={busy}>
-        {busy ? t('settingsExtra.exporting') : t('settingsExtra.export')}
-      </button>
+      <BusyButton type="button" className="btn btn-secondary" onClick={run} busy={busy} busyLabel={t('settingsExtra.exporting')}>
+        {t('settingsExtra.export')}
+      </BusyButton>
     </div>
   )
 }
@@ -136,9 +136,9 @@ function DeleteAccount() {
         <label htmlFor="del-word">{t('settingsExtra.deleteConfirmLabel')}</label>
         <input id="del-word" type="text" value={word} onChange={(e) => setWord(e.target.value)} autoComplete="off" />
       </div>
-      <button type="button" className="btn btn-danger" disabled={!ok || busy} onClick={run}>
-        {busy ? t('settingsExtra.deleting') : t('settingsExtra.deleteButton')}
-      </button>
+      <BusyButton type="button" className="btn btn-danger" disabled={!ok} busy={busy} busyLabel={t('settingsExtra.deleting')} onClick={run}>
+        {t('settingsExtra.deleteButton')}
+      </BusyButton>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { BusyButton } from '../../components/ui/Busy'
 import { useToast } from '../../components/fx/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -28,8 +29,17 @@ export function GoalFormPage() {
   const { id } = useParams()
   const repo = useRepo()
   const { t } = useTranslation()
-  const q = useQuery({ queryKey: ['goal', id], queryFn: () => repo.getGoal(id!), enabled: Boolean(id) })
-  if (id && q.isLoading) return <Page title={t('goals.edit')}><Spinner full /></Page>
+  const q = useQuery({
+    queryKey: ['goal', id],
+    queryFn: () => repo.getGoal(id!),
+    enabled: Boolean(id),
+  })
+  if (id && q.isLoading)
+    return (
+      <Page title={t('goals.edit')}>
+        <Spinner full />
+      </Page>
+    )
   return <GoalForm initial={q.data ?? null} />
 }
 
@@ -53,7 +63,12 @@ function GoalForm({ initial }: { initial: Goal | null }) {
   const [maxAlt, setMaxAlt] = useState(initial?.maxAltitudeM ? String(initial.maxAltitudeM) : '')
   const [stages, setStages] = useState<StageDraft[]>(
     initial?.stages.length
-      ? initial.stages.map((s) => ({ km: String(s.distanceM / 1000), elev: String(s.elevationGainM), terrain: s.terrain ?? '', time: toClock(s.targetTimeS, 'hh:mm') }))
+      ? initial.stages.map((s) => ({
+          km: String(s.distanceM / 1000),
+          elev: String(s.elevationGainM),
+          terrain: s.terrain ?? '',
+          time: toClock(s.targetTimeS, 'hh:mm'),
+        }))
       : [{ km: '', elev: '', terrain: '', time: '' }],
   )
   const [objective, setObjective] = useState<'finish' | 'time'>(initial?.objective ?? 'finish')
@@ -174,7 +189,13 @@ function GoalForm({ initial }: { initial: Goal | null }) {
     }
   }
 
-  const stageTotals = stages.reduce((a, s) => ({ d: a.d + (parseNum(s.km) || 0) * 1000, e: a.e + (parseWhole(s.elev) || 0) }), { d: 0, e: 0 })
+  const stageTotals = stages.reduce(
+    (a, s) => ({
+      d: a.d + (parseNum(s.km) || 0) * 1000,
+      e: a.e + (parseWhole(s.elev) || 0),
+    }),
+    { d: 0, e: 0 },
+  )
   const titles = [t('goals.typeStep'), t('goals.dataStep'), t('goals.objectiveStep'), t('goals.gpxStep')]
 
   return (
@@ -195,17 +216,38 @@ function GoalForm({ initial }: { initial: Goal | null }) {
             value={goalType}
             onChange={setGoalType}
             options={[
-              { value: 'single', label: t('goals.single'), help: t('goals.typeSingleHelp') },
-              { value: 'stage', label: t('goals.stage'), help: t('goals.typeStageHelp') },
+              {
+                value: 'single',
+                label: t('goals.single'),
+                help: t('goals.typeSingleHelp'),
+              },
+              {
+                value: 'stage',
+                label: t('goals.stage'),
+                help: t('goals.typeStageHelp'),
+              },
             ]}
           />
         )}
 
         {step === 2 && (
           <>
-            <TextField label={t('goals.name')} placeholder={t('goals.namePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} error={errors.name} />
+            <TextField
+              label={t('goals.name')}
+              placeholder={t('goals.namePlaceholder')}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              error={errors.name}
+            />
             <div className="grid-2">
-              <SelectField label={t('goals.sport')} value={sport} onChange={(e) => { setSport(e.target.value as Sport); setSubSport('') }}>
+              <SelectField
+                label={t('goals.sport')}
+                value={sport}
+                onChange={(e) => {
+                  setSport(e.target.value as Sport)
+                  setSubSport('')
+                }}
+              >
                 {SPORTS.filter((s) => s !== 'strength').map((s) => (
                   <option key={s} value={s}>
                     {t(`sports.${s}`)}
@@ -255,7 +297,14 @@ function GoalForm({ initial }: { initial: Goal | null }) {
               <>
                 <div className="grid-2">
                   <NumberField label={t('goals.distanceKm')} value={km} onChange={(e) => setKm(e.target.value)} error={errors.km} />
-                  <NumberField label={t('goals.elevationM')} optional value={elev} onChange={(e) => setElev(e.target.value)} error={errors.elev} inputMode="numeric" />
+                  <NumberField
+                    label={t('goals.elevationM')}
+                    optional
+                    value={elev}
+                    onChange={(e) => setElev(e.target.value)}
+                    error={errors.elev}
+                    inputMode="numeric"
+                  />
                 </div>
                 <div className="grid-2">
                   <SelectField label={t('goals.terrain')} optional value={terrain} onChange={(e) => setTerrain(e.target.value as Terrain)}>
@@ -312,7 +361,12 @@ function GoalForm({ initial }: { initial: Goal | null }) {
                     </div>
                   </div>
                 ))}
-                <p className="muted">{t('goals.totals', { distance: formatDistance(stageTotals.d), elevation: formatElevation(stageTotals.e) })}</p>
+                <p className="muted">
+                  {t('goals.totals', {
+                    distance: formatDistance(stageTotals.d),
+                    elevation: formatElevation(stageTotals.e),
+                  })}
+                </p>
                 <button type="button" className="btn btn-secondary" onClick={() => setStages([...stages, { km: '', elev: '', terrain: '', time: '' }])}>
                   {t('goals.addStage')}
                 </button>
@@ -335,7 +389,15 @@ function GoalForm({ initial }: { initial: Goal | null }) {
             />
             {objective === 'time' && (
               <>
-                <ClockField label={t('goals.targetTotal')} hint={t('goals.clockHint')} placeholder={t('goals.timePlaceholder')} value={target} onChange={(e) => setTarget(e.target.value)} error={errors.target} optional={goalType === 'stage'} />
+                <ClockField
+                  label={t('goals.targetTotal')}
+                  hint={t('goals.clockHint')}
+                  placeholder={t('goals.timePlaceholder')}
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value)}
+                  error={errors.target}
+                  optional={goalType === 'stage'}
+                />
                 {goalType === 'stage' && (
                   <fieldset>
                     <legend className="legend">{t('goals.targetPerStage')}</legend>
@@ -395,9 +457,9 @@ function GoalForm({ initial }: { initial: Goal | null }) {
               {t('common.continue')}
             </button>
           ) : (
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? t('common.saving') : t('goals.save')}
-            </button>
+            <BusyButton type="submit" className="btn btn-primary" busy={saving}>
+              {t('goals.save')}
+            </BusyButton>
           )}
         </div>
       </form>

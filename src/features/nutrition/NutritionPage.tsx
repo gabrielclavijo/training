@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { useToast } from '../../components/fx/Toast'
+import { BusyButton } from '../../components/ui/Busy'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
@@ -92,11 +94,18 @@ function ProfileCard({ prefs }: { prefs: NutritionPrefs | null }) {
             <Icon name="clock" /> {t('nutrition.chipMinutes', { count: prefs.cookingMinutes })}
           </li>
           <li className="chip">
-            <Icon name="coins" /> {t('nutrition.chipBudget', { value: t(`nutrition.budgets.${prefs.budget}`).toLowerCase() })}
+            <Icon name="coins" />{' '}
+            {t('nutrition.chipBudget', {
+              value: t(`nutrition.budgets.${prefs.budget}`).toLowerCase(),
+            })}
           </li>
           <li className={`chip${prefs.foodAllergies.length ? ' chip-warn' : ''}`}>
             <Icon name="alert" />{' '}
-            {prefs.foodAllergies.length ? t('nutrition.summaryAllergies', { list: prefs.foodAllergies.join(', ') }) : t('nutrition.noAllergies')}
+            {prefs.foodAllergies.length
+              ? t('nutrition.summaryAllergies', {
+                  list: prefs.foodAllergies.join(', '),
+                })
+              : t('nutrition.noAllergies')}
           </li>
         </ul>
         <button type="button" className="btn btn-secondary" onClick={() => setEditing(true)}>
@@ -121,6 +130,7 @@ function ProfileCard({ prefs }: { prefs: NutritionPrefs | null }) {
 
 export function NutritionForm({ prefs, onSaved }: { prefs: NutritionPrefs | null; onSaved?: () => void }) {
   const { t } = useTranslation()
+  const toast = useToast()
   const repo = useRepo()
   const p = prefs ?? DEFAULT_NUTRITION
   const [goal, setGoal] = useState(p.goal)
@@ -152,6 +162,7 @@ export function NutritionForm({ prefs, onSaved }: { prefs: NutritionPrefs | null
     if (!Number.isInteger(m) || m < 5 || m > 180) return setError(t('activities.mustBePositive'))
     setError(null)
     await save.mutateAsync(undefined)
+    toast(t('common.saved'))
     onSaved?.()
   }
   return (
@@ -208,11 +219,14 @@ export function NutritionForm({ prefs, onSaved }: { prefs: NutritionPrefs | null
         name="nbudget"
         value={budget}
         onChange={setBudget}
-        options={(['low', 'medium', 'high'] as const).map((value) => ({ value, label: t(`nutrition.budgets.${value}`) }))}
+        options={(['low', 'medium', 'high'] as const).map((value) => ({
+          value,
+          label: t(`nutrition.budgets.${value}`),
+        }))}
       />
-      <button className="btn btn-primary" type="submit" disabled={save.isPending}>
-        {save.isPending ? t('common.saving') : t('nutrition.save')}
-      </button>
+      <BusyButton className="btn btn-primary" type="submit" busy={save.isPending}>
+        {t('nutrition.save')}
+      </BusyButton>
     </form>
   )
 }
@@ -240,7 +254,9 @@ function Week({ start, prefs }: { start: string; prefs: NutritionPrefs | null })
         <p className="muted">{t('nutrition.needsHelp')}</p>
         {missing.length > 0 && (
           <Alert kind="info">
-            {t('nutrition.missingData', { list: missing.map((m) => t(`nutrition.missing.${m}`)).join(', ') })}{' '}
+            {t('nutrition.missingData', {
+              list: missing.map((m) => t(`nutrition.missing.${m}`)).join(', '),
+            })}{' '}
             <Link to="/perfil">{t('nutrition.goToProfile')}</Link>
           </Alert>
         )}
@@ -307,10 +323,24 @@ function MenuSection({
   const { t } = useTranslation()
   const repo = useRepo()
   const qc = useQueryClient()
-  const plans = useQuery({ queryKey: ['mealPlans'], queryFn: () => repo.listMealPlans() })
+  const plans = useQuery({
+    queryKey: ['mealPlans'],
+    queryFn: () => repo.listMealPlans(),
+  })
   const plan = plans.data?.find((p) => p.weekStart === start) ?? null
-  const generate = useRepoMutation(() => repo.generateMenu(toMenuRequest(start, days!)), [['mealPlans']])
-  const del = useRepoMutation((id: string) => repo.deleteMealPlan(id), [['mealPlans']])
+  const toast = useToast()
+  const generate = useRepoMutation(async () => {
+    const r = await repo.generateMenu(toMenuRequest(start, days!))
+    toast(t('nutrition.menuReady'), { icon: 'sparkles' })
+    return r
+  }, [['mealPlans']])
+  const del = useRepoMutation(
+    async (id: string) => {
+      await repo.deleteMealPlan(id)
+      toast(t('nutrition.menuDeleted'), { icon: 'trash' })
+    },
+    [['mealPlans']],
+  )
 
   const canGenerate = Boolean(prefs && days)
   return (
@@ -356,6 +386,7 @@ function MenuSection({
           selected={selected}
           onSelect={onSelect}
           onChanged={(p) => qc.setQueryData<MealPlan[]>(['mealPlans'], (old) => [p, ...(old ?? []).filter((x) => x.id !== p.id)])}
+          deleting={del.isPending}
           onDelete={() => {
             if (window.confirm(t('nutrition.deleteConfirm'))) del.mutate(plan.id)
           }}
@@ -372,6 +403,7 @@ function MenuView({
   onSelect,
   onChanged,
   onDelete,
+  deleting = false,
 }: {
   plan: MealPlan
   days: DayRow[] | null
@@ -379,8 +411,10 @@ function MenuView({
   onSelect: (d: string) => void
   onChanged: (p: MealPlan) => void
   onDelete: () => void
+  deleting?: boolean
 }) {
   const { t } = useTranslation()
+  const toast = useToast()
   const repo = useRepo()
   const [swapping, setSwapping] = useState<string | null>(null)
   const [swapError, setSwapError] = useState<string | null>(null)
@@ -393,6 +427,7 @@ function MenuView({
     setSwapError(null)
     try {
       onChanged(await repo.swapMeal(plan.id, date, index))
+      toast(t('nutrition.swapped'), { icon: 'refresh' })
     } catch (e) {
       setSwapError(errorText(t, e))
     } finally {
@@ -410,7 +445,10 @@ function MenuView({
           <h3 className="capitalize-first">{t('nutrition.menuOfDay', { date: longDay(day.date) })}</h3>
           <span className="pill-kcal num">
             <Icon name="flame" />{' '}
-            {t('nutrition.dayTotalShort', { kcal: formatNumber(day.meals.reduce((a, m) => a + m.kcal, 0)), target: formatNumber(targets.get(day.date) ?? 0) })}
+            {t('nutrition.dayTotalShort', {
+              kcal: formatNumber(day.meals.reduce((a, m) => a + m.kcal, 0)),
+              target: formatNumber(targets.get(day.date) ?? 0),
+            })}
           </span>
         </div>
         {day.note && (
@@ -449,10 +487,13 @@ function MenuView({
                   type="button"
                   className="btn btn-secondary btn-small no-print"
                   disabled={swapping !== null}
-                  aria-label={t('nutrition.swapLabel', { meal: m.label, date: d(day.date) })}
+                  aria-label={t('nutrition.swapLabel', {
+                    meal: m.label,
+                    date: d(day.date),
+                  })}
                   onClick={() => swap(day.date, i)}
                 >
-                  <Icon name="refresh" /> {busy ? t('nutrition.swapping') : t('nutrition.swap')}
+                  {busy ? <span className="btn-spinner" aria-hidden="true" /> : <Icon name="refresh" />} {busy ? t('nutrition.swapping') : t('nutrition.swap')}
                 </button>
               </li>
             )
@@ -509,9 +550,9 @@ function MenuView({
         <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
           <Icon name="printer" /> {t('nutrition.print')}
         </button>
-        <button type="button" className="btn btn-secondary" onClick={onDelete}>
+        <BusyButton type="button" className="btn btn-secondary" busy={deleting} busyLabel={t('common.deleting')} onClick={onDelete}>
           <Icon name="trash" /> {t('nutrition.delete')}
-        </button>
+        </BusyButton>
       </div>
 
       <details className="no-print sent">

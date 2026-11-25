@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Icon, type IconName } from '../ui/Icon'
 import { haptic } from './motion'
 
@@ -12,6 +12,11 @@ type Show = (text: string, opts?: { icon?: IconName; vibrate?: boolean }) => voi
 
 const Ctx = createContext<Show>(() => {})
 
+// Avisos desde fuera de React (p. ej. al terminar una mutación)
+let external: Show | null = null
+/** Muestra un aviso desde cualquier parte (si la app ya cargó los avisos). */
+export const notify: Show = (text, opts) => external?.(text, opts)
+
 /** Avisos cortos abajo de la pantalla («Guardado», «Actividad subida»…). */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Toast[]>([])
@@ -24,6 +29,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setTimeout(() => setItems((xs) => xs.filter((x) => x.id !== id)), 2900)
   }, [])
   const value = useMemo(() => show, [show])
+  useEffect(() => {
+    external = show
+    return () => {
+      if (external === show) external = null
+    }
+  }, [show])
   return (
     <Ctx.Provider value={value}>
       {children}

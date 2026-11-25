@@ -1,4 +1,5 @@
 import { TitleIcon } from '../../components/ui/Icon'
+import { BusyButton } from '../../components/ui/Busy'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -22,11 +23,13 @@ export function OnboardingPage() {
     [keys.profile],
   )
 
+  const [going, setGoing] = useState<string | null>(null)
   async function next(current: number) {
     await setProgress.mutateAsync({ step: current })
     setStep(current + 1)
   }
   async function finish(to: string) {
+    setGoing(to)
     await setProgress.mutateAsync({ step: TOTAL, done: true })
     navigate(to)
   }
@@ -76,9 +79,9 @@ export function OnboardingPage() {
           </h2>
           <p className="muted">{t('onboarding.s3Help')}</p>
           <div className="stack">
-            <button type="button" className="btn btn-primary" onClick={() => void finish('/subir')}>
+            <BusyButton type="button" busy={going === '/subir'} busyLabel={t('common.loading')} onClick={() => void finish('/subir')}>
               {t('onboarding.s3Upload')}
-            </button>
+            </BusyButton>
             <Link className="btn btn-secondary" to="/ayuda">
               {t('onboarding.s3Guide')}
             </Link>
@@ -103,12 +106,12 @@ export function OnboardingPage() {
           </h2>
           <p className="muted">{t('onboarding.s4Help')}</p>
           <div className="stack">
-            <button type="button" className="btn btn-primary" onClick={() => void finish('/metas/nueva')}>
+            <BusyButton type="button" busy={going === '/metas/nueva'} busyLabel={t('common.loading')} onClick={() => void finish('/metas/nueva')}>
               {t('onboarding.s4Create')}
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={() => void finish('/')}>
+            </BusyButton>
+            <BusyButton type="button" className="btn btn-secondary" busy={going === '/'} busyLabel={t('common.loading')} onClick={() => void finish('/')}>
               {t('onboarding.finishLater')}
-            </button>
+            </BusyButton>
           </div>
           <button type="button" className="btn-link" onClick={() => setStep(3)}>
             {t('common.back')}

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { BusyButton } from '../../components/ui/Busy'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Alert } from '../../components/ui/Page'
@@ -15,15 +16,15 @@ export function HealthSection() {
   const repo = useRepo()
   const consent = useHasHealthConsent()
   const health = useHealth()
-  const grant = useRepoMutation(() => repo.grantConsent('health_data', HEALTH_POLICY_VERSION), [keys.consents])
-  const revoke = useRepoMutation(
-    async () => {
-      await repo.deleteAllHealth()
-      await repo.revokeConsent('health_data')
-    },
-    'all',
-  )
-  const del = useRepoMutation((id: string) => repo.deleteHealth(id), 'all')
+  const grant = useRepoMutation(() => repo.grantConsent('health_data', HEALTH_POLICY_VERSION), [keys.consents], {
+    success: t('toast.permissionGranted'),
+    icon: 'shield',
+  })
+  const revoke = useRepoMutation(async () => {
+    await repo.deleteAllHealth()
+    await repo.revokeConsent('health_data')
+  }, 'all')
+  const del = useRepoMutation((id: string) => repo.deleteHealth(id), 'all', { success: t('toast.deleted'), icon: 'trash' })
 
   if (consent.isLoading) return null
 
@@ -34,9 +35,9 @@ export function HealthSection() {
         <div className="callout">
           <h3>{t('profile.consentTitle')}</h3>
           <p>{t('profile.consentText')}</p>
-          <button className="btn btn-primary" type="button" onClick={() => grant.mutate(undefined)} disabled={grant.isPending}>
+          <BusyButton type="button" busy={grant.isPending} onClick={() => grant.mutate(undefined)}>
             {t('profile.consentAccept')}
-          </button>
+          </BusyButton>
         </div>
       </div>
     )
@@ -59,7 +60,14 @@ export function HealthSection() {
                 {m.data.name}
                 {m.data.affectsHeartRate && <span className="badge badge-warning"> {t('profile.altersHr')}</span>}
               </span>
-              <button type="button" className="btn-link" onClick={() => del.mutate(m.id)} aria-label={`${t('profile.delete')} ${m.data.name}`}>
+              <button
+                type="button"
+                className="btn-link"
+                disabled={del.isPending}
+                aria-busy={(del.isPending && del.variables === m.id) || undefined}
+                onClick={() => del.mutate(m.id)}
+                aria-label={`${t('profile.delete')} ${m.data.name}`}
+              >
                 {t('profile.delete')}
               </button>
             </li>
@@ -74,7 +82,14 @@ export function HealthSection() {
           {allergies.map((m) => (
             <li key={m.id} className="row-between">
               <span>{m.data.name}</span>
-              <button type="button" className="btn-link" onClick={() => del.mutate(m.id)} aria-label={`${t('profile.delete')} ${m.data.name}`}>
+              <button
+                type="button"
+                className="btn-link"
+                disabled={del.isPending}
+                aria-busy={(del.isPending && del.variables === m.id) || undefined}
+                onClick={() => del.mutate(m.id)}
+                aria-label={`${t('profile.delete')} ${m.data.name}`}
+              >
                 {t('profile.delete')}
               </button>
             </li>
@@ -88,15 +103,17 @@ export function HealthSection() {
       </section>
       <p className="muted">🔒 {t('profile.encrypted')}</p>
       <div>
-        <button
+        <BusyButton
           type="button"
           className="btn btn-secondary"
+          busy={revoke.isPending}
+          busyLabel={t('common.deleting')}
           onClick={() => {
             if (window.confirm(t('profile.consentRevokeConfirm'))) revoke.mutate(undefined)
           }}
         >
           {t('profile.consentRevoke')}
-        </button>
+        </BusyButton>
       </div>
     </div>
   )
@@ -111,6 +128,7 @@ function AddHealthForm({ category }: { category: HealthCategory }) {
   const add = useRepoMutation(
     () => repo.saveHealth({ category, recordedOn: null, data: { name: name.trim(), affectsHeartRate: category === 'medication' ? affects : undefined } }),
     'all',
+    { success: t('common.saved') },
   )
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -135,9 +153,9 @@ function AddHealthForm({ category }: { category: HealthCategory }) {
           {t('profile.affectsHr')}
         </label>
       )}
-      <button type="submit" className="btn btn-secondary" disabled={add.isPending}>
+      <BusyButton type="submit" className="btn btn-secondary" busy={add.isPending}>
         {category === 'medication' ? t('profile.addMedication') : t('profile.addAllergy')}
-      </button>
+      </BusyButton>
     </form>
   )
 }

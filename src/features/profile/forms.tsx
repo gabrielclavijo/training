@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { BusyButton } from '../../components/ui/Busy'
 import { useToast } from '../../components/fx/Toast'
 import { useTranslation } from 'react-i18next'
 import { Alert } from '../../components/ui/Page'
@@ -36,20 +37,17 @@ export function BasicsForm({ onSaved, submitLabel, askWeight = false }: { onSave
     setAdult(p.adultConfirmed)
   }, [profile.data])
 
-  const save = useRepoMutation(
-    async () => {
-      await repo.updateProfile({
-        displayName: name.trim() || null,
-        birthDate: birth || null,
-        sexForFormulas: sex === 'none' ? null : sex,
-        heightCm: parseWhole(height),
-        adultConfirmed: adult,
-      })
-      const w = parseNum(weight)
-      if (w) await repo.saveWeight({ measuredOn: today(), weightKg: w })
-    },
-    [keys.profile, keys.weights],
-  )
+  const save = useRepoMutation(async () => {
+    await repo.updateProfile({
+      displayName: name.trim() || null,
+      birthDate: birth || null,
+      sexForFormulas: sex === 'none' ? null : sex,
+      heightCm: parseWhole(height),
+      adultConfirmed: adult,
+    })
+    const w = parseNum(weight)
+    if (w) await repo.saveWeight({ measuredOn: today(), weightKg: w })
+  }, [keys.profile, keys.weights])
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -111,9 +109,9 @@ export function BasicsForm({ onSaved, submitLabel, askWeight = false }: { onSave
           </span>
         )}
       </div>
-      <button className="btn btn-primary" type="submit" disabled={save.isPending}>
-        {save.isPending ? t('common.saving') : (submitLabel ?? t('common.save'))}
-      </button>
+      <BusyButton className="btn btn-primary" type="submit" busy={save.isPending}>
+        {submitLabel ?? t('common.save')}
+      </BusyButton>
     </form>
   )
 }
@@ -125,7 +123,14 @@ export function PhysiologyForm({ onSaved, submitLabel }: { onSaved?: () => void;
   const phys = usePhysiology()
   const last = phys.data?.at(-1)
   const [from, setFrom] = useState(today())
-  const [f, setF] = useState({ hrRest: '', hrMax: '', hrThreshold: '', ftp: '', run: '', swim: '' })
+  const [f, setF] = useState({
+    hrRest: '',
+    hrMax: '',
+    hrThreshold: '',
+    ftp: '',
+    run: '',
+    swim: '',
+  })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
   const toast = useToast()
@@ -142,12 +147,14 @@ export function PhysiologyForm({ onSaved, submitLabel }: { onSaved?: () => void;
     })
   }, [last])
 
-  const save = useRepoMutation(
-    (entry: Parameters<typeof repo.savePhysiology>[0]) => repo.savePhysiology(entry),
-    [keys.physiology],
-  )
+  const save = useRepoMutation((entry: Parameters<typeof repo.savePhysiology>[0]) => repo.savePhysiology(entry), [keys.physiology])
 
-  const ranges = { hrRest: [25, 120], hrMax: [100, 230], hrThreshold: [80, 220], ftp: [50, 600] } as const
+  const ranges = {
+    hrRest: [25, 120],
+    hrMax: [100, 230],
+    hrThreshold: [80, 220],
+    ftp: [50, 600],
+  } as const
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -186,12 +193,52 @@ export function PhysiologyForm({ onSaved, submitLabel }: { onSaved?: () => void;
       {save.isError && <Alert kind="error">{t('errors.generic')}</Alert>}
       {saved && !onSaved && <Alert kind="success">{t('common.saved')}</Alert>}
       <div className="grid-2">
-        <NumberField inputMode="numeric" label={t('profile.hrRest')} hint={t('profile.hrRestHelp')} optional value={f.hrRest} onChange={set('hrRest')} error={errors.hrRest} />
-        <NumberField inputMode="numeric" label={t('profile.hrMax')} hint={t('profile.hrMaxHelp')} optional value={f.hrMax} onChange={set('hrMax')} error={errors.hrMax} />
-        <NumberField inputMode="numeric" label={t('profile.hrThreshold')} hint={t('profile.hrThresholdHelp')} optional value={f.hrThreshold} onChange={set('hrThreshold')} error={errors.hrThreshold} />
+        <NumberField
+          inputMode="numeric"
+          label={t('profile.hrRest')}
+          hint={t('profile.hrRestHelp')}
+          optional
+          value={f.hrRest}
+          onChange={set('hrRest')}
+          error={errors.hrRest}
+        />
+        <NumberField
+          inputMode="numeric"
+          label={t('profile.hrMax')}
+          hint={t('profile.hrMaxHelp')}
+          optional
+          value={f.hrMax}
+          onChange={set('hrMax')}
+          error={errors.hrMax}
+        />
+        <NumberField
+          inputMode="numeric"
+          label={t('profile.hrThreshold')}
+          hint={t('profile.hrThresholdHelp')}
+          optional
+          value={f.hrThreshold}
+          onChange={set('hrThreshold')}
+          error={errors.hrThreshold}
+        />
         <NumberField inputMode="numeric" label={t('profile.ftp')} hint={t('profile.ftpHelp')} optional value={f.ftp} onChange={set('ftp')} error={errors.ftp} />
-        <ClockField label={t('profile.runPace')} hint={t('profile.clockHint')} optional placeholder={t('profile.pacePlaceholder')} value={f.run} onChange={set('run')} error={errors.run} />
-        <ClockField label={t('profile.swimPace')} hint={t('profile.clockHint')} optional placeholder="1:50" value={f.swim} onChange={set('swim')} error={errors.swim} />
+        <ClockField
+          label={t('profile.runPace')}
+          hint={t('profile.clockHint')}
+          optional
+          placeholder={t('profile.pacePlaceholder')}
+          value={f.run}
+          onChange={set('run')}
+          error={errors.run}
+        />
+        <ClockField
+          label={t('profile.swimPace')}
+          hint={t('profile.clockHint')}
+          optional
+          placeholder="1:50"
+          value={f.swim}
+          onChange={set('swim')}
+          error={errors.swim}
+        />
       </div>
       <div className="field">
         <label htmlFor="eff-from">{t('profile.effectiveFrom')}</label>
@@ -200,9 +247,9 @@ export function PhysiologyForm({ onSaved, submitLabel }: { onSaved?: () => void;
         </span>
         <input id="eff-from" type="date" value={from} max={today()} onChange={(e) => setFrom(e.target.value)} aria-describedby="eff-help" />
       </div>
-      <button className="btn btn-primary" type="submit" disabled={save.isPending}>
-        {save.isPending ? t('common.saving') : (submitLabel ?? t('profile.savePhysiology'))}
-      </button>
+      <BusyButton className="btn btn-primary" type="submit" busy={save.isPending}>
+        {submitLabel ?? t('profile.savePhysiology')}
+      </BusyButton>
     </form>
   )
 }
@@ -214,8 +261,8 @@ export function WeightSection() {
   const [kg, setKg] = useState('')
   const [date, setDate] = useState(today())
   const [error, setError] = useState<string | null>(null)
-  const add = useRepoMutation((w: { measuredOn: string; weightKg: number }) => repo.saveWeight(w), [keys.weights])
-  const del = useRepoMutation((id: string) => repo.deleteWeight(id), [keys.weights])
+  const add = useRepoMutation((w: { measuredOn: string; weightKg: number }) => repo.saveWeight(w), [keys.weights], { success: t('common.saved') })
+  const del = useRepoMutation((id: string) => repo.deleteWeight(id), [keys.weights], { success: t('toast.deleted'), icon: 'trash' })
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -235,9 +282,9 @@ export function WeightSection() {
           <input id="w-date" type="date" value={date} max={today()} onChange={(e) => setDate(e.target.value)} />
         </div>
         <div>
-          <button className="btn btn-secondary" type="submit" disabled={add.isPending}>
+          <BusyButton className="btn btn-secondary" type="submit" busy={add.isPending}>
             {t('profile.addWeight')}
-          </button>
+          </BusyButton>
         </div>
       </form>
       <h3 style={{ marginTop: 'var(--space-4)' }}>{t('profile.weightHistory')}</h3>
@@ -251,6 +298,8 @@ export function WeightSection() {
             <button
               type="button"
               className="btn-link"
+              disabled={del.isPending}
+              aria-busy={(del.isPending && del.variables === w.id) || undefined}
               onClick={() => del.mutate(w.id)}
               aria-label={`${t('profile.delete')} ${formatDate(`${w.measuredOn}T12:00:00Z`)}`}
             >

@@ -1,4 +1,5 @@
 import { Icon, TitleIcon } from '../../components/ui/Icon'
+import { BusyButton, useAction } from '../../components/ui/Busy'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -34,7 +35,10 @@ export function ActivityDetailPage() {
   const { id = '' } = useParams()
   const { t } = useTranslation()
   const repo = useRepo()
-  const q = useQuery({ queryKey: ['activity', id], queryFn: () => repo.getActivity(id) })
+  const q = useQuery({
+    queryKey: ['activity', id],
+    queryFn: () => repo.getActivity(id),
+  })
 
   if (q.isLoading)
     return (
@@ -64,7 +68,11 @@ function Detail({ activity: a, merges }: { activity: Activity; merges: MergeReco
   const phys = usePhysiology()
   const profile = useProfile()
   const health = useHealth()
-  const load = loadsFor([a], { physiology: phys.data ?? [], profile: profile.data ?? null, health: health.data ?? [] })[0].load
+  const load = loadsFor([a], {
+    physiology: phys.data ?? [],
+    profile: profile.data ?? null,
+    health: health.data ?? [],
+  })[0].load
   const dur = a.movingS || a.elapsedS
 
   const stats: [string, string][] = [
@@ -158,11 +166,13 @@ function RpeForm({ activity }: { activity: Activity }) {
   const qc = useQueryClient()
   const [rpe, setRpe] = useState<number | null>(activity.rpe)
   const [saved, setSaved] = useState(false)
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault()
+  const save = useAction(async () => {
     await repo.updateActivity(activity.id, { rpe, rpeIsEstimated: false })
     await qc.invalidateQueries()
-    setSaved(true)
+  })
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (await save.run()) setSaved(true)
   }
   return (
     <form onSubmit={onSubmit} noValidate style={{ marginTop: 'var(--space-4)' }}>
@@ -174,9 +184,9 @@ function RpeForm({ activity }: { activity: Activity }) {
           setSaved(false)
         }}
       />
-      <button type="submit" className="btn btn-secondary">
+      <BusyButton type="submit" className="btn btn-secondary" busy={save.busy}>
         {t('rpe.save')}
-      </button>
+      </BusyButton>
     </form>
   )
 }
@@ -290,17 +300,29 @@ function EditSection({ activity: a }: { activity: Activity }) {
   const [saved, setSaved] = useState(false)
   useEffect(() => setSaved(false), [sport, sub, title, notes])
 
+  const save = useAction(async () => {
+    await repo.updateActivity(a.id, {
+      sport,
+      subSport: sub || null,
+      title: title.trim() || null,
+      notes: notes.trim() || null,
+    })
+    await qc.invalidateQueries()
+  })
+  const del = useAction(
+    async () => {
+      await repo.deleteActivity(a.id)
+      await qc.invalidateQueries()
+    },
+    { success: t('toast.activityDeleted'), icon: 'trash' },
+  )
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    await repo.updateActivity(a.id, { sport, subSport: sub || null, title: title.trim() || null, notes: notes.trim() || null })
-    await qc.invalidateQueries()
-    setSaved(true)
+    if (await save.run()) setSaved(true)
   }
   async function remove() {
     if (!window.confirm(t('activities.deleteConfirm'))) return
-    await repo.deleteActivity(a.id)
-    await qc.invalidateQueries()
-    navigate('/actividades')
+    if (await del.run()) navigate('/actividades')
   }
   return (
     <section className="card" aria-labelledby="edit-h">
@@ -342,12 +364,19 @@ function EditSection({ activity: a }: { activity: Activity }) {
           <textarea id="notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
         <div className="row">
-          <button type="submit" className="btn btn-primary">
+          <BusyButton type="submit" busy={save.busy} disabled={del.busy}>
             {t('activities.saveChanges')}
-          </button>
-          <button type="button" className="btn btn-danger" onClick={() => void remove()}>
+          </BusyButton>
+          <BusyButton
+            type="button"
+            className="btn btn-danger"
+            busy={del.busy}
+            busyLabel={t('common.deleting')}
+            disabled={save.busy}
+            onClick={() => void remove()}
+          >
             {t('activities.delete')}
-          </button>
+          </BusyButton>
         </div>
       </form>
     </section>

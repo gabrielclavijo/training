@@ -1,4 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { useToast } from '../../components/fx/Toast'
+import { BusyButton } from '../../components/ui/Busy'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NumberField, SelectField, parseWhole } from '../../components/ui/Field'
@@ -12,6 +14,7 @@ const DAYS: Weekday[] = [1, 2, 3, 4, 5, 6, 7]
 
 export function AvailabilityPage() {
   const { t } = useTranslation()
+  const toast = useToast()
   const repo = useRepo()
   const qc = useQueryClient()
   const { derived, isLoading } = usePlan()
@@ -28,7 +31,12 @@ export function AvailabilityPage() {
     setLongDay(a.longDay)
   }, [derived, mins])
 
-  if (isLoading || !mins) return <Page title={t('plan.availability.title')}><Spinner full /></Page>
+  if (isLoading || !mins)
+    return (
+      <Page title={t('plan.availability.title')}>
+        <Spinner full />
+      </Page>
+    )
   const total = DAYS.reduce((s, d) => s + (parseWhole(mins[d]) || 0), 0)
 
   async function onSubmit(e: FormEvent) {
@@ -46,6 +54,7 @@ export function AvailabilityPage() {
     await repo.saveAvailability({ minutesByDay: out, longDay })
     await qc.invalidateQueries()
     setSaved(true)
+    toast(t('common.saved'))
     setBusy(false)
   }
 
@@ -59,7 +68,9 @@ export function AvailabilityPage() {
           {DAYS.map((d) => (
             <NumberField
               key={d}
-              label={t('plan.availability.minutesLabel', { day: t(`plan.availability.day.${d}`) })}
+              label={t('plan.availability.minutesLabel', {
+                day: t(`plan.availability.day.${d}`),
+              })}
               inputMode="numeric"
               value={mins[d]}
               error={errors[d]}
@@ -78,9 +89,9 @@ export function AvailabilityPage() {
           ))}
         </SelectField>
         <p className="muted">{t('plan.availability.weekly', { hours: formatDuration(total * 60) })}</p>
-        <button type="submit" className="btn btn-primary" disabled={busy}>
-          {busy ? t('common.saving') : t('plan.availability.save')}
-        </button>
+        <BusyButton type="submit" className="btn btn-primary" busy={busy}>
+          {t('plan.availability.save')}
+        </BusyButton>
       </form>
     </Page>
   )

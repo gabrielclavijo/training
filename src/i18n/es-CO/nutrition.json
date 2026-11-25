@@ -62,6 +62,9 @@
     "kcalValue": "{{value}} kcal",
     "rest": "Descanso",
     "legend": "Tipos de día",
+    "menuReady": "Menú listo",
+    "menuDeleted": "Menú borrado",
+    "swapped": "Comida cambiada",
     "legendKcal": "La barra y el número: calorías del día (k = miles)",
     "dayType": {
       "rest": "Descanso",

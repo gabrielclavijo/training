@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { SignOutButton } from './SignOutButton'
 import { useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -73,9 +74,9 @@ function AccountSection() {
         {t('settings.account')}
       </h2>
       {mode === 'local' ? <p className="muted">{t('local.banner')}</p> : user?.email && <p className="muted">{user.email}</p>}
-      <button type="button" className="btn btn-secondary" onClick={() => void signOut()}>
+      <SignOutButton signOut={signOut}>
         <Icon name="logout" /> {t('settings.signOut')}
-      </button>
+      </SignOutButton>
     </section>
   )
 }
@@ -115,13 +116,15 @@ function PhotoControls() {
       {message && <Alert kind={message.kind}>{message.text}</Alert>}
       <div className="row">
         <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => input.current?.click()} aria-describedby="photo-help">
-          <Icon name="camera" /> {save.isPending ? t('profile.photoSaving') : hasPhoto ? t('profile.photoChange') : t('profile.photoUpload')}
+          {save.isPending ? <span className="btn-spinner" aria-hidden="true" /> : <Icon name="camera" />}{' '}
+          {save.isPending ? t('profile.photoSaving') : hasPhoto ? t('profile.photoChange') : t('profile.photoUpload')}
         </button>
         {hasPhoto && (
           <button
             type="button"
             className="btn-link"
             disabled={busy}
+            aria-busy={remove.isPending || undefined}
             onClick={async () => {
               if (!window.confirm(t('profile.photoRemoveConfirm'))) return
               try {
@@ -196,7 +199,7 @@ function PhysiologyHistory() {
   const { t } = useTranslation()
   const phys = usePhysiology()
   const repo = useRepo()
-  const del = useRepoMutation((id: string) => repo.deletePhysiology(id), [keys.physiology])
+  const del = useRepoMutation((id: string) => repo.deletePhysiology(id), [keys.physiology], { success: t('toast.deleted'), icon: 'trash' })
   if (!phys.data) return null
   if (phys.data.length === 0)
     return (
@@ -223,7 +226,14 @@ function PhysiologyHistory() {
                 <br />
                 <span className="muted">{parts.join(' · ') || '—'}</span>
               </span>
-              <button type="button" className="btn-link" onClick={() => del.mutate(p.id)} aria-label={`${t('profile.delete')}: ${label}`}>
+              <button
+                type="button"
+                className="btn-link"
+                disabled={del.isPending}
+                aria-busy={(del.isPending && del.variables === p.id) || undefined}
+                onClick={() => del.mutate(p.id)}
+                aria-label={`${t('profile.delete')}: ${label}`}
+              >
                 {t('profile.delete')}
               </button>
             </li>

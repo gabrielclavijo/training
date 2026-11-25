@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { BusyButton } from '../../components/ui/Busy'
 import { useToast } from '../../components/fx/Toast'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
@@ -70,7 +71,20 @@ export function ManualActivityPage() {
     setBusy(true)
     setFailed(false)
     try {
-      const r = await importOne(repo, { name: t('activities.manualTitle'), parsed: { summary, streams: null, format: 'manual', originHint: 'other' }, sha256: null }, { jobId: null })
+      const r = await importOne(
+        repo,
+        {
+          name: t('activities.manualTitle'),
+          parsed: {
+            summary,
+            streams: null,
+            format: 'manual',
+            originHint: 'other',
+          },
+          sha256: null,
+        },
+        { jobId: null },
+      )
       await qc.invalidateQueries()
       toast(t('toast.activitySaved'), { icon: 'activity' })
       navigate(`/actividades/${r.activityId}`)
@@ -85,10 +99,14 @@ export function ManualActivityPage() {
       <p className="muted">{t('activities.manualHelp')}</p>
       <form className="card" onSubmit={onSubmit} noValidate>
         {failed && <Alert kind="error">{t('errors.generic')}</Alert>}
-        <SelectField label={t('activities.sport')} value={sport} onChange={(e) => {
-          setSport(e.target.value as Sport)
-          setSubSport('')
-        }}>
+        <SelectField
+          label={t('activities.sport')}
+          value={sport}
+          onChange={(e) => {
+            setSport(e.target.value as Sport)
+            setSubSport('')
+          }}
+        >
           {SPORTS.map((s) => (
             <option key={s} value={s}>
               {t(`sports.${s}`)}
@@ -116,18 +134,31 @@ export function ManualActivityPage() {
             <input id="m-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
           </div>
         </div>
-        <NumberField label={t('activities.durationMin')} value={minutes} onChange={(e) => setMinutes(e.target.value)} error={errors.minutes} inputMode="numeric" />
+        <NumberField
+          label={t('activities.durationMin')}
+          value={minutes}
+          onChange={(e) => setMinutes(e.target.value)}
+          error={errors.minutes}
+          inputMode="numeric"
+        />
         {sport !== 'strength' && (
           <div className="grid-2">
             <NumberField label={t('activities.distanceKm')} optional value={km} onChange={(e) => setKm(e.target.value)} error={errors.km} />
-            <NumberField label={t('activities.elevationM')} optional value={elev} onChange={(e) => setElev(e.target.value)} error={errors.elev} inputMode="numeric" />
+            <NumberField
+              label={t('activities.elevationM')}
+              optional
+              value={elev}
+              onChange={(e) => setElev(e.target.value)}
+              error={errors.elev}
+              inputMode="numeric"
+            />
           </div>
         )}
         <NumberField label={t('activities.avgHrOptional')} optional value={hr} onChange={(e) => setHr(e.target.value)} error={errors.hr} inputMode="numeric" />
         <RpeSelect value={rpe} onChange={setRpe} />
-        <button className="btn btn-primary" type="submit" disabled={busy}>
-          {busy ? t('common.saving') : t('activities.saveManual')}
-        </button>
+        <BusyButton className="btn btn-primary" type="submit" busy={busy}>
+          {t('activities.saveManual')}
+        </BusyButton>
       </form>
     </Page>
   )

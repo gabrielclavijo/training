@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { useToast } from '../../components/fx/Toast'
+import { BusyButton } from '../../components/ui/Busy'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -13,7 +15,8 @@ import { useRepo } from '../../data/RepoProvider'
 import type { AdminStats, PersonRow } from '../../../supabase/functions/_shared/adminStats.ts'
 import { useIsAdmin } from './useIsAdmin'
 
-const usd = (v: number, digits = 2) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'USD', minimumFractionDigits: digits, maximumFractionDigits: digits }).format(v)
+const usd = (v: number, digits = 2) =>
+  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'USD', minimumFractionDigits: digits, maximumFractionDigits: digits }).format(v)
 const dShort = (day: string) => formatDate(`${day}T12:00:00Z`).slice(0, 5)
 
 function duration(min: number) {
@@ -55,17 +58,27 @@ export function AdminPage() {
       </Page>
     )
   }
-  if (stats.isLoading) return <Page title={t('adminPage.title')}><Spinner full /></Page>
-  if (stats.isError || !stats.data) return <Page title={t('adminPage.title')}><Alert kind="error">{t('adminPage.error')}</Alert></Page>
+  if (stats.isLoading)
+    return (
+      <Page title={t('adminPage.title')}>
+        <Spinner full />
+      </Page>
+    )
+  if (stats.isError || !stats.data)
+    return (
+      <Page title={t('adminPage.title')}>
+        <Alert kind="error">{t('adminPage.error')}</Alert>
+      </Page>
+    )
   const s = stats.data
 
   return (
     <Page
       title={t('adminPage.title')}
       actions={
-        <button type="button" className="btn btn-secondary" onClick={() => void stats.refetch()} disabled={stats.isFetching}>
+        <BusyButton type="button" className="btn btn-secondary" onClick={() => void stats.refetch()} busy={stats.isFetching} busyLabel={t('common.loading')}>
           <Icon name="refresh" /> {t('adminPage.refresh')}
-        </button>
+        </BusyButton>
       }
     >
       <p className="muted">
@@ -156,7 +169,11 @@ function Kpis({ s }: { s: AdminStats }) {
         </div>
         {s.ai.toppedUpUsd > 0 ? (
           <>
-            <ArcGauge scale={balScale} value={s.ai.balanceUsd} label={t('adminPage.kpi.balanceGauge', { balance: usd(s.ai.balanceUsd), topped: usd(s.ai.toppedUpUsd) })}>
+            <ArcGauge
+              scale={balScale}
+              value={s.ai.balanceUsd}
+              label={t('adminPage.kpi.balanceGauge', { balance: usd(s.ai.balanceUsd), topped: usd(s.ai.toppedUpUsd) })}
+            >
               <span className="metric-value">{usd(s.ai.balanceUsd)}</span>
               <span className="metric-label">{t('adminPage.kpi.balance')}</span>
             </ArcGauge>
@@ -216,7 +233,13 @@ function Charts({ s }: { s: AdminStats }) {
           valueHeader={t('adminPage.minutes')}
           average={{ value: avg(past.map((d) => d.minutes)), label: t('adminPage.avg', { value: `${formatNumber(avg(past.map((d) => d.minutes)))} min` }) }}
           legend={legend}
-          data={s.series.map((d, i) => ({ label: dShort(d.day), value: d.minutes, display: `${formatNumber(d.minutes)} min`, short: formatNumber(d.minutes), partial: i === last }))}
+          data={s.series.map((d, i) => ({
+            label: dShort(d.day),
+            value: d.minutes,
+            display: `${formatNumber(d.minutes)} min`,
+            short: formatNumber(d.minutes),
+            partial: i === last,
+          }))}
         />
       </section>
       <section className="card">
@@ -238,7 +261,13 @@ function Charts({ s }: { s: AdminStats }) {
           valueHeader={t('adminPage.cost')}
           average={{ value: avg(past.map((d) => d.aiCostUsd)), label: t('adminPage.avg', { value: usd(avg(past.map((d) => d.aiCostUsd))) }) }}
           legend={legend}
-          data={s.series.map((d, i) => ({ label: dShort(d.day), value: d.aiCostUsd, display: usd(d.aiCostUsd, 4), short: d.aiCostUsd ? formatNumber(d.aiCostUsd, 2) : '0', partial: i === last }))}
+          data={s.series.map((d, i) => ({
+            label: dShort(d.day),
+            value: d.aiCostUsd,
+            display: usd(d.aiCostUsd, 4),
+            short: d.aiCostUsd ? formatNumber(d.aiCostUsd, 2) : '0',
+            partial: i === last,
+          }))}
         />
       </section>
     </div>
@@ -300,6 +329,7 @@ function People({ people }: { people: PersonRow[] }) {
 
 function AiBalance({ s }: { s: AdminStats }) {
   const { t } = useTranslation()
+  const toast = useToast()
   const repo = useRepo()
   const qc = useQueryClient()
   const [amount, setAmount] = useState('')
@@ -307,29 +337,42 @@ function AiBalance({ s }: { s: AdminStats }) {
   const [note, setNote] = useState('')
   const [threshold, setThreshold] = useState(String(s.ai.thresholdUsd))
   const [msg, setMsg] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
+  const [saving, setSaving] = useState<'topup' | 'threshold' | null>(null)
   const refresh = () => qc.invalidateQueries({ queryKey: ['adminStats'] })
 
   async function addTopup(e: FormEvent) {
     e.preventDefault()
     const v = parseNum(amount)
     if (v === null || Number.isNaN(v) || v <= 0) return setMsg({ kind: 'error', text: t('adminPage.invalidAmount') })
+    setSaving('topup')
     try {
       await repo.adminAddTopup(v, note.trim() || null, day)
       setAmount('')
       setNote('')
-      setMsg({ kind: 'success', text: t('adminPage.topupSaved') })
+      setMsg(null)
+      toast(t('adminPage.topupSaved'), { icon: 'coins' })
       await refresh()
     } catch {
       setMsg({ kind: 'error', text: t('adminPage.error') })
+    } finally {
+      setSaving(null)
     }
   }
   async function saveThreshold(e: FormEvent) {
     e.preventDefault()
     const v = parseNum(threshold)
     if (v === null || Number.isNaN(v) || v < 0) return setMsg({ kind: 'error', text: t('adminPage.invalidAmount') })
-    await repo.adminSetThreshold(v)
-    setMsg({ kind: 'success', text: t('adminPage.thresholdSaved') })
-    await refresh()
+    setSaving('threshold')
+    try {
+      await repo.adminSetThreshold(v)
+      setMsg(null)
+      toast(t('adminPage.thresholdSaved'))
+      await refresh()
+    } catch {
+      setMsg({ kind: 'error', text: t('adminPage.error') })
+    } finally {
+      setSaving(null)
+    }
   }
 
   return (
@@ -362,16 +405,16 @@ function AiBalance({ s }: { s: AdminStats }) {
             </div>
           </div>
           <TextField label={t('adminPage.note')} optional value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} />
-          <button type="submit" className="btn btn-primary">
+          <BusyButton type="submit" busy={saving === 'topup'} disabled={saving !== null}>
             <Icon name="check" /> {t('adminPage.saveTopup')}
-          </button>
+          </BusyButton>
         </form>
         <form onSubmit={saveThreshold} noValidate className="pause-form">
           <h3>{t('adminPage.threshold')}</h3>
           <NumberField label={t('adminPage.amount')} value={threshold} onChange={(e) => setThreshold(e.target.value)} />
-          <button type="submit" className="btn btn-secondary">
+          <BusyButton type="submit" className="btn btn-secondary" busy={saving === 'threshold'} disabled={saving !== null}>
             {t('adminPage.saveThreshold')}
-          </button>
+          </BusyButton>
         </form>
       </div>
       <h3>{t('adminPage.topups')}</h3>

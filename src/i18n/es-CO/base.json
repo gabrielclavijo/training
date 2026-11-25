@@ -58,6 +58,10 @@
     "activitySaved": "Actividad registrada",
     "goalSaved": "Meta guardada",
     "goalDeleted": "Meta eliminada",
+    "activityDeleted": "Actividad eliminada",
+    "deleted": "Eliminado",
+    "permissionGranted": "Permiso guardado",
+    "recHidden": "Listo: se oculta por 7 días",
     "uploaded_one": "Actividad subida",
     "uploaded_other": "{{count}} actividades subidas"
   },
@@ -84,6 +88,8 @@
     "loading": "Cargando…",
     "save": "Guardar",
     "saving": "Guardando…",
+    "deleting": "Borrando…",
+    "sending": "Enviando…",
     "saved": "Guardado",
     "cancel": "Cancelar",
     "continue": "Continuar",
@@ -109,7 +115,8 @@
     "unitsMetric": "Métrico (km, m, kg, °C)",
     "onlyOptionForNow": "Por ahora es la única opción disponible.",
     "account": "Cuenta",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "signingOut": "Cerrando sesión…"
   },
   "empty": {
     "activities": {
@@ -128,6 +135,7 @@
     }
   },
   "errors": {
+    "saveFailed": "No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.",
     "generic": "Algo salió mal. Intenta de nuevo en un momento.",
     "network": "No pudimos conectarnos. Revisa tu internet e intenta de nuevo.",
     "notFoundTitle": "No encontramos esta página",

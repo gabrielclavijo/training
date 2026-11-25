@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { BusyButton } from '../../components/ui/Busy'
 import { celebrateOnce } from '../../components/fx/motion'
 import { Icon, TitleIcon, type IconName } from '../../components/ui/Icon'
 import { ArcGauge, CountUp, Semaphore } from '../../components/ui/Status'
@@ -131,6 +132,7 @@ export function GoalDetailPage() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const q = useQuery({ queryKey: ['goal', id], queryFn: () => repo.getGoal(id) })
+  const [deleting, setDeleting] = useState(false)
   // Celebración (una vez) cuando llega o acaba de pasar el día de la meta
   const eventDate = q.data?.eventDate
   useEffect(() => {
@@ -169,8 +171,15 @@ export function GoalDetailPage() {
 
   async function remove() {
     if (!window.confirm(t('goals.deleteConfirm'))) return
-    await repo.deleteGoal(g!.id)
-    await qc.invalidateQueries()
+    setDeleting(true)
+    try {
+      await repo.deleteGoal(g!.id)
+      await qc.invalidateQueries()
+    } catch {
+      setDeleting(false)
+      toast(t('errors.saveFailed'), { icon: 'alert' })
+      return
+    }
     toast(t('toast.goalDeleted'), { icon: 'trash' })
     navigate('/metas')
   }
@@ -255,9 +264,9 @@ export function GoalDetailPage() {
         <Link className="btn btn-secondary" to="/temporada">
           {t('season.title')}
         </Link>
-        <button type="button" className="btn btn-danger" onClick={() => void remove()}>
+        <BusyButton type="button" className="btn btn-danger" busy={deleting} busyLabel={t('common.deleting')} onClick={() => void remove()}>
           {t('goals.delete')}
-        </button>
+        </BusyButton>
       </div>
     </Page>
   )

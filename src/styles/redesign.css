@@ -2679,3 +2679,59 @@ textarea {
     font-size: 0.8125rem;
   }
 }
+
+/* ======================= Botones ocupados (guardando…) ======================= */
+.btn.is-busy {
+  cursor: progress;
+  opacity: 1;
+}
+.btn.is-busy[disabled] {
+  opacity: 0.85;
+}
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 50%;
+  border: 2.5px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 700ms linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Sin giro: un punto que se nota igual */
+  .btn-spinner {
+    border-right-color: currentColor;
+    width: 10px;
+    height: 10px;
+    animation: none !important;
+  }
+}
+/* Enlaces de acción («Borrar», «Quitar») mientras trabajan */
+.btn-link[aria-busy='true'] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: progress;
+  opacity: 0.8;
+}
+.btn-link[aria-busy='true']::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 700ms linear infinite;
+}
+.btn[aria-busy='true']:not(.is-busy)::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 700ms linear infinite;
+}

@@ -1,4 +1,5 @@
 import { Icon, TitleIcon, type IconName } from '../../components/ui/Icon'
+import { BusyButton } from '../../components/ui/Busy'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useToast } from '../../components/fx/Toast'
@@ -218,7 +219,7 @@ function PausesSection() {
       }),
     [keys.pauses, ['plan']],
   )
-  const del = useRepoMutation((id: string) => repo.deletePause(id), [keys.pauses, ['plan']])
+  const del = useRepoMutation((id: string) => repo.deletePause(id), [keys.pauses, ['plan']], { success: t('toast.deleted'), icon: 'trash' })
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -258,6 +259,8 @@ function PausesSection() {
                   <button
                     type="button"
                     className="btn-icon"
+                    disabled={del.isPending}
+                    aria-busy={(del.isPending && del.variables === p.id) || undefined}
                     onClick={() => del.mutate(p.id)}
                     aria-label={`${t('season.deletePause')}: ${t(`season.pauseKinds.${p.kind}`)} ${fmt(p.startsOn)}`}
                   >
@@ -371,9 +374,9 @@ function PausesSection() {
               )}
             </>
           )}
-          <button type="submit" className="btn btn-primary" disabled={save.isPending}>
+          <BusyButton type="submit" busy={save.isPending}>
             <Icon name="check" /> {t('season.savePause')}
-          </button>
+          </BusyButton>
         </form>
       </details>
     </section>
