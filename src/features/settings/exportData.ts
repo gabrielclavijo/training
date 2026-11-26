@@ -25,6 +25,7 @@ export async function buildExport(repo: Repo): Promise<Blob> {
     mealPlans: await repo.listMealPlans(),
     usage: await repo.listMyUsage(),
     dailyCheckins: await repo.listCheckins(),
+    strengthPrefs: await repo.getStrengthPrefs(),
     recommendationState: await repo.listRecommendationState(),
     activities,
   }
@@ -58,10 +59,40 @@ export async function buildExport(repo: Repo): Promise<Blob> {
 }
 
 function toCsv(activities: Awaited<ReturnType<Repo['listActivities']>>) {
-  const header = ['id', 'fecha_inicio_utc', 'deporte', 'modalidad', 'nombre', 'duracion_s', 'en_movimiento_s', 'distancia_m', 'desnivel_m', 'pulso_prom', 'potencia_prom', 'potencia_normalizada', 'esfuerzo_1a10', 'fuentes']
+  const header = [
+    'id',
+    'fecha_inicio_utc',
+    'deporte',
+    'modalidad',
+    'nombre',
+    'duracion_s',
+    'en_movimiento_s',
+    'distancia_m',
+    'desnivel_m',
+    'pulso_prom',
+    'potencia_prom',
+    'potencia_normalizada',
+    'esfuerzo_1a10',
+    'fuentes',
+  ]
   const q = (v: unknown) => (v === null || v === undefined ? '' : `"${String(v).replace(/"/g, '""')}"`)
   const rows = activities.map((a) =>
-    [a.id, a.startTime, a.sport, a.subSport, a.title, a.elapsedS, a.movingS, a.distanceM, a.elevationGainM, a.avgHr, a.avgPowerW, a.normalizedPowerW, a.rpe, a.sources.map((s) => s.format).join('+')]
+    [
+      a.id,
+      a.startTime,
+      a.sport,
+      a.subSport,
+      a.title,
+      a.elapsedS,
+      a.movingS,
+      a.distanceM,
+      a.elevationGainM,
+      a.avgHr,
+      a.avgPowerW,
+      a.normalizedPowerW,
+      a.rpe,
+      a.sources.map((s) => s.format).join('+'),
+    ]
       .map(q)
       .join(','),
   )

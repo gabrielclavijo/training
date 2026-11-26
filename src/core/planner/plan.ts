@@ -69,7 +69,7 @@ export interface SessionDraft {
   goalId: string | null
   phase: Phase
   /** Para sesiones de pausa (ej. gimnasio de hotel) */
-  note?: 'hotel_gym' | 'travel' | 'return' | 'stage_day' | 'back_to_back' | 'openers' | 'day_before' | 'brick' | 'tri_leg'
+  note?: 'hotel_gym' | 'travel' | 'return' | 'stage_day' | 'back_to_back' | 'openers' | 'day_before' | 'brick' | 'tri_leg' | 'mobility'
 }
 
 export type WeekNote =
@@ -109,6 +109,11 @@ export interface PlanInput {
   pauses: PlanPause[]
   /** Ajuste por lo que de verdad pasó (ver adapt.ts) */
   adjustment?: { weekFactor: number; easyDays: number }
+  /**
+   * Rutinas de fuerza (activas por defecto). `minutes` es la duración de una
+   * sesión normal según la experiencia. Sin este dato se usa el historial.
+   */
+  strength?: { enabled: boolean; minutes: number }
 }
 
 export interface PlanOutput {
@@ -350,6 +355,7 @@ export function generatePlan(input: PlanInput): PlanOutput {
       easyFirstDays: w === 0 ? (input.adjustment?.easyDays ?? 0) : 0,
       today,
       weekIndex: w,
+      strength: input.strength,
     })
     if (sessions.some((s) => s.note === 'back_to_back')) notes.push('back_to_back')
     if (sessions.some((s) => s.note === 'brick')) notes.push('brick')
@@ -392,6 +398,7 @@ function buildWeekSessions(a: {
   easyFirstDays: number
   today: string
   weekIndex: number
+  strength?: PlanInput['strength']
 }): SessionDraft[] {
   const { days, pauseDays, phase, win, availability, mix } = a
   const goalId = win?.goal.id ?? null
@@ -475,7 +482,22 @@ function buildWeekSessions(a: {
   const lightPhase = phase === 'taper' || phase === 'event' || phase === 'recovery' || phase === 'recovery_week' || phase === 'return'
   const plan: PlanSlot[] = win?.goal.triMinutes
     ? triathlonSlots({ days, free, cap, phase, win, availability, mix, longMin: a.longMin, weekIndex: a.weekIndex, lightPhase })
-    : normalSlots({ days, free, cap, phase, win, availability, mix, longMin: a.longMin, weekIndex: a.weekIndex, lightPhase, pauseDays, sport })
+    : normalSlots({
+        days,
+        free,
+        cap,
+        phase,
+        win,
+        availability,
+        mix,
+        longMin: a.longMin,
+        weekIndex: a.weekIndex,
+        lightPhase,
+        pauseDays,
+        sport,
+        strengthOn: !!a.strength,
+      })
+  if (a.strength?.enabled) addStrength({ plan, days, free, cap, phase, win, minutes: a.strength.minutes })
   return finishWeek({ plan, out, days, cap, phase, win, goalId, sport, a })
 }
 
@@ -494,12 +516,13 @@ interface SlotArgs {
   lightPhase: boolean
 }
 
-function normalSlots(args: SlotArgs & { pauseDays: (PlanPause | undefined)[]; sport: Sport }): PlanSlot[] {
-  const { days, free, cap, phase, win, availability, mix, lightPhase, pauseDays, sport } = args
+function normalSlots(args: SlotArgs & { pauseDays: (PlanPause | undefined)[]; sport: Sport; strengthOn: boolean }): PlanSlot[] {
+  const { days, free, cap, phase, win, availability, mix, lightPhase, pauseDays, sport, strengthOn } = args
   const a = { longMin: args.longMin, weekIndex: args.weekIndex }
   // Reparto de deportes complementarios
   const extra: { sport: Sport; kind: SessionKind; minutes: number }[] = []
-  if (mix.strength >= 0.08 && phase !== 'event' && !(phase === 'taper' && win && daysBetween(days[0], win.eventStart) <= 7)) {
+  // (con «Tu fuerza» la fuerza se agrega aparte, ver addStrength)
+  if (!strengthOn && mix.strength >= 0.08 && phase !== 'event' && !(phase === 'taper' && win && daysBetween(days[0], win.eventStart) <= 7)) {
     extra.push({ sport: 'strength', kind: 'strength', minutes: 50 })
     if (mix.strength >= 0.2 && !lightPhase) extra.push({ sport: 'strength', kind: 'strength', minutes: 45 })
   }
@@ -634,6 +657,86 @@ function triathlonSlots(args: SlotArgs): PlanSlot[] {
   return plan
 }
 
+/** Sesiones de fuerza por semana según la etapa. */
+export function strengthPerWeek(phase: Phase) {
+  return ({ base: 2, build: 2, maintenance: 2, recovery_week: 1, taper: 1, recovery: 1, return: 1, event: 0, pause: 0 } as Record<Phase, number>)[phase]
+}
+
+const KEY_KINDS: SessionKind[] = ['long', 'tempo', 'threshold', 'vo2', 'climb', 'openers', 'event']
+
+/**
+ * Agrega la fuerza a la semana: en un día suave (o después de la bici de
+ * calidad), nunca la víspera de la sesión larga o de una clave, ni el día
+ * siguiente a la larga, y con al menos un día entre una y otra. En la
+ * puesta a punto, nada en los últimos 5 días antes del evento.
+ */
+function addStrength(f: { plan: PlanSlot[]; days: string[]; free: number[]; cap: number[]; phase: Phase; win: GoalWindow | null; minutes: number }) {
+  const { plan, days, free, cap, phase, win } = f
+  const light = phase === 'recovery' || phase === 'return'
+  const n = strengthPerWeek(phase)
+  if (n === 0) return
+  const minutes = light ? 25 : phase === 'taper' || phase === 'recovery_week' ? Math.min(30, f.minutes) : f.minutes
+  const at = (i: number) => plan.filter((p) => p.i === i)
+  const isLong = (i: number) => at(i).some((p) => p.kind === 'long')
+  const isKey = (i: number) => at(i).some((p) => KEY_KINDS.includes(p.kind) && !(p.sport === 'cycling' && p.kind !== 'long' && p.kind !== 'event'))
+  const used = (i: number) => at(i).reduce((s, p) => s + p.minutes, 0)
+  // La sesión larga principal de la semana (48 h de margen después de ella)
+  const mainLong = plan.filter((p) => p.kind === 'long').sort((x, y) => y.minutes - x.minutes)[0]?.i
+  const easyOf = (i: number) => at(i).filter((p) => p.kind === 'easy' || p.kind === 'recovery')
+
+  // Cuánto cabe: tal cual, recortando un suave (mínimo 30 min), o en lugar de un suave corto (no natación)
+  function fit(i: number): { how: 'free' | 'trim' | 'replace'; min: number } | null {
+    const left = cap[i] - used(i)
+    if (left >= minutes) return { how: 'free', min: minutes }
+    const trimmable = Math.max(0, ...easyOf(i).map((p) => p.minutes - 30))
+    if (left + trimmable >= minutes) return { how: 'trim', min: minutes }
+    const one = at(i)
+    if (one.length === 1 && easyOf(i).length === 1 && one[0].sport !== 'swimming' && cap[i] >= minutes) return { how: 'replace', min: minutes }
+    // Versión corta (mínimo 20 min) si el día está justo
+    if (left + trimmable >= 20) return { how: 'trim', min: left + trimmable }
+    return null
+  }
+
+  const cand: { i: number; cost: number }[] = []
+  for (const i of free) {
+    if (win && days[i] < win.eventStart && daysBetween(days[i], win.eventStart) <= 5) continue
+    if (win && days[i] >= win.eventStart && days[i] <= win.eventEnd) continue
+    if (isKey(i) || isLong(i)) continue
+    if (i > 0 && i - 1 === mainLong) continue
+    // Nunca la víspera de la larga, del evento ni de una clave de running o natación;
+    // la víspera de una calidad de bici solo como segunda opción
+    const next = i + 1 < 7 ? at(i + 1).filter((p) => KEY_KINDS.includes(p.kind)) : []
+    if (next.some((p) => p.kind === 'long' || p.kind === 'event' || p.sport !== 'cycling')) continue
+    const f = fit(i)
+    if (!f) continue
+    const afterLong = i > 0 && isLong(i - 1)
+    cand.push({ i, cost: (next.length ? 10 : 0) + (afterLong ? 5 : 0) + (f.min < minutes ? 4 : 0) + { free: 0, trim: 1, replace: 2 }[f.how] })
+  }
+
+  // La mejor combinación: el mayor número de sesiones (con un día entre ellas) y el menor costo
+  let chosen: number[] = []
+  let best = Infinity
+  const pick = (from: number, set: { i: number; cost: number }[]) => {
+    if (set.length > 0) {
+      const score = (n - set.length) * 1000 + set.reduce((t, c) => t + c.cost, 0)
+      if (score < best) [best, chosen] = [score, set.map((c) => c.i)]
+    }
+    if (set.length === n) return
+    for (let k = from; k < cand.length; k++) if (set.every((c) => Math.abs(c.i - cand[k].i) >= 2)) pick(k + 1, [...set, cand[k]])
+  }
+  pick(0, [])
+
+  for (const i of chosen) {
+    const f = fit(i)!
+    const short = f.min - (cap[i] - used(i))
+    if (f.how === 'trim' && short > 0) {
+      const easy = easyOf(i).sort((x, y) => y.minutes - x.minutes)[0]
+      easy.minutes -= short
+    } else if (f.how === 'replace') plan.splice(plan.indexOf(at(i)[0]), 1)
+    plan.push({ i, sport: 'strength', kind: 'strength', minutes: f.min, note: light ? 'mobility' : undefined })
+  }
+}
+
 function finishWeek(f: {
   plan: PlanSlot[]
   out: SessionDraft[]
@@ -676,7 +779,9 @@ function finishWeek(f: {
   const factor = flexLoad > 0 ? Math.min(1.6, Math.max(0.5, wanted / flexLoad)) : 1
   const scaled = flexible.map((d) => {
     const i = days.indexOf(d.date)
-    const minutes = Math.max(30, Math.min(cap[i], d.durationMin * factor))
+    // Lo que queda del día después de las demás sesiones (p. ej. la fuerza)
+    const others = drafts.filter((x) => x !== d && x.date === d.date).reduce((s, x) => s + x.durationMin, 0)
+    const minutes = Math.max(30, Math.min(Math.max(30, cap[i] - others), d.durationMin * factor))
     return session(d.date, d.sport, d.kind, minutes, goalId, phase, d.note)
   })
 

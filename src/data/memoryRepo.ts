@@ -1,3 +1,4 @@
+import type { StrengthPrefs } from '../core/strength/library'
 import type { MatchDeltas, MatchedBy, MergedActivity } from '../core/dedupe'
 import { pairKey } from '../core/dedupe'
 import type { Repo } from './repo'
@@ -67,6 +68,7 @@ interface State {
   goals: Goal[]
   pauses: Pause[]
   availability: Availability | null
+  strength?: StrengthPrefs | null
   plans: (StoredPlan & { isDemo: boolean })[]
   weeks: (StoredWeek & { isDemo: boolean })[]
   sessions: (StoredSession & { isDemo: boolean })[]
@@ -85,9 +87,7 @@ interface State {
 
 const now = () => new Date().toISOString()
 const uid = () =>
-  typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36)
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36)
 
 function initial(): State {
   return {
@@ -132,7 +132,7 @@ function initial(): State {
   }
 }
 
-const clone = <T,>(x: T): T => structuredClone(x)
+const clone = <T>(x: T): T => structuredClone(x)
 
 export class MemoryRepo implements Repo {
   readonly kind = 'memory' as const
@@ -274,9 +274,7 @@ export class MemoryRepo implements Repo {
     return { ...a, sources: this.s.sources.filter((s) => s.activityId === a.id) }
   }
   async listActivities() {
-    return clone(
-      [...this.s.activities].sort((a, b) => b.startTime.localeCompare(a.startTime)).map((a) => this.withSources(a)),
-    )
+    return clone([...this.s.activities].sort((a, b) => b.startTime.localeCompare(a.startTime)).map((a) => this.withSources(a)))
   }
   async getActivity(id: string) {
     const a = this.s.activities.find((x) => x.id === id)
@@ -301,14 +299,14 @@ export class MemoryRepo implements Repo {
   }
 
   async findSourceByIdentity(hash: string | null, externalId: string | null) {
-    const s = this.s.sources.find((x) => (hash && (x as StoredSource & { fileSha256?: string }).fileSha256 === hash) || (externalId && x.externalId === externalId))
+    const s = this.s.sources.find(
+      (x) => (hash && (x as StoredSource & { fileSha256?: string }).fileSha256 === hash) || (externalId && x.externalId === externalId),
+    )
     return s ? { sourceId: s.id, activityId: s.activityId } : null
   }
   async activitiesNear(startIso: string, windowS: number) {
     const t = Date.parse(startIso)
-    const ids = new Set(
-      this.s.sources.filter((s) => Math.abs(Date.parse(s.startTime) - t) <= windowS * 1000).map((s) => s.activityId),
-    )
+    const ids = new Set(this.s.sources.filter((s) => Math.abs(Date.parse(s.startTime) - t) <= windowS * 1000).map((s) => s.activityId))
     return clone(this.s.activities.filter((a) => ids.has(a.id)).map((a) => this.withSources(a)))
   }
   async createActivity(m: Omit<MergedActivity, 'primarySourceId' | 'powerSourceId' | 'hrSourceId' | 'gpsSourceId' | 'cadenceSourceId'>, isDemo: boolean) {
@@ -439,6 +437,18 @@ export class MemoryRepo implements Repo {
     this.s.availability = a
     await this.done(null)
   }
+  async getStrengthPrefs() {
+    return clone(this.s.strength ?? null)
+  }
+  async saveStrengthPrefs(p: StrengthPrefs) {
+    this.s.strength = {
+      ...p,
+      equipment: [...p.equipment],
+      discomfort: [...p.discomfort],
+      dumbbellMaxKg: p.equipment.includes('dumbbells') ? p.dumbbellMaxKg : null,
+    }
+    await this.done(null)
+  }
   async getCurrentPlan(): Promise<CurrentPlan> {
     // La última versión guardada (el orden de inserción desempata horas iguales)
     const plan = this.s.plans[this.s.plans.length - 1] ?? null
@@ -460,8 +470,18 @@ export class MemoryRepo implements Repo {
       for (const x of w.sessions) {
         if (x.date < args.fromDay) continue
         this.s.sessions.push({
-          id: uid(), planId: id, goalId: x.goalId, date: x.date, sport: x.sport, kind: x.kind, durationMin: x.durationMin,
-          plannedLoad: x.load, blocks: x.blocks, phase: x.phase, note: x.note ?? null, isDemo: args.isDemo,
+          id: uid(),
+          planId: id,
+          goalId: x.goalId,
+          date: x.date,
+          sport: x.sport,
+          kind: x.kind,
+          durationMin: x.durationMin,
+          plannedLoad: x.load,
+          blocks: x.blocks,
+          phase: x.phase,
+          note: x.note ?? null,
+          isDemo: args.isDemo,
         })
       }
     }
@@ -469,7 +489,12 @@ export class MemoryRepo implements Repo {
     return this.done(id)
   }
   async listPlanChanges(limit = 30) {
-    return clone([...this.s.changes].reverse().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit))
+    return clone(
+      [...this.s.changes]
+        .reverse()
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, limit),
+    )
   }
 
   // ---- Strava (no disponible en modo local)
@@ -510,7 +535,15 @@ export class MemoryRepo implements Repo {
     const { inputs, menu } = localMenu({ ...DEFAULT_NUTRITION, ...prefs }, req)
     this.s.mealPlans ??= []
     const existing = this.s.mealPlans.find((m) => m.weekStart === inputs.days[0].date)
-    const plan: MealPlan = { id: existing?.id ?? uid(), weekStart: inputs.days[0].date, inputs, menu, model: LOCAL_MODEL, createdAt: existing?.createdAt ?? now(), updatedAt: now() }
+    const plan: MealPlan = {
+      id: existing?.id ?? uid(),
+      weekStart: inputs.days[0].date,
+      inputs,
+      menu,
+      model: LOCAL_MODEL,
+      createdAt: existing?.createdAt ?? now(),
+      updatedAt: now(),
+    }
     this.s.mealPlans = [...this.s.mealPlans.filter((m) => m.id !== plan.id), plan]
     await this.done(null)
     return clone(plan)
@@ -580,9 +613,27 @@ export class MemoryRepo implements Repo {
     const plans = this.s.mealPlans ?? []
     return buildStats({
       now: new Date(),
-      users: [{ id: me, email: null, name: this.s.profile.displayName, provider: 'local', createdAt: this.s.jobs.at(-1)?.startedAt ?? new Date().toISOString(), lastSignInAt: null }],
+      users: [
+        {
+          id: me,
+          email: null,
+          name: this.s.profile.displayName,
+          provider: 'local',
+          createdAt: this.s.jobs.at(-1)?.startedAt ?? new Date().toISOString(),
+          lastSignInAt: null,
+        },
+      ],
       usage: (this.s.usage ?? []).map((u) => ({ userId: me, day: u.day, seconds: u.seconds, visits: u.visits, lastSeenAt: u.lastSeenAt })),
-      ai: plans.map((p) => ({ userId: me, kind: 'menu' as const, createdAt: p.createdAt, costUsd: 0, inputTokens: 0, outputTokens: 0, counted: true, model: p.model })),
+      ai: plans.map((p) => ({
+        userId: me,
+        kind: 'menu' as const,
+        createdAt: p.createdAt,
+        costUsd: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+        counted: true,
+        model: p.model,
+      })),
       topups: this.s.topups ?? [],
       thresholdUsd: this.s.aiThreshold ?? 2,
       activitiesByUser: { [me]: this.s.activities.length },

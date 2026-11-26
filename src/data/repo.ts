@@ -1,3 +1,4 @@
+import type { StrengthPrefs } from '../core/strength/library'
 import type { MatchDeltas, MatchedBy, MergedActivity } from '../core/dedupe'
 import type { WeekDraft } from '../core/planner/plan'
 import type { PlanChange } from '../core/planner/adapt'
@@ -82,7 +83,10 @@ export interface Repo {
   // Primitivas para la importación y la fusión
   findSourceByIdentity(fileSha256: string | null, externalId: string | null): Promise<{ sourceId: string; activityId: string } | null>
   activitiesNear(startIso: string, windowS: number): Promise<Activity[]>
-  createActivity(merged: Omit<MergedActivity, 'primarySourceId' | 'powerSourceId' | 'hrSourceId' | 'gpsSourceId' | 'cadenceSourceId'>, isDemo: boolean): Promise<string>
+  createActivity(
+    merged: Omit<MergedActivity, 'primarySourceId' | 'powerSourceId' | 'hrSourceId' | 'gpsSourceId' | 'cadenceSourceId'>,
+    isDemo: boolean,
+  ): Promise<string>
   insertSource(activityId: string, src: NewSource): Promise<string>
   moveSource(sourceId: string, toActivityId: string): Promise<void>
   updateCanonical(activityId: string, merged: MergedActivity): Promise<void>
@@ -110,10 +114,20 @@ export interface Repo {
 
   // Plan de entrenamiento (fase 2)
   getAvailability(): Promise<Availability | null>
+  /** «Tu fuerza» (null si no ha respondido) */
+  getStrengthPrefs(): Promise<StrengthPrefs | null>
+  saveStrengthPrefs(p: StrengthPrefs): Promise<void>
   saveAvailability(a: Availability): Promise<void>
   getCurrentPlan(): Promise<CurrentPlan>
   /** Guarda una versión nueva: reemplaza semanas desde la semana de `fromDay` y sesiones desde `fromDay`. */
-  savePlan(args: { reason: PlanChange['reason']; inputsHash: string; weeks: WeekDraft[]; fromDay: string; changes: PlanChange[]; isDemo: boolean }): Promise<string>
+  savePlan(args: {
+    reason: PlanChange['reason']
+    inputsHash: string
+    weeks: WeekDraft[]
+    fromDay: string
+    changes: PlanChange[]
+    isDemo: boolean
+  }): Promise<string>
   listPlanChanges(limit?: number): Promise<PlanChangeRecord[]>
 
   // Strava (bandeja de entrada del webhook y conexión)

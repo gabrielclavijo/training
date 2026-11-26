@@ -30,10 +30,7 @@ export interface ActivityWithLoad {
   load: LoadResult
 }
 
-export function loadsFor(
-  activities: Activity[],
-  ctx: { physiology: PhysiologyEntry[]; profile: Profile | null; health: HealthRecord[] },
-): ActivityWithLoad[] {
+export function loadsFor(activities: Activity[], ctx: { physiology: PhysiologyEntry[]; profile: Profile | null; health: HealthRecord[] }): ActivityWithLoad[] {
   const med = takesHrMedication(ctx.health)
   return activities.map((a) => {
     const day = localDayKey(a.startTime, a.timezone ?? TIMEZONE)

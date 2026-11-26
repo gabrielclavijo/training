@@ -29,18 +29,85 @@ interface Dish {
 }
 
 const BREAKFAST: Dish[] = [
-  { dish: 'Arepa con huevos pericos y fruta', items: [['Arepa de maíz', '80 g (1 unidad)'], ['Huevos', '2 unidades'], ['Tomate y cebolla', '60 g'], ['Papaya', '150 g (1 taza)']], vegetarian: true },
-  { dish: 'Avena en hojuelas con banano y canela', items: [['Avena en hojuelas', '60 g (2/3 taza)'], ['Bebida de soya', '250 ml (1 vaso)'], ['Banano', '1 unidad']], vegan: true, vegetarian: true },
+  {
+    dish: 'Arepa con huevos pericos y fruta',
+    items: [
+      ['Arepa de maíz', '80 g (1 unidad)'],
+      ['Huevos', '2 unidades'],
+      ['Tomate y cebolla', '60 g'],
+      ['Papaya', '150 g (1 taza)'],
+    ],
+    vegetarian: true,
+  },
+  {
+    dish: 'Avena en hojuelas con banano y canela',
+    items: [
+      ['Avena en hojuelas', '60 g (2/3 taza)'],
+      ['Bebida de soya', '250 ml (1 vaso)'],
+      ['Banano', '1 unidad'],
+    ],
+    vegan: true,
+    vegetarian: true,
+  },
 ]
 const MAIN: Dish[] = [
-  { dish: 'Arroz, fríjoles, pollo a la plancha y ensalada', items: [['Arroz', '150 g cocido (1 taza)'], ['Fríjoles', '150 g cocidos (3/4 taza)'], ['Pechuga de pollo', '120 g'], ['Lechuga y tomate', '100 g']] },
-  { dish: 'Lentejas con arroz, plátano maduro y aguacate', items: [['Lentejas', '180 g cocidas (1 taza)'], ['Arroz', '120 g cocido'], ['Plátano maduro', '100 g'], ['Aguacate', '50 g (1/4)']], vegan: true, vegetarian: true },
-  { dish: 'Pasta con atún, tomate y verduras', items: [['Pasta', '90 g en seco'], ['Atún en agua', '1 lata (120 g)'], ['Tomate y calabacín', '150 g']] },
-  { dish: 'Garbanzos guisados con papa y ensalada', items: [['Garbanzos', '180 g cocidos'], ['Papa', '150 g'], ['Ensalada de repollo', '100 g']], vegan: true, vegetarian: true },
+  {
+    dish: 'Arroz, fríjoles, pollo a la plancha y ensalada',
+    items: [
+      ['Arroz', '150 g cocido (1 taza)'],
+      ['Fríjoles', '150 g cocidos (3/4 taza)'],
+      ['Pechuga de pollo', '120 g'],
+      ['Lechuga y tomate', '100 g'],
+    ],
+  },
+  {
+    dish: 'Lentejas con arroz, plátano maduro y aguacate',
+    items: [
+      ['Lentejas', '180 g cocidas (1 taza)'],
+      ['Arroz', '120 g cocido'],
+      ['Plátano maduro', '100 g'],
+      ['Aguacate', '50 g (1/4)'],
+    ],
+    vegan: true,
+    vegetarian: true,
+  },
+  {
+    dish: 'Pasta con atún, tomate y verduras',
+    items: [
+      ['Pasta', '90 g en seco'],
+      ['Atún en agua', '1 lata (120 g)'],
+      ['Tomate y calabacín', '150 g'],
+    ],
+  },
+  {
+    dish: 'Garbanzos guisados con papa y ensalada',
+    items: [
+      ['Garbanzos', '180 g cocidos'],
+      ['Papa', '150 g'],
+      ['Ensalada de repollo', '100 g'],
+    ],
+    vegan: true,
+    vegetarian: true,
+  },
 ]
 const SNACK: Dish[] = [
-  { dish: 'Yogur con granola', items: [['Yogur natural', '200 g'], ['Granola', '40 g']], vegetarian: true },
-  { dish: 'Banano con mantequilla de ajonjolí', items: [['Banano', '1 unidad'], ['Mantequilla de ajonjolí', '15 g (1 cucharada)']], vegan: true, vegetarian: true },
+  {
+    dish: 'Yogur con granola',
+    items: [
+      ['Yogur natural', '200 g'],
+      ['Granola', '40 g'],
+    ],
+    vegetarian: true,
+  },
+  {
+    dish: 'Banano con mantequilla de ajonjolí',
+    items: [
+      ['Banano', '1 unidad'],
+      ['Mantequilla de ajonjolí', '15 g (1 cucharada)'],
+    ],
+    vegan: true,
+    vegetarian: true,
+  },
 ]
 
 const LABELS = ['Desayuno', 'Media mañana', 'Almuerzo', 'Algo', 'Comida', 'Merienda']

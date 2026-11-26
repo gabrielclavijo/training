@@ -1,3 +1,4 @@
+import type { StrengthPrefs } from '../core/strength/library'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { gunzipSync, gzipSync, strFromU8, strToU8 } from 'fflate'
 import type { MatchDeltas, MatchedBy, MergedActivity } from '../core/dedupe'
@@ -691,6 +692,33 @@ export class SupabaseRepo implements Repo {
       await this.sb
         .from('training_availability')
         .upsert({ minutes_by_day: a.minutesByDay, long_day: a.longDay, pool_days: a.poolDays ?? [], updated_at: new Date().toISOString() }),
+    )
+  }
+  async getStrengthPrefs(): Promise<StrengthPrefs | null> {
+    const r = check(await this.sb.from('strength_prefs').select('*').maybeSingle()) as Row | null
+    if (!r) return null
+    return {
+      enabled: r.enabled,
+      location: r.location,
+      equipment: r.equipment ?? [],
+      dumbbellMaxKg: r.dumbbell_max_kg === null ? null : Number(r.dumbbell_max_kg),
+      experience: r.experience,
+      discomfort: r.discomfort ?? [],
+    }
+  }
+  async saveStrengthPrefs(p: StrengthPrefs) {
+    check(
+      await this.sb.from('strength_prefs').upsert(
+        {
+          enabled: p.enabled,
+          location: p.location,
+          equipment: p.equipment,
+          dumbbell_max_kg: p.equipment.includes('dumbbells') ? p.dumbbellMaxKg : null,
+          experience: p.experience,
+          discomfort: p.discomfort,
+        },
+        { onConflict: 'user_id' },
+      ),
     )
   }
   async getCurrentPlan(): Promise<CurrentPlan> {

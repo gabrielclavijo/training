@@ -325,8 +325,83 @@ describe('plan de triatlón', () => {
     expect(r.weeks.flatMap((w) => w.sessions).filter((s) => s.sport === 'swimming' && s.kind !== 'event').length).toBe(0)
     expect(r.weeks[0].notes).toContain('no_pool')
   })
+  it('con «Tu fuerza» también lleva fuerza, sin quitar las tres disciplinas', () => {
+    const w = generatePlan({ ...input, strength: { enabled: true, minutes: 40 } }).weeks
+    const b = w.filter((x) => x.phase === 'build' || x.phase === 'base')
+    expect(b.every((x) => x.sessions.some((s) => s.kind === 'strength'))).toBe(true)
+    expect(b.filter((x) => ['swimming', 'cycling', 'running'].every((sp) => x.sessions.some((s) => s.sport === sp))).length).toBe(b.length)
+  })
+
   it('meta a 11 días: directo a disminución de carga y semana de carrera', () => {
     const near = generatePlan({ ...input, goals: [{ ...tri, eventDate: addDays(today, 11) }] })
     expect(near.weeks.slice(0, 2).map((w) => w.phase)).toEqual(['taper', 'event'])
+  })
+})
+
+describe('fuerza en el plan', () => {
+  const on: PlanInput = {
+    ...base,
+    pauses: [],
+    availability: { minutesByDay: { 1: 45, 2: 60, 3: 75, 4: 50, 5: 60, 6: 240, 7: 90 }, longDay: 6 },
+    strength: { enabled: true, minutes: 40 },
+  }
+  const { weeks } = generatePlan(on)
+  const days = (w: (typeof weeks)[number]) => [...new Set(w.sessions.map((s) => s.date))]
+  const idx = (w: (typeof weeks)[number], d: string) => Math.round((Date.parse(d) - Date.parse(w.weekStart)) / 86_400_000)
+
+  it('sesiones por etapa: base/desarrollo 2, descarga y puesta a punto 1, semana del evento 0', () => {
+    for (const w of weeks) {
+      const n = w.sessions.filter((s) => s.kind === 'strength').length
+      if (w.phase === 'event') expect(n).toBe(0)
+      if (w.phase === 'recovery_week' || w.phase === 'taper' || w.phase === 'recovery') expect(n).toBeLessThanOrEqual(1)
+      if (w.phase === 'base' || w.phase === 'build') expect(n).toBeLessThanOrEqual(2)
+    }
+    const baseWeeks = weeks.filter((w) => w.phase === 'base' || w.phase === 'build')
+    expect(baseWeeks.filter((w) => w.sessions.filter((s) => s.kind === 'strength').length === 2).length).toBeGreaterThan(baseWeeks.length / 2)
+  })
+
+  it('nunca la víspera de la larga o de una clave de running, ni el día después de la larga, ni días seguidos', () => {
+    const KEY = ['long', 'tempo', 'threshold', 'vo2', 'climb', 'openers', 'event']
+    for (const w of weeks) {
+      const str = w.sessions.filter((s) => s.kind === 'strength').map((s) => idx(w, s.date))
+      for (const i of str) {
+        const next = w.sessions.filter((s) => idx(w, s.date) === i + 1)
+        const prev = w.sessions.filter((s) => idx(w, s.date) === i - 1)
+        const same = w.sessions.filter((s) => idx(w, s.date) === i)
+        // Se permite la víspera de una calidad de bici, nunca de la larga, del evento ni de una clave de running
+        expect(next.some((s) => s.kind === 'long' || s.kind === 'event' || (KEY.includes(s.kind) && s.sport !== 'cycling'))).toBe(false)
+        expect(prev.some((s) => s.kind === 'long')).toBe(false)
+        expect(same.some((s) => s.kind === 'long')).toBe(false)
+      }
+      for (let k = 1; k < str.length; k++) expect(Math.abs(str[k] - str[k - 1])).toBeGreaterThanOrEqual(2)
+    }
+    expect(days(weeks[0]).length).toBeGreaterThan(0)
+  })
+
+  it('nada de fuerza en los 5 días antes del evento', () => {
+    for (const g of [gravel, vuelta])
+      for (const s of weeks.flatMap((w) => w.sessions).filter((x) => x.kind === 'strength'))
+        expect(s.date >= g.eventDate || Date.parse(g.eventDate) - Date.parse(s.date) > 5 * 86_400_000).toBe(true)
+  })
+
+  it('respeta el tiempo de cada día', () => {
+    for (const w of weeks)
+      for (const d of days(w)) {
+        const wd = isoWeekday(d)
+        const ss = w.sessions.filter((s) => s.date === d)
+        if (ss.some((s) => s.kind === 'event')) continue
+        const total = ss.reduce((t, s) => t + s.durationMin, 0)
+        expect(total).toBeLessThanOrEqual((on.availability.minutesByDay[wd] ?? 0) + 1)
+      }
+  })
+
+  it('en recuperación es movilidad y core corta', () => {
+    const rec = weeks.filter((w) => w.phase === 'recovery').flatMap((w) => w.sessions.filter((s) => s.kind === 'strength'))
+    for (const s of rec) expect([s.note, s.durationMin]).toEqual(['mobility', 25])
+  })
+
+  it('si la persona la desactiva, no hay fuerza', () => {
+    const off = generatePlan({ ...on, strength: { enabled: false, minutes: 40 } })
+    expect(off.weeks.flatMap((w) => w.sessions).some((s) => s.kind === 'strength')).toBe(false)
   })
 })

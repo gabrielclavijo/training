@@ -1,3 +1,4 @@
+import { DEFAULT_STRENGTH, type StrengthPrefs } from '../core/strength/library'
 import { addDays, daysBetween, localDayKey, weekStart } from '../core/dates'
 import { estimateLeg, LEG_SPORT, legShares, legStatus, presetInfo, TRI_LEGS, type LegDiagnosis, type TriLeg } from '../core/triathlon'
 import { referenceLegTimes, type TriLegs } from '../core/triathlon'
@@ -34,16 +35,20 @@ export interface PlanContext {
   health: HealthRecord[]
   availability: Availability
   availabilityIsDefault: boolean
+  /** «Tu fuerza» (valores por defecto si no ha respondido) */
+  strength: StrengthPrefs
+  strengthIsDefault: boolean
 }
 
 export async function loadContext(repo: Repo, health: HealthRecord[] = []): Promise<PlanContext> {
-  const [activities, goals, pauses, physiology, profile, availability] = await Promise.all([
+  const [activities, goals, pauses, physiology, profile, availability, strength] = await Promise.all([
     repo.listActivities(),
     repo.listGoals(),
     repo.listPauses(),
     repo.listPhysiology(),
     repo.getProfile(),
     repo.getAvailability(),
+    repo.getStrengthPrefs(),
   ])
   const loaded = loadsFor(activities, { physiology, profile, health })
   const today = localDayKey(new Date())
@@ -58,6 +63,8 @@ export async function loadContext(repo: Repo, health: HealthRecord[] = []): Prom
     health,
     availability: availability ?? suggestAvailability(loaded, today),
     availabilityIsDefault: !availability,
+    strength: strength ?? DEFAULT_STRENGTH,
+    strengthIsDefault: !strength,
   }
 }
 
@@ -152,7 +159,12 @@ function inputsHash(ctx: PlanContext) {
     .filter((g) => g.status === 'active')
     .map((g) => [g.id, g.eventDate, g.priority, g.goalType, g.objective, g.targetTimeS, g.distanceM, g.elevationGainM, g.stages.length, g.legs ?? null])
   const pauses = ctx.pauses.map((p) => [p.kind, p.startsOn, p.endsOn, p.canTrain, p.available, p.minutesPerDay])
-  return `${h(goals)}.${h(pauses)}.${h(ctx.availability)}`
+  return `${h(goals)}.${h(pauses)}.${h(ctx.availability)}.${h(strengthInput(ctx.strength))}`
+}
+
+/** Lo que el plan necesita de «Tu fuerza»: si va y cuánto dura una sesión. */
+export function strengthInput(p: StrengthPrefs) {
+  return { enabled: p.enabled, minutes: p.experience === 'new' ? 30 : p.experience === 'some' ? 40 : 45 }
 }
 
 export function doneLike(loaded: ActivityWithLoad[]): DoneLike[] {
@@ -223,6 +235,7 @@ export async function refreshPlan(
     longestRecentMin,
     pauses: ctx.pauses.map(toPlanPause),
     adjustment: adjustment && adjustment.reasons[0] !== 'on_plan' ? adjustment : undefined,
+    strength: strengthInput(ctx.strength),
   })
 
   const hash = inputsHash(ctx)

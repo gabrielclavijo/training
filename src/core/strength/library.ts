@@ -954,3 +954,16 @@ export const EXERCISES: Exercise[] = [
 ]
 
 export const exerciseById = (id: string) => EXERCISES.find((e) => e.id === id) ?? null
+
+/** «Tu fuerza»: lo que la persona respondió (o los valores por defecto). */
+export type StrengthLocation = 'home' | 'gym' | 'both'
+export type StrengthExperience = 'new' | 'some' | 'regular'
+export interface StrengthPrefs {
+  enabled: boolean
+  location: StrengthLocation
+  equipment: Equip[]
+  dumbbellMaxKg: number | null
+  experience: StrengthExperience
+  discomfort: Discomfort[]
+}
+export const DEFAULT_STRENGTH: StrengthPrefs = { enabled: true, location: 'home', equipment: [], dumbbellMaxKg: null, experience: 'new', discomfort: [] }

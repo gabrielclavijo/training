@@ -27,7 +27,12 @@ describe('datos de prueba de punta a punta (importación + duplicados + forma)',
 
   it('volver a subir el mismo archivo no crea otra actividad', async () => {
     const items = demoCandidates(localDayKey(NOW))
-    const again = await runImportJob(repo, 'files', items.map((c) => ({ name: c.name, candidate: c })), { total: items.length })
+    const again = await runImportJob(
+      repo,
+      'files',
+      items.map((c) => ({ name: c.name, candidate: c })),
+      { total: items.length },
+    )
     expect(again.progress.imported).toBe(0)
     expect(again.progress.duplicates).toBe(again.progress.total)
     expect((await repo.listActivities()).length).toBe(activities.length)
@@ -72,7 +77,11 @@ describe('datos de prueba de punta a punta (importación + duplicados + forma)',
     const goals = await repo.listGoals()
     expect(goals.map((g) => g.name)).toEqual(['Gravel de la Sabana', 'Vuelta de 3 días'])
     expect(goals[0].eventDate).toBe(addDays('2026-11-23', 84))
-    expect(goals[1].stages.map((s) => [s.distanceM, s.elevationGainM])).toEqual([[95_000, 1800], [140_000, 2600], [80_000, 1200]])
+    expect(goals[1].stages.map((s) => [s.distanceM, s.elevationGainM])).toEqual([
+      [95_000, 1800],
+      [140_000, 2600],
+      [80_000, 1200],
+    ])
     const [pause] = await repo.listPauses()
     expect(pause).toMatchObject({ kind: 'travel', available: ['gym'] })
     expect(pause.startsOn).toBe(addDays('2026-11-23', 42))
