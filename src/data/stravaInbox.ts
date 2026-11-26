@@ -26,16 +26,12 @@ export async function processStravaInbox(repo: Repo): Promise<{ created: number;
         const parsed = parseStravaApi(it.payload as StravaInboxPayload)
         const expires = new Date(Date.parse(it.receivedAt) + 7 * 86_400_000).toISOString()
         const freshIndex = it.event === 'update' ? new ImportIndex(await repo.listActivities()) : index
-        const r = await importOne(
-          repo,
-          { name: parsed.summary.title ?? externalId, parsed, sha256: null },
-          {
-            jobId: null,
-            notDuplicatePairs: pairs,
-            index: freshIndex,
-            stravaCacheUntil: expires,
-          },
-        )
+        const r = await importOne(repo, { name: parsed.summary.title ?? externalId, parsed, sha256: null }, {
+          jobId: null,
+          notDuplicatePairs: pairs,
+          index: freshIndex,
+          stravaCacheUntil: expires,
+        })
         if (r.status === 'imported') res.created++
         else if (r.status === 'merged') res.merged++
       }

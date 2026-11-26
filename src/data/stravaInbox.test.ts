@@ -59,23 +59,13 @@ describe('actividades que llegan solas desde Strava (bandeja del webhook)', () =
 
   it('una actividad solo de Strava se crea, se actualiza y se borra', async () => {
     const repo = new MemoryRepo()
-    repo.pushInbox({
-      provider: 'strava',
-      externalId: '222',
-      event: 'create',
-      payload: stravaPayload(222, '2026-11-22T11:00:00Z', { sportType: 'Run', name: 'Trote' }),
-    })
+    repo.pushInbox({ provider: 'strava', externalId: '222', event: 'create', payload: stravaPayload(222, '2026-11-22T11:00:00Z', { sportType: 'Run', name: 'Trote' }) })
     expect((await processStravaInbox(repo)).created).toBe(1)
     let [a] = await repo.listActivities()
     expect(a.sport).toBe('running')
     expect(a.title).toBe('Trote')
 
-    repo.pushInbox({
-      provider: 'strava',
-      externalId: '222',
-      event: 'update',
-      payload: stravaPayload(222, '2026-11-22T11:00:00Z', { sportType: 'Run', name: 'Trote suave' }),
-    })
+    repo.pushInbox({ provider: 'strava', externalId: '222', event: 'update', payload: stravaPayload(222, '2026-11-22T11:00:00Z', { sportType: 'Run', name: 'Trote suave' }) })
     await processStravaInbox(repo)
     const list = await repo.listActivities()
     expect(list).toHaveLength(1)

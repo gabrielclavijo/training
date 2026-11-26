@@ -169,13 +169,7 @@ export async function importOne(
   const sourceId = await repo.insertSource(activityId, newSource)
   await repo.updateCanonical(activityId, mergeSources([{ ...candidate, id: sourceId }]))
   if (keepStreams) await repo.saveStreams(sourceId, streams)
-  index?.addSource(activityId, toStored(newSource, sourceId, activityId), {
-    ...base,
-    rpe: base.rpe,
-    rpeIsEstimated: false,
-    notes: null,
-    isDemo: Boolean(opts.isDemo),
-  } as Partial<Activity>)
+  index?.addSource(activityId, toStored(newSource, sourceId, activityId), { ...base, rpe: base.rpe, rpeIsEstimated: false, notes: null, isDemo: Boolean(opts.isDemo) } as Partial<Activity>)
   return { status: 'imported', activityId, sourceId }
 }
 

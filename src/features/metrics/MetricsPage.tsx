@@ -113,11 +113,7 @@ function Spark({ values, label }: { values: number[]; label: string }) {
   return (
     <span className="spark" aria-hidden="true" title={label}>
       {values.map((v, i) => (
-        <i
-          key={i}
-          className={i === values.length - 1 ? 'is-last' : undefined}
-          style={{ height: `${Math.max(6, (v / max) * 100)}%`, animationDelay: `${i * 25}ms` }}
-        />
+        <i key={i} className={i === values.length - 1 ? 'is-last' : undefined} style={{ height: `${Math.max(6, (v / max) * 100)}%`, animationDelay: `${i * 25}ms` }} />
       ))}
     </span>
   )
@@ -161,58 +157,23 @@ function SportPanel({ sport }: { sport: Sport }) {
   const sp = (f: (p: (typeof filled)[number]) => number) => filled.map(f)
   const tiles: Tile[] = [
     { icon: 'calendar', tone: 'mint', label: t('metrics.sessions'), value: String(summary.count), spark: sp((p) => p.count) },
-    {
-      icon: 'refresh',
-      tone: 'sky',
-      label: t('metrics.frequency'),
-      value: t('metrics.perWeek', { value: formatNumber(summary.count / 12, 1) }),
-      help: t('metrics.help.frequency'),
-      dots: Math.round(summary.count / 12),
-    },
-    {
-      icon: 'clock',
-      tone: 'amber',
-      label: t('metrics.hours'),
-      value: formatDuration(summary.durationS),
-      help: t('metrics.help.volume'),
-      spark: sp((p) => p.durationS),
-    },
+    { icon: 'refresh', tone: 'sky', label: t('metrics.frequency'), value: t('metrics.perWeek', { value: formatNumber(summary.count / 12, 1) }), help: t('metrics.help.frequency'), dots: Math.round(summary.count / 12) },
+    { icon: 'clock', tone: 'amber', label: t('metrics.hours'), value: formatDuration(summary.durationS), help: t('metrics.help.volume'), spark: sp((p) => p.durationS) },
   ]
   if (sport !== 'strength') {
     tiles.push({ icon: 'route', tone: 'mint', label: t('metrics.km'), value: formatDistance(summary.distanceM), spark: sp((p) => p.distanceM) })
-    if (sport !== 'swimming')
-      tiles.push({ icon: 'mountain', tone: 'amber', label: t('metrics.elevation'), value: formatElevation(summary.elevationM), spark: sp((p) => p.elevationM) })
+    if (sport !== 'swimming') tiles.push({ icon: 'mountain', tone: 'amber', label: t('metrics.elevation'), value: formatElevation(summary.elevationM), spark: sp((p) => p.elevationM) })
   }
   if (sport === 'cycling') {
-    if (summary.avgSpeedMs)
-      tiles.push({ icon: 'gauge', tone: 'sky', label: t('metrics.avgSpeed'), value: formatSpeed(summary.avgSpeedMs), help: t('metrics.help.speed') })
+    if (summary.avgSpeedMs) tiles.push({ icon: 'gauge', tone: 'sky', label: t('metrics.avgSpeed'), value: formatSpeed(summary.avgSpeedMs), help: t('metrics.help.speed') })
     if (summary.avgPowerW) {
       tiles.push({ icon: 'bolt', tone: 'coral', label: t('metrics.avgPower'), value: formatPower(summary.avgPowerW) })
-      tiles.push({
-        icon: 'scale',
-        tone: 'soft',
-        label: t('metrics.wkg'),
-        value: kg ? formatWattsPerKg(summary.avgPowerW, kg) : '—',
-        help: kg ? undefined : t('metrics.noWeightForWkg'),
-      })
+      tiles.push({ icon: 'scale', tone: 'soft', label: t('metrics.wkg'), value: kg ? formatWattsPerKg(summary.avgPowerW, kg) : '—', help: kg ? undefined : t('metrics.noWeightForWkg') })
     } else tiles.push({ icon: 'bolt', tone: 'soft', label: t('metrics.avgPower'), value: '—', help: t('metrics.noPower'), muted: true })
   }
-  if (sport === 'running' && summary.avgSpeedMs)
-    tiles.push({
-      icon: 'timer',
-      tone: 'coral',
-      label: t('metrics.pacePerKm'),
-      value: formatPacePerKm(1000, 1000 / summary.avgSpeedMs),
-      help: t('metrics.help.pace'),
-    })
+  if (sport === 'running' && summary.avgSpeedMs) tiles.push({ icon: 'timer', tone: 'coral', label: t('metrics.pacePerKm'), value: formatPacePerKm(1000, 1000 / summary.avgSpeedMs), help: t('metrics.help.pace') })
   if (sport === 'swimming' && summary.avgSpeedMs)
-    tiles.push({
-      icon: 'timer',
-      tone: 'sky',
-      label: t('metrics.pacePer100'),
-      value: formatPacePer100m(100, 100 / summary.avgSpeedMs),
-      help: t('metrics.help.pace'),
-    })
+    tiles.push({ icon: 'timer', tone: 'sky', label: t('metrics.pacePer100'), value: formatPacePer100m(100, 100 / summary.avgSpeedMs), help: t('metrics.help.pace') })
   if (summary.avgHr) tiles.push({ icon: 'heart', tone: 'coral', label: t('metrics.avgHr'), value: formatHeartRate(summary.avgHr) })
 
   return (

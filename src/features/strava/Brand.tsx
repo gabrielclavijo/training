@@ -29,13 +29,7 @@ export function ConnectWithStrava({ onClick, disabled }: { onClick: () => void; 
 export function PoweredByStrava() {
   const [imgOk, setImgOk] = useState(true)
   return imgOk ? (
-    <img
-      className="powered-by-strava"
-      src={`${base}api_logo_pwrdBy_strava_horiz_orange.svg`}
-      alt="Powered by Strava"
-      height={24}
-      onError={() => setImgOk(false)}
-    />
+    <img className="powered-by-strava" src={`${base}api_logo_pwrdBy_strava_horiz_orange.svg`} alt="Powered by Strava" height={24} onError={() => setImgOk(false)} />
   ) : (
     <span className="powered-by-strava-text" style={{ color: ORANGE }}>
       Powered by Strava

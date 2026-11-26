@@ -20,8 +20,7 @@ export function Greeting() {
   const profile = useProfile()
   const { derived } = usePlan()
   const h = new Date().getHours()
-  const part: { key: string; icon: IconName } =
-    h >= 5 && h < 12 ? { key: 'morning', icon: 'sun' } : h >= 12 && h < 19 ? { key: 'afternoon', icon: 'cloud' } : { key: 'night', icon: 'moon' }
+  const part: { key: string; icon: IconName } = h >= 5 && h < 12 ? { key: 'morning', icon: 'sun' } : h >= 12 && h < 19 ? { key: 'afternoon', icon: 'cloud' } : { key: 'night', icon: 'moon' }
   const name = profile.data?.displayName?.split(' ')[0]
   const hello = t(`home.${part.key}`)
   const today = derived?.today
@@ -306,10 +305,7 @@ export function PullToRefresh() {
   if (!dy && !busy) return null
   return (
     <div className="ptr" style={{ height: busy ? 52 : dy }} aria-live="polite">
-      <span
-        className={`ptr-icon${busy ? ' is-busy' : ''}`}
-        style={{ transform: busy ? undefined : `rotate(${dy * 3}deg)`, opacity: busy ? 1 : Math.min(1, dy / 60) }}
-      >
+      <span className={`ptr-icon${busy ? ' is-busy' : ''}`} style={{ transform: busy ? undefined : `rotate(${dy * 3}deg)`, opacity: busy ? 1 : Math.min(1, dy / 60) }}>
         <Icon name="refresh" />
       </span>
       <span className="visually-hidden">{busy ? t('home.refreshing') : dy >= 60 ? t('home.pull') : ''}</span>

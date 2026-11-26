@@ -4,6 +4,7 @@ import { formatClock } from '../../core/units'
 import { usePlan } from '../plan/usePlan'
 import { LegalNotice } from '../plan/SessionView'
 
+
 export function DiagnosisCard({ goalId }: { goalId: string }) {
   const { t } = useTranslation()
   const { derived } = usePlan()

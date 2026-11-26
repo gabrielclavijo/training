@@ -16,7 +16,12 @@ export function NotFoundPage() {
   const { t } = useTranslation()
   return (
     <Page title={t('errors.notFoundTitle')}>
-      <EmptyState title={t('errors.notFoundTitle')} body={t('errors.notFoundBody')} actionLabel={t('errors.goHome')} actionTo="/" />
+      <EmptyState
+        title={t('errors.notFoundTitle')}
+        body={t('errors.notFoundBody')}
+        actionLabel={t('errors.goHome')}
+        actionTo="/"
+      />
     </Page>
   )
 }

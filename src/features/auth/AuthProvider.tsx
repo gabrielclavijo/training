@@ -65,7 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthState>(() => {
-    const user: AppUser | null = session ? { id: session.user.id, email: session.user.email ?? null } : local ? LOCAL_USER : null
+    const user: AppUser | null = session
+      ? { id: session.user.id, email: session.user.email ?? null }
+      : local
+        ? LOCAL_USER
+        : null
     return {
       user,
       mode: session ? 'supabase' : local ? 'local' : null,
