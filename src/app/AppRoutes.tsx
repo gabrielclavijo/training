@@ -37,6 +37,7 @@ const AvailabilityPage = lazyPage(() => import('../features/plan/AvailabilityPag
 const NutritionPage = lazyPage(() => import('../features/nutrition/NutritionPage'), 'NutritionPage')
 const LabsPage = lazyPage(() => import('../features/labs/LabsPage'), 'LabsPage')
 const AdminPage = lazyPage(() => import('../features/admin/AdminPage'), 'AdminPage')
+const StrengthDemoPage = lazyPage(() => import('../features/strength/StrengthDemoPage'), 'StrengthDemoPage')
 const StravaCallbackPage = lazyPage(() => import('../features/strava/StravaCallbackPage'), 'StravaCallbackPage')
 const UpdatePasswordPage = lazyPage(() => import('../features/auth/UpdatePasswordPage'), 'UpdatePasswordPage')
 
@@ -274,6 +275,16 @@ export function AppRoutes() {
             </S>
           }
         />
+        {import.meta.env.DEV && (
+          <Route
+            path="fuerza-demo"
+            element={
+              <S>
+                <StrengthDemoPage />
+              </S>
+            }
+          />
+        )}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       {/* La política se puede leer sin cuenta */}

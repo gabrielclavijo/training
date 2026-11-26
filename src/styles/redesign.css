@@ -3105,3 +3105,164 @@ textarea {
   color: var(--text-muted);
   font-weight: 600;
 }
+
+/* ======================= Dibujos de ejercicios ======================= */
+.ex-figure {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #eef6fb 0%, #f2f7f4 100%);
+}
+.ex-floor {
+  stroke: #b9c7c0;
+  stroke-width: 2;
+}
+.ex-mat {
+  fill: #cfe3f3;
+}
+.ex-bench {
+  fill: #9aa6a1;
+}
+.ex-limb {
+  stroke: #2b3a34;
+  stroke-linecap: round;
+}
+.ex-limb.ex-on {
+  stroke: var(--secondary);
+}
+.ex-on-fill {
+  fill: var(--secondary);
+  opacity: 0.9;
+}
+.ex-head {
+  fill: #2b3a34;
+}
+.ex-ghost {
+  opacity: 0.25;
+}
+.ex-band {
+  stroke: var(--tertiary);
+  stroke-width: 3;
+  stroke-dasharray: 5 3;
+  fill: none;
+}
+.ex-anchor {
+  fill: var(--tertiary);
+}
+.ex-weight {
+  fill: #4a5a53;
+}
+.ex-arrow line,
+.ex-arrow polyline {
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ex-list {
+  display: grid;
+  gap: var(--space-4);
+}
+.ex-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  animation: fade-up 320ms var(--ease) both;
+}
+@media (min-width: 700px) {
+  .ex-card {
+    grid-template-columns: 260px 1fr;
+    align-items: start;
+  }
+}
+.ex-card-art {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+.ex-card-art .ex-figure {
+  width: 100%;
+  height: auto;
+}
+.ex-muscles {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.ex-muscles i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--secondary);
+}
+.ex-where {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+}
+.ex-card-body h3 {
+  margin: 2px 0 var(--space-2);
+  font-size: 1.25rem;
+}
+.ex-dose {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+}
+.ex-dose li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-low);
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+.ex-dose svg {
+  width: 15px;
+  height: 15px;
+  color: var(--primary);
+}
+.ex-steps {
+  margin: 0 0 var(--space-3);
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 4px;
+}
+.ex-mistakes {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 12px;
+  background: var(--warning-bg);
+  color: #5e2c00;
+  font-size: 0.875rem;
+  margin: 0 0 var(--space-2);
+}
+.ex-mistakes svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 2px;
+}
+.ex-variants {
+  display: grid;
+  gap: 2px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
