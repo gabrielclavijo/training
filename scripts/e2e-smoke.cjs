@@ -92,7 +92,25 @@ async function makeUploadFiles() {
   console.log('subida: la actividad aparece en la lista');
   await p.getByRole('button', { name: /Calendario/ }).click();
 
-  // Fase 2: plan, sesión y diagnóstico
+  // Fuerza: la rutina de una sesión de fuerza y «Tu fuerza»
+  await p.goto(base + '#/plan'); await p.waitForTimeout(800);
+  let rutina = null;
+  for (let k = 0; k < 3 && !rutina; k++) {
+    const ls = await p.locator('a[href*="plan/sesion/"]').evaluateAll((as) => as.map((a) => [a.getAttribute('href'), a.textContent]));
+    rutina = ls.find((x) => /Rutina/.test(x[1]))?.[0];
+    if (!rutina) { await p.getByRole('button', { name: 'Semana siguiente' }).first().click(); await p.waitForTimeout(500); }
+  }
+  if (!rutina) throw new Error('El plan no trae sesiones de fuerza');
+  await p.goto(base + rutina); await p.waitForTimeout(800);
+  if ((await p.locator('.ex-card').count()) < 4) throw new Error('La rutina de fuerza tiene menos de 4 ejercicios');
+  await axe('rutina de fuerza');
+  await p.goto(base + '#/plan/disponibilidad'); await p.waitForTimeout(600);
+  await p.locator('.place-opt').nth(1).click();
+  await p.getByRole('button', { name: 'Guardar mi fuerza' }).click();
+  await p.getByText('Listo: ajustamos la fuerza').waitFor();
+  await p.goto(base + rutina); await p.waitForTimeout(800);
+  console.log('fuerza: rutina con', await p.locator('.ex-card').count(), 'ejercicios; máquinas:', await p.locator('.ex-machine').count());
+
   await p.goto(base + '#/plan'); await p.waitForTimeout(800);
   const planText = await p.locator('main').innerText();
   if (!/orientativo y no reemplaza/.test(planText)) throw new Error('Falta el aviso legal en el plan');
