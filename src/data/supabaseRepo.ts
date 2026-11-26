@@ -182,6 +182,8 @@ const toGoal = (r: Row): Goal => ({
   notes: r.notes,
   status: r.status,
   isDemo: r.is_demo,
+  triPreset: r.tri_preset ?? null,
+  legs: r.legs ?? null,
   stages: ((r.goal_stages ?? []) as Row[])
     .map(
       (s): GoalStage => ({
@@ -344,9 +346,7 @@ export class SupabaseRepo implements Repo {
     check(await this.sb.from('consents').insert({ consent_type: type, policy_version: version }))
   }
   async revokeConsent(type: ConsentType) {
-    check(
-      await this.sb.from('consents').update({ revoked_at: new Date().toISOString() }).eq('consent_type', type).is('revoked_at', null),
-    )
+    check(await this.sb.from('consents').update({ revoked_at: new Date().toISOString() }).eq('consent_type', type).is('revoked_at', null))
   }
   /** Los datos de salud pasan SIEMPRE por la Edge Function que cifra y descifra. */
   private async health<T>(body: Row): Promise<T> {
@@ -396,11 +396,7 @@ export class SupabaseRepo implements Repo {
   }
   async getActivity(id: string) {
     const r = check(
-      await this.sb
-        .from('activities')
-        .select(`*, activity_sources!activity_sources_activity_id_user_id_fkey(${SOURCE_COLUMNS})`)
-        .eq('id', id)
-        .maybeSingle(),
+      await this.sb.from('activities').select(`*, activity_sources!activity_sources_activity_id_user_id_fkey(${SOURCE_COLUMNS})`).eq('id', id).maybeSingle(),
     ) as Row | null
     if (!r) return null
     const merges = check(await this.sb.from('activity_merges').select('*').eq('activity_id', id).order('created_at')) as Row[]
@@ -449,10 +445,7 @@ export class SupabaseRepo implements Repo {
     const unique = [...new Set(ids.map((r) => r.activity_id))]
     if (unique.length === 0) return []
     const rows = check(
-      await this.sb
-        .from('activities')
-        .select(`*, activity_sources!activity_sources_activity_id_user_id_fkey(${SOURCE_COLUMNS})`)
-        .in('id', unique),
+      await this.sb.from('activities').select(`*, activity_sources!activity_sources_activity_id_user_id_fkey(${SOURCE_COLUMNS})`).in('id', unique),
     ) as Row[]
     return rows.map(toActivity)
   }
@@ -515,14 +508,17 @@ export class SupabaseRepo implements Repo {
   }
   async updateCanonical(activityId: string, m: MergedActivity) {
     const current = check(await this.sb.from('activities').select('rpe').eq('id', activityId).single()) as Row
-    check(await this.sb.from('activities').update({ ...canonicalRow(m), rpe: current.rpe ?? m.rpe }).eq('id', activityId))
+    check(
+      await this.sb
+        .from('activities')
+        .update({ ...canonicalRow(m), rpe: current.rpe ?? m.rpe })
+        .eq('id', activityId),
+    )
   }
   async saveStreams(sourceId: string, streams: Streams) {
     const path = `${this.userId}/${sourceId}.json.gz`
     const body = gzipSync(strToU8(JSON.stringify(streams)))
-    const { error } = await this.sb.storage
-      .from('activity-streams')
-      .upload(path, new Blob([body as BlobPart], { type: 'application/gzip' }), { upsert: true })
+    const { error } = await this.sb.storage.from('activity-streams').upload(path, new Blob([body as BlobPart], { type: 'application/gzip' }), { upsert: true })
     if (error) return null
     check(await this.sb.from('activity_sources').update({ streams_path: path }).eq('id', sourceId))
     return path
@@ -623,6 +619,8 @@ export class SupabaseRepo implements Repo {
       notes: g.notes,
       status: g.status,
       is_demo: g.isDemo ?? false,
+      tri_preset: g.sport === 'triathlon' ? (g.triPreset ?? 'custom') : null,
+      legs: g.sport === 'triathlon' ? (g.legs ?? null) : null,
     }
     let id = g.id
     if (id) check(await this.sb.from('goals').update(row).eq('id', id))
@@ -686,17 +684,27 @@ export class SupabaseRepo implements Repo {
     if (!r) return null
     const m: Row = r.minutes_by_day ?? {}
     const minutesByDay = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((d) => [d, Number(m[d] ?? 0)])) as Availability['minutesByDay']
-    return { minutesByDay, longDay: r.long_day }
+    return { minutesByDay, longDay: r.long_day, poolDays: ((r.pool_days ?? []) as number[]).map(Number) as Availability['poolDays'] }
   }
   async saveAvailability(a: Availability) {
-    check(await this.sb.from('training_availability').upsert({ minutes_by_day: a.minutesByDay, long_day: a.longDay, updated_at: new Date().toISOString() }))
+    check(
+      await this.sb
+        .from('training_availability')
+        .upsert({ minutes_by_day: a.minutesByDay, long_day: a.longDay, pool_days: a.poolDays ?? [], updated_at: new Date().toISOString() }),
+    )
   }
   async getCurrentPlan(): Promise<CurrentPlan> {
     const plans = check(await this.sb.from('training_plans').select('*').order('created_at', { ascending: false }).limit(1)) as Row[]
     const weeks = check(await this.sb.from('plan_weeks').select('*').order('week_start')) as Row[]
     const sessions: Row[] = []
     for (let from = 0; ; from += 1000) {
-      const page = check(await this.sb.from('planned_sessions').select('*').order('date').range(from, from + 999)) as Row[]
+      const page = check(
+        await this.sb
+          .from('planned_sessions')
+          .select('*')
+          .order('date')
+          .range(from, from + 999),
+      ) as Row[]
       sessions.push(...page)
       if (page.length < 1000) break
     }
@@ -704,7 +712,14 @@ export class SupabaseRepo implements Repo {
     return {
       plan: p ? { id: p.id, reason: p.reason, inputsHash: p.inputs?.hash ?? null, createdAt: p.created_at } : null,
       weeks: weeks.map(
-        (w): StoredWeek => ({ planId: w.plan_id, weekStart: w.week_start, phase: w.phase, goalId: w.goal_id, targetLoad: Number(w.target_load), notes: w.notes ?? [] }),
+        (w): StoredWeek => ({
+          planId: w.plan_id,
+          weekStart: w.week_start,
+          phase: w.phase,
+          goalId: w.goal_id,
+          targetLoad: Number(w.target_load),
+          notes: w.notes ?? [],
+        }),
       ),
       sessions: sessions.map(
         (x): StoredSession => ({
@@ -725,7 +740,11 @@ export class SupabaseRepo implements Repo {
   }
   async savePlan(args: { reason: PlanChange['reason']; inputsHash: string; weeks: WeekDraft[]; fromDay: string; changes: PlanChange[]; isDemo: boolean }) {
     const plan = check(
-      await this.sb.from('training_plans').insert({ reason: args.reason, inputs: { hash: args.inputsHash }, is_demo: args.isDemo }).select('id').single(),
+      await this.sb
+        .from('training_plans')
+        .insert({ reason: args.reason, inputs: { hash: args.inputsHash }, is_demo: args.isDemo })
+        .select('id')
+        .single(),
     ) as Row
     const id = plan.id as string
     const ws = weekStart(args.fromDay)

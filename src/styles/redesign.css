@@ -2735,3 +2735,373 @@ textarea {
   border-right-color: transparent;
   animation: spin 700ms linear infinite;
 }
+
+/* ======================= Triatlón ======================= */
+.tri-icons {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  place-items: center;
+}
+.tri-icons svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+.tri-icons svg:first-child {
+  grid-column: 1 / -1;
+}
+.goal-hero-icon .tri-icons svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+.goal-hero-triathlon {
+  background: linear-gradient(135deg, #005c8e 0%, #007f66 55%, #b04a1c 100%);
+}
+.goal-card-triathlon .goal-card-icon {
+  background: linear-gradient(135deg, #dcefff, #d6f3e5, #ffe1d6);
+  color: var(--text);
+}
+.tri-presets {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--space-4);
+}
+.tri-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.tri-preset {
+  display: grid;
+  gap: 4px;
+  padding: var(--space-3);
+  border-radius: 16px;
+  border: 1.5px solid var(--surface-3);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 150ms, background 150ms, transform 150ms var(--ease);
+}
+.tri-preset:active {
+  transform: scale(0.98);
+}
+.tri-preset.is-on {
+  border-color: var(--primary);
+  background: #e6f5ee;
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+.tri-preset.is-im strong::after {
+  content: ' ●';
+  color: var(--secondary);
+  font-size: 0.7em;
+  vertical-align: middle;
+}
+.tri-preset:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.tri-preset-legs {
+  display: grid;
+  gap: 2px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+.tri-preset-legs span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tri-preset-legs svg {
+  width: 14px;
+  height: 14px;
+  color: var(--primary);
+}
+.tri-split {
+  margin: var(--space-3) 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #e6f5ee, #eef6fb);
+}
+.tri-split-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 var(--space-2);
+  font-weight: 700;
+}
+.tri-split-title svg {
+  width: 18px;
+  height: 18px;
+  color: var(--primary);
+}
+.tri-split ul {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.tri-split li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.tri-split li strong {
+  margin-left: auto;
+}
+.tri-leg-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tri-leg-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.tri-legs {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.tri-leg {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 16px;
+  background: var(--surface-low);
+  animation: fade-up 300ms var(--ease) both;
+}
+.tri-leg-tile {
+  margin: 0;
+  flex: none;
+}
+.tri-leg-text {
+  flex: 1;
+  display: grid;
+}
+.tri-leg-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+.tri-leg-target svg {
+  width: 15px;
+  height: 15px;
+  color: var(--secondary);
+}
+.tri-bar {
+  display: flex;
+  gap: 3px;
+  height: 10px;
+  margin-bottom: var(--space-2);
+}
+.tri-bar span {
+  border-radius: 999px;
+  transform-origin: left;
+  animation: grow-x 700ms var(--ease) both;
+}
+.tri-bar-swim { background: var(--tertiary); }
+.tri-bar-bike { background: var(--primary); animation-delay: 120ms !important; }
+.tri-bar-run { background: var(--secondary); animation-delay: 240ms !important; }
+.tri-diag {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1.5px dashed var(--border);
+}
+.tri-diag-title {
+  font-size: 1rem;
+  margin: 0 0 var(--space-3);
+}
+.tri-diag-bars {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+.tri-diag-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  animation: fade-up 300ms var(--ease) both;
+}
+.tri-diag-row .kpi-icon {
+  margin: 0;
+  flex: none;
+}
+.tri-diag-main {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+}
+.tri-diag-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tri-advice {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-3);
+  border-radius: 14px;
+  background: var(--warning-bg);
+  color: #5e2c00;
+  margin: 0 0 var(--space-3);
+}
+.tri-advice svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 2px;
+}
+.tri-times {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+.tri-times caption {
+  text-align: left;
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+.tri-times th,
+.tri-times td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--surface-3);
+  text-align: left;
+}
+.tri-times td {
+  text-align: right;
+}
+.tri-times thead th:not(:first-child) {
+  text-align: right;
+}
+.tri-times th svg {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  color: var(--primary);
+}
+.tri-times .is-behind {
+  color: #8c0009;
+  font-weight: 700;
+}
+.tri-times-total th,
+.tri-times-total td {
+  font-weight: 800;
+  border-bottom: none;
+}
+
+/* ======================= Alimentación de carrera ======================= */
+.race-fuel-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.fuel-steps {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+  position: relative;
+}
+.fuel-steps > li {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: 16px;
+  background: var(--surface-low);
+  animation: fade-up 300ms var(--ease) both;
+}
+.fuel-steps > li:nth-child(2) { animation-delay: 60ms; }
+.fuel-steps > li:nth-child(3) { animation-delay: 120ms; }
+.fuel-steps > li:nth-child(4) { animation-delay: 180ms; }
+.fuel-steps > li:nth-child(5) { animation-delay: 240ms; }
+.fuel-steps > li:nth-child(n + 6) { animation-delay: 300ms; }
+.fuel-steps p {
+  margin: 4px 0 0;
+}
+.fuel-step-icon {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+}
+.fuel-step-icon svg {
+  width: 21px;
+  height: 21px;
+}
+.fuel-seg-cycling {
+  box-shadow: inset 4px 0 0 var(--primary);
+}
+.fuel-seg-running {
+  box-shadow: inset 4px 0 0 var(--secondary);
+}
+.fuel-seg-swimming {
+  box-shadow: inset 4px 0 0 var(--tertiary);
+}
+.fuel-rates {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 3px;
+  font-size: 0.9375rem;
+}
+.fuel-rates li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fuel-rates svg {
+  width: 16px;
+  height: 16px;
+  color: var(--primary);
+  flex: none;
+}
+.fuel-count {
+  font-size: 0.9375rem;
+}
+.fuel-totals {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--space-2);
+}
+.fuel-totals li {
+  display: grid;
+  padding: var(--space-3);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #e6f5ee, #eef6fb);
+  text-align: center;
+}
+.fuel-totals strong {
+  font-size: 1.25rem;
+}
+.fuel-totals span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}

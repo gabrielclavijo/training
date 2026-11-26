@@ -13,6 +13,8 @@ import { parseRouteGpx } from '../../core/parsers/gpx'
 import { formatDistance, formatElevation } from '../../core/units'
 import { useRepo } from '../../data/RepoProvider'
 import type { Goal, GoalStage, Terrain } from '../../data/types'
+import { presetInfo, suggestSplit, TRI_PRESETS, type TriLeg, type TriPreset } from '../../core/triathlon'
+import { Icon } from '../../components/ui/Icon'
 import { SPORTS, SUBSPORTS } from '../activities/sports'
 
 const TERRAINS: Terrain[] = ['paved', 'unpaved', 'mixed', 'technical', 'track', 'pool', 'open_water']
@@ -51,9 +53,21 @@ function GoalForm({ initial }: { initial: Goal | null }) {
   const navigate = useNavigate()
   const stepHeading = useRef<HTMLHeadingElement>(null)
   const [step, setStep] = useState(1)
-  const [goalType, setGoalType] = useState<'single' | 'stage'>(initial?.goalType ?? 'single')
+  const [goalType, setGoalType] = useState<'single' | 'stage' | 'triathlon'>(initial?.sport === 'triathlon' ? 'triathlon' : (initial?.goalType ?? 'single'))
+  const isTri = goalType === 'triathlon'
+  const [preset, setPreset] = useState<TriPreset>(initial?.triPreset ?? 'olympic')
+  const [legKm, setLegKm] = useState<Record<TriLeg, string>>({
+    swim: initial?.legs ? String(initial.legs.swimM / 1000) : '',
+    bike: initial?.legs ? String(initial.legs.bikeM / 1000) : '',
+    run: initial?.legs ? String(initial.legs.runM / 1000) : '',
+  })
+  const [legTime, setLegTime] = useState<Record<TriLeg, string>>({
+    swim: toClock(initial?.legs?.swimS ?? null, 'hh:mm'),
+    bike: toClock(initial?.legs?.bikeS ?? null, 'hh:mm'),
+    run: toClock(initial?.legs?.runS ?? null, 'hh:mm'),
+  })
   const [name, setName] = useState(initial?.name ?? '')
-  const [sport, setSport] = useState<Sport>(initial?.sport ?? 'cycling')
+  const [sport, setSport] = useState<Sport>(initial?.sport && initial.sport !== 'triathlon' ? initial.sport : 'cycling')
   const [subSport, setSubSport] = useState<SubSport | ''>(initial?.subSport ?? '')
   const [date, setDate] = useState(initial?.eventDate ?? '')
   const [priority, setPriority] = useState<'primary' | 'secondary'>(initial?.priority ?? 'primary')
@@ -84,12 +98,35 @@ function GoalForm({ initial }: { initial: Goal | null }) {
     stepHeading.current?.focus()
   }, [step])
 
+  /** Distancias de los tres tramos (catálogo o las escritas) */
+  function triDistances() {
+    const p = presetInfo(preset)
+    if (p) return { swimM: p.swimM, bikeM: p.bikeM, runM: p.runM }
+    const m = (k: TriLeg) => (parseNum(legKm[k]) ?? 0) * 1000
+    return { swimM: m('swim'), bikeM: m('bike'), runM: m('run') }
+  }
+  /** Objetivos por tramo: los escritos y, si solo hay total, el reparto sugerido */
+  function triTargets() {
+    const given = Object.fromEntries((['swim', 'bike', 'run'] as const).map((k) => [k, parseClock(legTime[k], 'hh:mm')])) as Record<TriLeg, number | null>
+    const total = parseClock(target, 'hh:mm')
+    const d = triDistances()
+    if (total && !Number.isNaN(total)) return suggestSplit({ ...d, swimS: given.swim, bikeS: given.bike, runS: given.run }, total)
+    if (given.swim && given.bike && given.run) return given as Record<TriLeg, number>
+    return null
+  }
+
   function validate(s: number) {
     const e: Record<string, string> = {}
     if (s === 2) {
       if (!name.trim()) e.name = t('goals.requiredName')
       if (!date) e.date = t('goals.requiredDate')
-      if (goalType === 'single') {
+      if (isTri) {
+        if (preset === 'custom')
+          (['swim', 'bike', 'run'] as const).forEach((k) => {
+            const d = parseNum(legKm[k])
+            if (d === null || Number.isNaN(d) || d <= 0) e[`leg-${k}`] = t('goals.requiredDistance')
+          })
+      } else if (goalType === 'single') {
         const d = parseNum(km)
         if (d === null || Number.isNaN(d) || d <= 0) e.km = t('goals.requiredDistance')
         const up = parseWhole(elev)
@@ -101,7 +138,14 @@ function GoalForm({ initial }: { initial: Goal | null }) {
         })
       }
     }
-    if (s === 3 && objective === 'time') {
+    if (s === 3 && objective === 'time' && isTri) {
+      ;(['swim', 'bike', 'run'] as const).forEach((k) => {
+        if (legTime[k].trim() && Number.isNaN(parseClock(legTime[k], 'hh:mm'))) e[`ltime-${k}`] = t('goals.timeInvalid')
+      })
+      const v = parseClock(target, 'hh:mm')
+      if (target.trim() && (v === null || Number.isNaN(v))) e.target = t('goals.timeInvalid')
+      if (!target.trim() && !(['swim', 'bike', 'run'] as const).every((k) => legTime[k].trim())) e.target = t('goals.triTargetNeeded')
+    } else if (s === 3 && objective === 'time') {
       const v = parseClock(target, 'hh:mm')
       if (goalType === 'single' || target.trim()) {
         if (v === null || Number.isNaN(v)) e.target = t('goals.timeInvalid')
@@ -124,7 +168,13 @@ function GoalForm({ initial }: { initial: Goal | null }) {
     try {
       const { samples, maxAltitudeM } = parseRouteGpx(await file.text())
       const stats = computeStats(samples)
-      if (stats.distanceM) setKm(String(Math.round(stats.distanceM / 100) / 10))
+      if (stats.distanceM) {
+        const kmText = String(Math.round(stats.distanceM / 100) / 10)
+        if (isTri) {
+          setPreset('custom')
+          setLegKm((l) => ({ ...l, ...(preset !== 'custom' ? kmOf(presetInfo(preset)) : {}), bike: kmText }))
+        } else setKm(kmText)
+      }
       if (stats.elevationGainM !== null) setElev(String(stats.elevationGainM))
       if (maxAltitudeM !== null) setMaxAlt(String(maxAltitudeM))
       setGpxInfo(
@@ -145,6 +195,42 @@ function GoalForm({ initial }: { initial: Goal | null }) {
     if (!validate(2) || !validate(3)) return
     setSaving(true)
     setFailed(false)
+    if (isTri) {
+      const d = triDistances()
+      const tt = objective === 'time' ? triTargets() : null
+      try {
+        const id = await repo.saveGoal({
+          id: initial?.id,
+          name: name.trim(),
+          sport: 'triathlon',
+          subSport: null,
+          eventDate: date,
+          priority,
+          goalType: 'single',
+          objective,
+          targetTimeS: tt ? tt.swim + tt.bike + tt.run : null,
+          distanceM: d.swimM + d.bikeM + d.runM,
+          elevationGainM: parseWhole(elev),
+          terrain: null,
+          maxAltitudeM: null,
+          gpxPath: initial?.gpxPath ?? null,
+          notes: notes.trim() || null,
+          status: initial?.status ?? 'active',
+          isDemo: initial?.isDemo,
+          stages: [],
+          triPreset: preset,
+          legs: { ...d, swimS: tt?.swim ?? null, bikeS: tt?.bike ?? null, runS: tt?.run ?? null },
+        })
+        await qc.invalidateQueries()
+        toast(t('toast.goalSaved'), { icon: 'flag' })
+        navigate(`/metas/${id}`)
+      } catch (err) {
+        console.error(err)
+        setFailed(true)
+        setSaving(false)
+      }
+      return
+    }
     const stageList: GoalStage[] =
       goalType === 'stage'
         ? stages.map((s, i) => ({
@@ -166,7 +252,7 @@ function GoalForm({ initial }: { initial: Goal | null }) {
         subSport: subSport || null,
         eventDate: date,
         priority,
-        goalType,
+        goalType: goalType === 'stage' ? 'stage' : 'single',
         objective,
         targetTimeS: objective === 'time' ? total : null,
         distanceM: goalType === 'single' ? (parseNum(km) ?? 0) * 1000 : stageList.reduce((a, s) => a + s.distanceM, 0),
@@ -226,6 +312,11 @@ function GoalForm({ initial }: { initial: Goal | null }) {
                 label: t('goals.stage'),
                 help: t('goals.typeStageHelp'),
               },
+              {
+                value: 'triathlon',
+                label: t('goals.triathlon'),
+                help: t('goals.typeTriHelp'),
+              },
             ]}
           />
         )}
@@ -239,32 +330,34 @@ function GoalForm({ initial }: { initial: Goal | null }) {
               onChange={(e) => setName(e.target.value)}
               error={errors.name}
             />
-            <div className="grid-2">
-              <SelectField
-                label={t('goals.sport')}
-                value={sport}
-                onChange={(e) => {
-                  setSport(e.target.value as Sport)
-                  setSubSport('')
-                }}
-              >
-                {SPORTS.filter((s) => s !== 'strength').map((s) => (
-                  <option key={s} value={s}>
-                    {t(`sports.${s}`)}
-                  </option>
-                ))}
-              </SelectField>
-              {SUBSPORTS[sport].length > 0 && (
-                <SelectField label={t('goals.subSport')} optional value={subSport} onChange={(e) => setSubSport(e.target.value as SubSport)}>
-                  <option value="">{t('subSports.none')}</option>
-                  {SUBSPORTS[sport].map((s) => (
+            {!isTri && (
+              <div className="grid-2">
+                <SelectField
+                  label={t('goals.sport')}
+                  value={sport}
+                  onChange={(e) => {
+                    setSport(e.target.value as Sport)
+                    setSubSport('')
+                  }}
+                >
+                  {SPORTS.filter((s) => s !== 'strength').map((s) => (
                     <option key={s} value={s}>
-                      {t(`subSports.${s}`)}
+                      {t(`sports.${s}`)}
                     </option>
                   ))}
                 </SelectField>
-              )}
-            </div>
+                {SUBSPORTS[sport].length > 0 && (
+                  <SelectField label={t('goals.subSport')} optional value={subSport} onChange={(e) => setSubSport(e.target.value as SubSport)}>
+                    <option value="">{t('subSports.none')}</option>
+                    {SUBSPORTS[sport].map((s) => (
+                      <option key={s} value={s}>
+                        {t(`subSports.${s}`)}
+                      </option>
+                    ))}
+                  </SelectField>
+                )}
+              </div>
+            )}
             <div className="field">
               <label htmlFor="g-date">{goalType === 'stage' ? t('goals.dateFirstStage') : t('goals.date')}</label>
               <input
@@ -293,7 +386,9 @@ function GoalForm({ initial }: { initial: Goal | null }) {
                 { value: 'secondary', label: t('goals.secondary') },
               ]}
             />
-            {goalType === 'single' ? (
+            {isTri ? (
+              <TriDistancePicker preset={preset} onPreset={setPreset} legKm={legKm} onLegKm={setLegKm} errors={errors} elev={elev} onElev={setElev} />
+            ) : goalType === 'single' ? (
               <>
                 <div className="grid-2">
                   <NumberField label={t('goals.distanceKm')} value={km} onChange={(e) => setKm(e.target.value)} error={errors.km} />
@@ -387,7 +482,18 @@ function GoalForm({ initial }: { initial: Goal | null }) {
                 { value: 'time', label: t('goals.objectiveTime') },
               ]}
             />
-            {objective === 'time' && (
+            {objective === 'time' && isTri && (
+              <TriTargets
+                target={target}
+                onTarget={setTarget}
+                legTime={legTime}
+                onLegTime={setLegTime}
+                errors={errors}
+                split={triTargets()}
+                cutoffS={presetInfo(preset)?.cutoffS ?? null}
+              />
+            )}
+            {objective === 'time' && !isTri && (
               <>
                 <ClockField
                   label={t('goals.targetTotal')}
@@ -428,7 +534,7 @@ function GoalForm({ initial }: { initial: Goal | null }) {
 
         {step === 4 && (
           <>
-            <p className="muted">{t('goals.gpxHelp')}</p>
+            <p className="muted">{isTri ? t('goals.gpxHelpTri') : t('goals.gpxHelp')}</p>
             <div className="field">
               <label htmlFor="g-gpx">{t('goals.gpxChoose')}</label>
               <input id="g-gpx" type="file" onChange={(e) => void onGpx(e.target.files?.[0])} />
@@ -464,5 +570,160 @@ function GoalForm({ initial }: { initial: Goal | null }) {
         </div>
       </form>
     </Page>
+  )
+}
+
+const LEG_ICON = { swim: 'swim', bike: 'bike', run: 'run' } as const
+const kmOf = (p: { swimM: number; bikeM: number; runM: number } | null) =>
+  p ? { swim: String(p.swimM / 1000), bike: String(p.bikeM / 1000), run: String(p.runM / 1000) } : {}
+
+/** Distancias del triatlón: catálogo (incluye IRONMAN) o personalizada. */
+function TriDistancePicker({
+  preset,
+  onPreset,
+  legKm,
+  onLegKm,
+  errors,
+  elev,
+  onElev,
+}: {
+  preset: TriPreset
+  onPreset: (p: TriPreset) => void
+  legKm: Record<TriLeg, string>
+  onLegKm: (v: Record<TriLeg, string>) => void
+  errors: Record<string, string>
+  elev: string
+  onElev: (v: string) => void
+}) {
+  const { t } = useTranslation()
+  const km = (m: number) => formatDistance(m)
+  return (
+    <fieldset className="tri-presets">
+      <legend className="legend">{t('goals.triDistance')}</legend>
+      <div className="tri-preset-grid">
+        {[...TRI_PRESETS.map((p) => p.key), 'custom' as const].map((k) => {
+          const p = presetInfo(k)
+          return (
+            <label key={k} className={`tri-preset${preset === k ? ' is-on' : ''}${p?.ironman ? ' is-im' : ''}`}>
+              <input
+                type="radio"
+                name="tri-preset"
+                className="visually-hidden"
+                checked={preset === k}
+                onChange={() => {
+                  onPreset(k)
+                  if (k === 'custom' && !legKm.swim) onLegKm({ ...legKm, ...kmOf(presetInfo(preset)) })
+                }}
+              />
+              <strong>{t(`triathlon.presets.${k}`)}</strong>
+              {p ? (
+                <span className="tri-preset-legs">
+                  <span>
+                    <Icon name="swim" /> {km(p.swimM)}
+                  </span>
+                  <span>
+                    <Icon name="bike" /> {km(p.bikeM)}
+                  </span>
+                  <span>
+                    <Icon name="run" /> {km(p.runM)}
+                  </span>
+                </span>
+              ) : (
+                <span className="muted">{t('goals.triCustomHelp')}</span>
+              )}
+            </label>
+          )
+        })}
+      </div>
+      {preset === 'custom' && (
+        <div className="grid-3">
+          {(['swim', 'bike', 'run'] as const).map((k) => (
+            <NumberField
+              key={k}
+              label={t(`triathlon.legKm.${k}`)}
+              value={legKm[k]}
+              error={errors[`leg-${k}`]}
+              onChange={(e) => onLegKm({ ...legKm, [k]: e.target.value })}
+            />
+          ))}
+        </div>
+      )}
+      <NumberField label={t('goals.triBikeElevation')} optional value={elev} onChange={(e) => onElev(e.target.value)} inputMode="numeric" />
+    </fieldset>
+  )
+}
+
+/** Tiempo objetivo total y por tramo (sin transiciones), con reparto sugerido. */
+function TriTargets({
+  target,
+  onTarget,
+  legTime,
+  onLegTime,
+  errors,
+  split,
+  cutoffS,
+}: {
+  target: string
+  onTarget: (v: string) => void
+  legTime: Record<TriLeg, string>
+  onLegTime: (v: Record<TriLeg, string>) => void
+  errors: Record<string, string>
+  split: Record<TriLeg, number> | null
+  cutoffS: number | null
+}) {
+  const { t } = useTranslation()
+  return (
+    <>
+      <ClockField
+        label={t('goals.targetTotal')}
+        hint={t('goals.triTotalHint')}
+        placeholder={t('goals.timePlaceholder')}
+        value={target}
+        onChange={(e) => onTarget(e.target.value)}
+        error={errors.target}
+        optional
+      />
+      <fieldset>
+        <legend className="legend">{t('goals.triPerLeg')}</legend>
+        <p className="hint">{t('goals.triPerLegHint')}</p>
+        <div className="grid-3">
+          {(['swim', 'bike', 'run'] as const).map((k) => (
+            <ClockField
+              key={k}
+              label={t(`triathlon.legs.${k}`)}
+              placeholder={split ? toClock(split[k], 'hh:mm') : '0:45'}
+              value={legTime[k]}
+              error={errors[`ltime-${k}`]}
+              onChange={(e) => onLegTime({ ...legTime, [k]: e.target.value })}
+            />
+          ))}
+        </div>
+      </fieldset>
+      {split && (
+        <div className="tri-split" aria-live="polite">
+          <p className="tri-split-title">
+            <Icon name="sparkles" /> {t('goals.triSplitTitle')}
+          </p>
+          <ul>
+            {(['swim', 'bike', 'run'] as const).map((k) => (
+              <li key={k}>
+                <span className="tri-leg-icon" aria-hidden="true">
+                  <Icon name={LEG_ICON[k]} />
+                </span>
+                {t(`triathlon.legs.${k}`)} <strong className="num">{toClock(split[k], 'hh:mm')}</strong>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            className="btn btn-secondary btn-small"
+            onClick={() => onLegTime({ swim: toClock(split.swim, 'hh:mm'), bike: toClock(split.bike, 'hh:mm'), run: toClock(split.run, 'hh:mm') })}
+          >
+            {t('goals.triUseSplit')}
+          </button>
+        </div>
+      )}
+      {cutoffS && <p className="muted small">{t('goals.triCutoff', { time: toClock(cutoffS, 'hh:mm') })}</p>}
+    </>
   )
 }

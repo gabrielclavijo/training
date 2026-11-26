@@ -1,4 +1,5 @@
 import { gunzipSync, unzipSync } from 'fflate'
+import { parseFitLegs } from './fit'
 import { reconcileSport } from '../activity/sport'
 import type { SportMapping } from '../activity/sport'
 import type { OriginHint, ParsedActivity } from '../activity/types'
@@ -82,7 +83,7 @@ export function* parseUpload(entry: FileEntry, opts: UploadOptions = {}): Genera
   }
   if (!/\.zip$/i.test(entry.name)) {
     opts.onDiscovered?.(1)
-    yield parseOne(entry)
+    yield* parseOne(entry)
     return
   }
   let files: Record<string, Uint8Array>
@@ -96,11 +97,39 @@ export function* parseUpload(entry: FileEntry, opts: UploadOptions = {}): Genera
   yield* parseArchive(files, 0, undefined, opts)
 }
 
-function parseOne(entry: FileEntry, hint?: SportMapping, originHint?: OriginHint): ParseOutcome {
+function parseOne(entry: FileEntry, hint?: SportMapping, originHint?: OriginHint): ParseOutcome[] {
   try {
-    return { ok: true, name: entry.name, activity: parseActivityFile(entry, hint, originHint), raw: entry.bytes }
+    // Triatlón grabado en modo multideporte: una actividad por tramo
+    const legs = /\.fit(\.gz)?$/i.test(entry.name) ? parseFitLegsSafe(entry) : null
+    if (legs) {
+      return legs.map((activity, i) => {
+        activity.originHint = originHint ?? 'device_file'
+        // Huella distinta por tramo: volver a subir el archivo los reconoce como «ya estaban»
+        const raw = new Uint8Array(entry.bytes.length + 8)
+        raw.set(entry.bytes)
+        raw.set(new TextEncoder().encode(`#leg${i}`.padEnd(8)), entry.bytes.length)
+        return { ok: true as const, name: `${entry.name} (${i + 1}/${legs.length})`, activity, raw }
+      })
+    }
+    return [{ ok: true, name: entry.name, activity: parseActivityFile(entry, hint, originHint), raw: entry.bytes }]
   } catch (e) {
-    return { ok: false, name: entry.name, code: e instanceof ImportError ? e.code : 'corrupt' }
+    return [{ ok: false, name: entry.name, code: e instanceof ImportError ? e.code : 'corrupt' }]
+  }
+}
+
+function parseFitLegsSafe(entry: FileEntry) {
+  let bytes = entry.bytes
+  if (/\.gz$/i.test(entry.name)) {
+    try {
+      bytes = gunzipSync(bytes)
+    } catch {
+      return null
+    }
+  }
+  try {
+    return parseFitLegs(bytes, entry.name)
+  } catch {
+    return null
   }
 }
 
@@ -141,13 +170,14 @@ function* parseArchive(
     }
     if (!isActivityFile(name)) continue
     const row = byFile.get(lower(name))
-    const outcome = parseOne({ name, bytes: files[name] }, row?.mapping, originHint)
-    if (outcome.ok && row) {
-      outcome.activity.summary.title ??= row.title
-      outcome.activity.summary.rpe ??= row.rpe
-      outcome.activity.summary.externalId ??= `strava-export:${row.activityId}`
+    for (const outcome of parseOne({ name, bytes: files[name] }, row?.mapping, originHint)) {
+      if (outcome.ok && row) {
+        outcome.activity.summary.title ??= row.title
+        outcome.activity.summary.rpe ??= row.rpe
+        outcome.activity.summary.externalId ??= `strava-export:${row.activityId}`
+      }
+      yield outcome
     }
-    yield outcome
   }
 
   // Actividades de Strava registradas a mano (sin archivo)
@@ -166,7 +196,6 @@ export async function sha256Hex(bytes: Uint8Array): Promise<string> {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-
 // ---------------------------------------------------------------------------
 // Versión por partes (para archivos grandes): trabaja sobre un File/Blob y nunca
 // carga el .zip entero en memoria. Es la que usa la app.
@@ -176,11 +205,7 @@ export async function sha256Hex(bytes: Uint8Array): Promise<string> {
 const MAX_SINGLE_FILE_BYTES = 200 * 1024 * 1024
 const GARMIN_ACTIVITIES = /DI-Connect-Uploaded-Files/i
 
-export async function* parseUploadBlob(
-  file: Blob,
-  name: string,
-  opts: UploadOptions = {},
-): AsyncGenerator<ParseOutcome, void, void> {
+export async function* parseUploadBlob(file: Blob, name: string, opts: UploadOptions = {}): AsyncGenerator<ParseOutcome, void, void> {
   if (/\.zip$/i.test(name) || (await isZip(file))) {
     let entries: ZipEntry[]
     try {
@@ -198,7 +223,7 @@ export async function* parseUploadBlob(
     yield { ok: false, name, code: 'too_large' }
     return
   }
-  yield parseOne({ name, bytes: new Uint8Array(await file.arrayBuffer()) })
+  yield* parseOne({ name, bytes: new Uint8Array(await file.arrayBuffer()) })
 }
 
 async function* parseZipBlob(
@@ -241,16 +266,17 @@ async function* parseZipBlob(
       continue
     }
     const row = byFile.get(lower(e.name))
-    const outcome = parseOne({ name: e.name, bytes }, row?.mapping, originHint)
-    if (outcome.ok && row) {
-      outcome.activity.summary.title ??= row.title
-      outcome.activity.summary.rpe ??= row.rpe
-      outcome.activity.summary.externalId ??= `strava-export:${row.activityId}`
+    for (const outcome of parseOne({ name: e.name, bytes }, row?.mapping, originHint)) {
+      if (outcome.ok && row) {
+        outcome.activity.summary.title ??= row.title
+        outcome.activity.summary.rpe ??= row.rpe
+        outcome.activity.summary.externalId ??= `strava-export:${row.activityId}`
+      }
+      // En una exportación, un archivo que no es actividad (ej. un curso o un
+      // entrenamiento planeado) no es un error: simplemente se omite.
+      if (!outcome.ok && outcome.code === 'not_activity') outcome.skipped = true
+      yield outcome
     }
-    // En una exportación, un archivo que no es actividad (ej. un curso o un
-    // entrenamiento planeado) no es un error: simplemente se omite.
-    if (!outcome.ok && outcome.code === 'not_activity') outcome.skipped = true
-    yield outcome
   }
 
   for (const z of nestedZips) {

@@ -15,7 +15,11 @@ import { addDays, daysBetween, formatDate, localDayKey } from '../../core/dates'
 import { formatClock, formatDistance, formatElevation, formatNumber } from '../../core/units'
 import { useRepo } from '../../data/RepoProvider'
 import { DiagnosisCard } from './DiagnosisCard'
+import { RaceFuelCard } from './RaceFuelCard'
 import { goalEstimatedHours, goalTotals } from './goalUtils'
+import { TriIcons } from './GoalsPage'
+import type { TriLegs } from '../../core/triathlon'
+import type { GoalDiagnosis } from '../../data/planService'
 
 const SPORT_ICON: Record<string, IconName> = { cycling: 'bike', running: 'run', swimming: 'swim', strength: 'dumbbell', other: 'activity' }
 
@@ -37,13 +41,14 @@ function GoalHero({ goal: g, days }: { goal: Goal; days: number }) {
   return (
     <section className={`goal-hero goal-hero-${g.sport}`} aria-label={g.name}>
       <span className="goal-hero-icon" aria-hidden="true">
-        <Icon name={SPORT_ICON[g.sport] ?? 'activity'} />
+        {g.sport === 'triathlon' ? <TriIcons /> : <Icon name={SPORT_ICON[g.sport] ?? 'activity'} />}
       </span>
       <div className="goal-hero-text">
         <span className="goal-hero-sport">
           {t(`sports.${g.sport}`)}
           {g.subSport && ` · ${t(`subSports.${g.subSport}`)}`}
           {g.goalType === 'stage' && ` · ${t('goals.stagesCount', { count: g.stages.length })}`}
+          {g.sport === 'triathlon' && ` · ${t(`triathlon.presets.${g.triPreset ?? 'custom'}`)}`}
         </span>
         <p className="goal-hero-name">{g.name}</p>
         <span className="goal-hero-date">
@@ -120,7 +125,95 @@ function FormToGoal({ goalId }: { goalId: string }) {
         </li>
       </ul>
       <p className="form-verdict">{t(`diagnosis.statusHelp.${x.status}`)}</p>
+      {d.tri && <TriDiagnosis tri={d.tri} targetTimeS={d.targetTimeS} weeksToEvent={x.weeksToEvent} />}
     </section>
+  )
+}
+
+const LEG_TONE = { swim: 'sky', bike: 'mint', run: 'coral' } as const
+const LEG_ICON = { swim: 'swim', bike: 'bike', run: 'run' } as const
+
+/** Triatlón: barra por disciplina, recomendación para la más atrasada y tiempos por tramo. */
+function TriDiagnosis({ tri, targetTimeS, weeksToEvent }: { tri: NonNullable<GoalDiagnosis['tri']>; targetTimeS: number | null; weeksToEvent: number }) {
+  const { t } = useTranslation()
+  const weak = tri.legs.find((l) => l.leg === tri.weakest)
+  const hasTimes = tri.legs.some((l) => l.estimateS || l.targetS)
+  return (
+    <div className="tri-diag">
+      <h3 className="tri-diag-title">{t('triathlon.byDiscipline')}</h3>
+      <ul className="tri-diag-bars">
+        {tri.legs.map((l, i) => (
+          <li key={l.leg} className={`tri-diag-row lstatus-${l.status}`} style={{ animationDelay: `${i * 90}ms` }}>
+            <span className={`kpi-icon kpi-${LEG_TONE[l.leg]}`} aria-hidden="true">
+              <Icon name={LEG_ICON[l.leg]} />
+            </span>
+            <span className="tri-diag-main">
+              <span className="tri-diag-head">
+                <strong>{t(`triathlon.legs.${l.leg}`)}</strong>
+                <span className={`gstatus gstatus-${l.status === 'on_track' ? 'good' : l.status === 'tight' ? 'caution' : 'alert'}`}>
+                  {l.status === 'no_data' ? t('triathlon.noData') : `${Math.min(l.pct, 199)} %`}
+                </span>
+              </span>
+              <span
+                className="goal-card-bar"
+                role="img"
+                aria-label={
+                  l.status === 'no_data'
+                    ? `${t(`triathlon.legs.${l.leg}`)}: ${t('triathlon.noData')}`
+                    : t('triathlon.barLabel', { leg: t(`triathlon.legs.${l.leg}`), pct: l.pct, now: l.ctl, target: l.targetCtl })
+                }
+              >
+                <span
+                  className={`goal-card-fill fill-${l.status === 'on_track' ? 'good' : l.status === 'tight' ? 'caution' : 'alert'}`}
+                  style={{ width: `${l.status === 'no_data' ? 0 : Math.min(100, l.pct)}%` }}
+                />
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      {weak && (
+        <p className="tri-advice">
+          <Icon name="bulb" />{' '}
+          {weeksToEvent < 2
+            ? t('triathlon.adviceNear')
+            : weak.status === 'no_data'
+              ? t('triathlon.adviceNoData', { leg: t(`triathlon.legs.${weak.leg}`).toLowerCase() })
+              : t(`triathlon.advice.${weak.leg}`)}
+        </p>
+      )}
+      {hasTimes && (
+        <table className="tri-times">
+          <caption>{t('triathlon.timesTitle')}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{t('triathlon.leg')}</th>
+              <th scope="col">{t('triathlon.estimated')}</th>
+              <th scope="col">{t('triathlon.target')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tri.legs.map((l) => (
+              <tr key={l.leg}>
+                <th scope="row">
+                  <Icon name={LEG_ICON[l.leg]} /> {t(`triathlon.legs.${l.leg}`)}
+                </th>
+                <td className={`num${l.estimateS && l.targetS && l.estimateS > l.targetS * 1.05 ? ' is-behind' : ''}`}>
+                  {l.estimateS ? formatClock(l.estimateS) : '—'}
+                </td>
+                <td className="num">{l.targetS ? formatClock(l.targetS) : '—'}</td>
+              </tr>
+            ))}
+            <tr className="tri-times-total">
+              <th scope="row">{t('triathlon.total')}</th>
+              <td className="num">{tri.estimateS ? formatClock(tri.estimateS) : '—'}</td>
+              <td className="num">{targetTimeS ? formatClock(targetTimeS) : tri.cutoffS ? `${t('triathlon.cutoff')} ${formatClock(tri.cutoffS)}` : '—'}</td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+      {tri.legs.some((l) => !l.estimateS) && <p className="muted small">{t('triathlon.estimateNeeds')}</p>}
+    </div>
   )
 }
 
@@ -188,9 +281,19 @@ export function GoalDetailPage() {
     <Page title={g.name} headerTitle={t('goals.title')}>
       <GoalHero goal={g} days={days} />
 
+      {g.sport === 'triathlon' && g.legs && <TriLegsCard legs={g.legs} />}
       <ul className="goal-tiles">
-        {tot.distanceM > 0 && <Tile icon="route" tone="mint" label={t('activities.distance')} value={formatDistance(tot.distanceM)} />}
-        {tot.elevationGainM > 0 && <Tile icon="mountain" tone="amber" label={t('goals.elevationGain')} value={`↑ ${formatElevation(tot.elevationGainM)}`} />}
+        {g.sport !== 'triathlon' && tot.distanceM > 0 && (
+          <Tile icon="route" tone="mint" label={t('activities.distance')} value={formatDistance(tot.distanceM)} />
+        )}
+        {tot.elevationGainM > 0 && (
+          <Tile
+            icon="mountain"
+            tone="amber"
+            label={g.sport === 'triathlon' ? t('goals.triBikeElevationShort') : t('goals.elevationGain')}
+            value={`↑ ${formatElevation(tot.elevationGainM)}`}
+          />
+        )}
         {g.maxAltitudeM ? <Tile icon="flag" tone="sky" label={t('goals.maxAltitude')} value={formatElevation(g.maxAltitudeM)} /> : null}
         {g.terrain && <Tile icon="leaf" tone="soft" label={t('goals.terrain')} value={t(`terrain.${g.terrain}`)} />}
         <Tile
@@ -257,6 +360,8 @@ export function GoalDetailPage() {
 
       <DiagnosisCard goalId={g.id} />
 
+      <RaceFuelCard goal={g} />
+
       <div className="row">
         <Link className="btn btn-primary" to={`/metas/${g.id}/editar`}>
           {t('goals.edit')}
@@ -269,5 +374,51 @@ export function GoalDetailPage() {
         </BusyButton>
       </div>
     </Page>
+  )
+}
+
+const LEGS = [
+  { k: 'swim', icon: 'swim', tone: 'sky', m: 'swimM', s: 'swimS' },
+  { k: 'bike', icon: 'bike', tone: 'mint', m: 'bikeM', s: 'bikeS' },
+  { k: 'run', icon: 'run', tone: 'coral', m: 'runM', s: 'runS' },
+] as const
+
+/** Los tres tramos del triatlón: distancia y objetivo de cada uno. */
+function TriLegsCard({ legs }: { legs: TriLegs }) {
+  const { t } = useTranslation()
+  const total = legs.swimM + legs.bikeM + legs.runM
+  return (
+    <section className="card tri-legs-card" aria-labelledby="legs-h">
+      <h2 id="legs-h" className="card-title-icon">
+        <span className="icon-tile">
+          <Icon name="route" />
+        </span>
+        {t('goals.triLegsTitle')}
+      </h2>
+      <ol className="tri-legs">
+        {LEGS.map((x, i) => (
+          <li key={x.k} className={`tri-leg tri-leg-${x.k}`} style={{ animationDelay: `${i * 80}ms` }}>
+            <span className={`kpi-icon tri-leg-tile kpi-${x.tone}`} aria-hidden="true">
+              <Icon name={x.icon} />
+            </span>
+            <span className="tri-leg-text">
+              <strong>{t(`triathlon.legs.${x.k}`)}</strong>
+              <span className="num">{formatDistance(legs[x.m])}</span>
+            </span>
+            {legs[x.s] ? (
+              <span className="tri-leg-target">
+                <Icon name="timer" /> <span className="num">{formatClock(legs[x.s]!)}</span>
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ol>
+      <div className="tri-bar" aria-hidden="true">
+        {LEGS.map((x) => (
+          <span key={x.k} className={`tri-bar-${x.k}`} style={{ flexGrow: legs[x.s] ?? legs[x.m] / total }} />
+        ))}
+      </div>
+      <p className="muted small">{t('goals.triNoTransitions')}</p>
+    </section>
   )
 }

@@ -35,6 +35,8 @@
       "maintenance": "Mantenimiento"
     },
     "notes": {
+      "no_pool": "No marcaste días con piscina: el plan no incluye natación. Márcalos en «Tu tiempo disponible».",
+      "brick": "Esta semana hay una sesión combinada: después de la bici larga, un trote corto para acostumbrar las piernas.",
       "recovery_week": "Semana de descarga: menos carga para asimilar lo entrenado.",
       "taper": "Bajamos la carga para que llegues fresco al evento, manteniendo algo de intensidad.",
       "event_week": "¡Semana de evento! Lo importante es llegar descansado.",
@@ -75,6 +77,8 @@
       "rest": "Descanso."
     },
     "sessionNote": {
+      "brick": "combinada: trote justo después de la bici",
+      "tri_leg": "tramo del triatlón",
       "hotel_gym": "Gimnasio del hotel",
       "travel": "Durante el viaje",
       "return": "Regreso gradual",
@@ -137,6 +141,9 @@
         "7": "Domingo"
       },
       "minutesLabel": "{{day}} (minutos)",
+      "poolDays": "Días con piscina",
+      "poolHint": "Para la natación del plan (triatlón o natación). Solo pondremos natación esos días.",
+      "poolNoMinutes": "Algún día con piscina tiene 0 minutos: ese día no se puede nadar.",
       "longDay": "Día de la salida larga",
       "save": "Guardar disponibilidad",
       "saved": "Listo: el plan se ajustó a tu tiempo.",

@@ -269,3 +269,64 @@ describe('ajuste automático', () => {
     expect(planDiffers(a, generatePlan({ ...base, pauses: [] }).weeks)).toBe(true)
   })
 })
+
+describe('plan de triatlón', () => {
+  const tri: PlanGoal = {
+    id: 'tri',
+    name: 'IRONMAN 70.3',
+    sport: 'triathlon',
+    subSport: null,
+    goalType: 'single',
+    objective: 'time',
+    priority: 'primary',
+    eventDate: addDays(today, 112),
+    estimatedHours: 6,
+    stageDays: 1,
+    targetTimeS: 6 * 3600,
+    elevationPerKm: 5,
+    triMinutes: { swim: 40, bike: 195, run: 125 },
+  }
+  const input: PlanInput = {
+    ...base,
+    goals: [tri],
+    pauses: [],
+    availability: { minutesByDay: { 1: 60, 2: 75, 3: 60, 4: 75, 5: 60, 6: 240, 7: 120 }, longDay: 6, poolDays: [1, 3, 5] },
+    mix: { cycling: 0.6, running: 0.3, swimming: 0.05, strength: 0.05 },
+  }
+  const { weeks } = generatePlan(input)
+  const build = weeks.filter((w) => w.phase === 'build')
+  const all = weeks.flatMap((w) => w.sessions)
+
+  it('la natación solo cae en días con piscina', () => {
+    const swims = all.filter((s) => s.sport === 'swimming' && s.kind !== 'event')
+    expect(swims.length).toBeGreaterThan(0)
+    for (const s of swims) expect([1, 3, 5]).toContain(isoWeekday(s.date))
+  })
+  it('hay semanas con las tres disciplinas y sesión combinada (bici + trote)', () => {
+    const w = build[0]
+    expect(new Set(w.sessions.map((s) => s.sport))).toEqual(
+      new Set(['swimming', 'cycling', 'running', ...w.sessions.filter((s) => s.sport === 'strength').map(() => 'strength')]),
+    )
+    const brick = w.sessions.find((s) => s.note === 'brick')!
+    expect(brick.sport).toBe('running')
+    expect(w.sessions.some((s) => s.date === brick.date && s.sport === 'cycling' && s.kind === 'long')).toBe(true)
+    expect(w.notes).toContain('brick')
+  })
+  it('la natación (la más floja) recibe 3 sesiones en semanas de carga', () => {
+    expect(build[0].sessions.filter((s) => s.sport === 'swimming').length).toBe(3)
+  })
+  it('el día del evento son tres sesiones: natación, bici y running', () => {
+    const ev = all.filter((s) => s.kind === 'event')
+    expect(ev.map((s) => s.sport)).toEqual(['swimming', 'cycling', 'running'])
+    expect(new Set(ev.map((s) => s.date)).size).toBe(1)
+  })
+  it('sin días de piscina avisa en vez de inventar natación', () => {
+    const r = generatePlan({ ...input, availability: { ...input.availability, poolDays: [] } })
+    expect(r.weeks.flatMap((w) => w.sessions).filter((s) => s.sport === 'swimming' && s.kind !== 'event').length).toBe(0)
+    expect(r.weeks[0].notes).toContain('no_pool')
+  })
+  it('meta a 11 días: directo a disminución de carga y semana de carrera', () => {
+    const near = generatePlan({ ...input, goals: [{ ...tri, eventDate: addDays(today, 11) }] })
+    expect(near.weeks.slice(0, 2).map((w) => w.phase)).toEqual(['taper', 'event'])
+  })
+})

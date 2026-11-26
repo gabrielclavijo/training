@@ -1,4 +1,5 @@
 import type { OriginHint, Provider, SourceFormat, Sport, SubSport } from '../core/activity/types'
+import type { TriLegs, TriPreset } from '../core/triathlon'
 import type { MatchDeltas, MatchedBy, MergedActivity, SourceLike } from '../core/dedupe'
 import type { Streams } from '../core/activity/types'
 import type { Availability, Block, Phase, SessionDraft, SessionKind, WeekNote } from '../core/planner/plan'
@@ -147,10 +148,13 @@ export interface GoalStage {
   targetTimeS: number | null
 }
 
+/** Deporte de una meta: los de las actividades o triatlón (natación + bici + running) */
+export type GoalSport = Sport | 'triathlon'
+
 export interface Goal {
   id: string
   name: string
-  sport: Sport
+  sport: GoalSport
   subSport: SubSport | null
   eventDate: string
   priority: 'primary' | 'secondary'
@@ -166,6 +170,9 @@ export interface Goal {
   status: 'active' | 'done' | 'cancelled'
   isDemo?: boolean
   stages: GoalStage[]
+  /** Solo triatlón: distancia del catálogo y tramos */
+  triPreset?: TriPreset | null
+  legs?: TriLegs | null
 }
 
 export type PauseKind = 'illness' | 'injury' | 'travel' | 'vacation' | 'other'

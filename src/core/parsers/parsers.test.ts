@@ -29,7 +29,7 @@ describe('lector .FIT', () => {
     expect(summary.hrHistogram!.reduce((a, [, s]) => a + s, 0)).toBeCloseTo(3 * 3600, -1)
     expect(summary.deviceSerial).toBe('42')
     expect(summary.externalId).toMatch(/^fit:42:/)
-    expect(streams!.t.length).toBeLessThan(3 * 3600 / 4) // reducido a 1 muestra cada 5 s
+    expect(streams!.t.length).toBeLessThan((3 * 3600) / 4) // reducido a 1 muestra cada 5 s
   })
 
   it('calcula potencia normalizada y curva cuando hay potenciómetro', () => {
@@ -122,7 +122,57 @@ describe('exportaciones completas', () => {
   })
 
   it('CSV con comillas, comas y saltos de línea', () => {
-    expect(parseCsv('a,b\n"x, y","línea\nnueva"\n')).toEqual([['a', 'b'], ['x, y', 'línea\nnueva']])
+    expect(parseCsv('a,b\n"x, y","línea\nnueva"\n')).toEqual([
+      ['a', 'b'],
+      ['x, y', 'línea\nnueva'],
+    ])
     expect(parseStravaActivitiesCsv('Activity ID,Activity Type\n1,Ride\n')[0].mapping.sport).toBe('cycling')
+  })
+})
+
+describe('triatlón grabado en modo multideporte', () => {
+  // Archivo .FIT con 5 sesiones: natación, transición, bici, transición, running
+  async function multisportFit() {
+    const { Encoder, Profile } = await import('@garmin/fitsdk')
+    const e = new Encoder()
+    const t0 = new Date('2026-12-07T11:00:00Z')
+    e.writeMesg({ mesgNum: Profile.MesgNum.FILE_ID, type: 'activity', manufacturer: 'garmin', product: 1, serialNumber: 99, timeCreated: t0 } as never)
+    const legs = [
+      { sport: 'swimming', subSport: 'openWater', secs: 2400, km: 1.9 },
+      { sport: 'transition', subSport: 'generic', secs: 240, km: 0 },
+      { sport: 'cycling', subSport: 'road', secs: 11700, km: 90 },
+      { sport: 'transition', subSport: 'generic', secs: 120, km: 0 },
+      { sport: 'running', subSport: 'road', secs: 7500, km: 21.1 },
+    ]
+    let t = t0.getTime()
+    for (const l of legs) {
+      const st = new Date(t)
+      for (let i = 0; i <= l.secs; i += 60)
+        e.writeMesg({ mesgNum: Profile.MesgNum.RECORD, timestamp: new Date(t + i * 1000), heartRate: 140, distance: (l.km * 1000 * i) / l.secs } as never)
+      e.writeMesg({
+        mesgNum: Profile.MesgNum.SESSION,
+        timestamp: new Date(t + l.secs * 1000),
+        startTime: st,
+        sport: l.sport,
+        subSport: l.subSport,
+        totalElapsedTime: l.secs,
+        totalTimerTime: l.secs,
+        totalDistance: l.km * 1000,
+      } as never)
+      t += l.secs * 1000
+    }
+    return e.close()
+  }
+
+  it('se separa en tres actividades (natación, bici, running) sin las transiciones', async () => {
+    const out: ParseOutcome[] = []
+    for (const o of parseUpload({ name: 'triatlon.fit', bytes: await multisportFit() })) out.push(o)
+    const ok = okOnly(out)
+    expect(ok.map((o) => o.activity.summary.sport)).toEqual(['swimming', 'cycling', 'running'])
+    expect(ok.map((o) => Math.round((o.activity.summary.distanceM ?? 0) / 100) / 10)).toEqual([1.9, 90, 21.1])
+    expect(ok[0].activity.summary.title).toBe('Triatlón · Natación')
+    // Cada tramo con su identificador y su huella: no se toman como duplicados entre sí
+    expect(new Set(ok.map((o) => o.activity.summary.externalId)).size).toBe(3)
+    expect(ok[1].activity.summary.startTime > ok[0].activity.summary.startTime).toBe(true)
   })
 })

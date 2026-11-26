@@ -41,3 +41,5 @@ done
   | sed -e 's/^psql:[^ ]* NOTICE:  /  /' -e '/^$/d' -e '/^aaaa\|^bbbb\|^{/d'
 "${PSQL[@]}" -At -f "$ROOT/supabase/tests/rls_sport_fix_test.sql" 2>&1 \
   | sed -e 's/^psql:[^ ]* NOTICE:  /  /' -e '/^$/d' -e '/^aaaa\|^bbbb\|^{/d'
+"${PSQL[@]}" -At -f "$ROOT/supabase/tests/rls_triatlon_test.sql" 2>&1 \
+  | sed -e 's/^psql:[^ ]* NOTICE:  /  /' -e '/^$/d' -e '/^aaaa\|^bbbb\|^{/d'

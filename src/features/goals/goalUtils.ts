@@ -1,5 +1,6 @@
 import { estimateHours, type SeasonGoal } from '../../core/season'
 import type { Goal } from '../../data/types'
+import { triEstimatedHours } from '../../core/triathlon'
 
 export function goalTotals(g: Pick<Goal, 'goalType' | 'stages' | 'distanceM' | 'elevationGainM'>) {
   if (g.goalType === 'stage' && g.stages.length) {
@@ -12,6 +13,7 @@ export function goalTotals(g: Pick<Goal, 'goalType' | 'stages' | 'distanceM' | '
 }
 
 export function goalEstimatedHours(g: Goal) {
+  if (g.sport === 'triathlon' && g.legs) return triEstimatedHours(g.legs)
   if (g.goalType === 'stage' && g.stages.length) {
     return g.stages.reduce((a, s) => a + estimateHours(g.sport, s.distanceM, s.elevationGainM, s.terrain ?? g.terrain), 0)
   }

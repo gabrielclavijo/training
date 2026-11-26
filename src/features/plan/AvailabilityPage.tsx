@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { Icon } from '../../components/ui/Icon'
 import { useToast } from '../../components/fx/Toast'
 import { BusyButton } from '../../components/ui/Busy'
 import { useEffect, useState, type FormEvent } from 'react'
@@ -20,6 +21,7 @@ export function AvailabilityPage() {
   const { derived, isLoading } = usePlan()
   const [mins, setMins] = useState<Record<Weekday, string> | null>(null)
   const [longDay, setLongDay] = useState<Weekday>(6)
+  const [pool, setPool] = useState<Weekday[]>([])
   const [errors, setErrors] = useState<Record<number, string>>({})
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -29,6 +31,7 @@ export function AvailabilityPage() {
     const a = derived.ctx.availability
     setMins(Object.fromEntries(DAYS.map((d) => [d, String(a.minutesByDay[d] ?? 0)])) as Record<Weekday, string>)
     setLongDay(a.longDay)
+    setPool(a.poolDays ?? [])
   }, [derived, mins])
 
   if (isLoading || !mins)
@@ -51,7 +54,7 @@ export function AvailabilityPage() {
     setErrors(errs)
     if (Object.keys(errs).length) return
     setBusy(true)
-    await repo.saveAvailability({ minutesByDay: out, longDay })
+    await repo.saveAvailability({ minutesByDay: out, longDay, poolDays: [...pool].sort() })
     await qc.invalidateQueries()
     setSaved(true)
     toast(t('common.saved'))
@@ -88,6 +91,33 @@ export function AvailabilityPage() {
             </option>
           ))}
         </SelectField>
+        <fieldset className="pool-days">
+          <legend className="legend">
+            <Icon name="swim" /> {t('plan.availability.poolDays')}
+          </legend>
+          <p className="hint">{t('plan.availability.poolHint')}</p>
+          <div className="tag-row">
+            {DAYS.map((d) => {
+              const on = pool.includes(d)
+              return (
+                <label key={d} className={`tag-opt${on ? ' is-on' : ''}`}>
+                  <input
+                    type="checkbox"
+                    className="visually-hidden"
+                    checked={on}
+                    onChange={() => {
+                      setSaved(false)
+                      setPool(on ? pool.filter((x) => x !== d) : [...pool, d])
+                    }}
+                  />
+                  {on && <Icon name="check" />}
+                  {t(`plan.availability.day.${d}`)}
+                </label>
+              )
+            })}
+          </div>
+          {pool.some((d) => !(parseWhole(mins[d]) || 0)) && <p className="hint">{t('plan.availability.poolNoMinutes')}</p>}
+        </fieldset>
         <p className="muted">{t('plan.availability.weekly', { hours: formatDuration(total * 60) })}</p>
         <BusyButton type="submit" className="btn btn-primary" busy={busy}>
           {t('plan.availability.save')}

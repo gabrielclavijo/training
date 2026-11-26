@@ -10,7 +10,38 @@
     "running": "Running",
     "swimming": "Natación",
     "strength": "Gimnasio",
-    "other": "Otro"
+    "other": "Otro",
+    "triathlon": "Triatlón"
+  },
+  "triathlon": {
+    "presets": {
+      "super_sprint": "Súper sprint",
+      "sprint": "Sprint",
+      "olympic": "Olímpico",
+      "im_5150": "IRONMAN 5150",
+      "im_703": "IRONMAN 70.3",
+      "im_full": "IRONMAN",
+      "custom": "Personalizada"
+    },
+    "legs": { "swim": "Natación", "bike": "Bici", "run": "Running" },
+    "legKm": { "swim": "Natación (km)", "bike": "Bici (km)", "run": "Running (km)" },
+    "byDiscipline": "Tu forma por disciplina",
+    "noData": "Sin datos",
+    "barLabel": "{{leg}}: llegarías con el {{pct}} % de la forma recomendada (hoy {{now}} de {{target}})",
+    "advice": {
+      "swim": "La natación es la más atrasada: el plan te pone una sesión extra en la piscina. Prioriza la técnica y nadar seguido la distancia de la carrera.",
+      "bike": "La bici es la más atrasada y es el tramo más largo: no te saltes la salida larga del fin de semana.",
+      "run": "El running es el más atrasado: cuida la carrera larga y los trotes después de la bici."
+    },
+    "adviceNoData": "No tienes actividades recientes de {{leg}}: registra algunas para medir esa disciplina y estimar su tramo.",
+    "adviceNear": "Falta muy poco: ya no hay tiempo para mejorar la forma. Prioriza llegar descansado y repasa tu plan de alimentación de carrera.",
+    "timesTitle": "Tiempo por tramo (sin transiciones)",
+    "leg": "Tramo",
+    "estimated": "Estimado",
+    "target": "Objetivo",
+    "total": "Total",
+    "cutoff": "corte",
+    "estimateNeeds": "Para estimar un tramo hacen falta al menos 2 actividades recientes de esa disciplina (natación de 10 min o más, bici de 45 min o más, running de 20 min o más)."
   },
   "subSports": {
     "road": "Ruta",

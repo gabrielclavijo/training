@@ -19,8 +19,18 @@ export function GoalsPage() {
       {t('goals.new')}
     </Link>
   )
-  if (goals.isLoading) return <Page title={t('goals.title')}><Spinner full /></Page>
-  if (goals.error) return <Page title={t('goals.title')}><Alert kind="error">{t('errors.generic')}</Alert></Page>
+  if (goals.isLoading)
+    return (
+      <Page title={t('goals.title')}>
+        <Spinner full />
+      </Page>
+    )
+  if (goals.error)
+    return (
+      <Page title={t('goals.title')}>
+        <Alert kind="error">{t('errors.generic')}</Alert>
+      </Page>
+    )
   if (!goals.data?.length) {
     return (
       <Page title={t('goals.title')}>
@@ -29,7 +39,9 @@ export function GoalsPage() {
     )
   }
   const today = localDayKey(new Date())
-  const upcoming = goals.data.filter((g) => g.status === 'active' && g.eventDate >= today).sort((a, b) => (a.priority === b.priority ? a.eventDate.localeCompare(b.eventDate) : a.priority === 'primary' ? -1 : 1))
+  const upcoming = goals.data
+    .filter((g) => g.status === 'active' && g.eventDate >= today)
+    .sort((a, b) => (a.priority === b.priority ? a.eventDate.localeCompare(b.eventDate) : a.priority === 'primary' ? -1 : 1))
   const past = goals.data.filter((g) => !upcoming.includes(g))
   return (
     <Page title={t('goals.title')} actions={actions}>
@@ -98,12 +110,17 @@ export function GoalCard({ goal: g, index = 0 }: { goal: Goal; index?: number })
       <Link to={`/metas/${g.id}`} className={`goal-card goal-card-${g.sport}${primary ? ' is-primary' : ''}${days < 0 ? ' is-past' : ''}`}>
         <span className="goal-card-top">
           <span className="goal-card-icon" aria-hidden="true">
-            <Icon name={SPORT_ICON[g.sport] ?? 'activity'} />
+            {g.sport === 'triathlon' ? <TriIcons /> : <Icon name={SPORT_ICON[g.sport] ?? 'activity'} />}
           </span>
           <span className="goal-card-text">
             <span className="goal-card-sport">
               {t(`sports.${g.sport}`)}
-              {g.subSport && ` · ${t(`subSports.${g.subSport}`)}`} · {g.goalType === 'stage' ? t('goals.stagesCount', { count: g.stages.length }) : t('goals.single')}
+              {g.subSport && ` · ${t(`subSports.${g.subSport}`)}`} ·{' '}
+              {g.sport === 'triathlon'
+                ? t(`triathlon.presets.${g.triPreset ?? 'custom'}`)
+                : g.goalType === 'stage'
+                  ? t('goals.stagesCount', { count: g.stages.length })
+                  : t('goals.single')}
             </span>
             <strong className="goal-card-name">{g.name}</strong>
             <span className="goal-card-date">
@@ -129,10 +146,24 @@ export function GoalCard({ goal: g, index = 0 }: { goal: Goal; index?: number })
           ) : (
             <span className="gchip">{t('goals.secondary')}</span>
           )}
-          {tot.distanceM > 0 && (
-            <span className="gchip">
-              <Icon name="route" /> {formatDistance(tot.distanceM)}
-            </span>
+          {g.sport === 'triathlon' && g.legs ? (
+            <>
+              <span className="gchip">
+                <Icon name="swim" /> {formatDistance(g.legs.swimM)}
+              </span>
+              <span className="gchip">
+                <Icon name="bike" /> {formatDistance(g.legs.bikeM)}
+              </span>
+              <span className="gchip">
+                <Icon name="run" /> {formatDistance(g.legs.runM)}
+              </span>
+            </>
+          ) : (
+            tot.distanceM > 0 && (
+              <span className="gchip">
+                <Icon name="route" /> {formatDistance(tot.distanceM)}
+              </span>
+            )
           )}
           {tot.elevationGainM > 0 && (
             <span className="gchip">
@@ -160,5 +191,16 @@ export function GoalCard({ goal: g, index = 0 }: { goal: Goal; index?: number })
         </span>
       </Link>
     </li>
+  )
+}
+
+/** Ícono de triatlón: natación, bici y running juntos. */
+export function TriIcons() {
+  return (
+    <span className="tri-icons">
+      <Icon name="swim" />
+      <Icon name="bike" />
+      <Icon name="run" />
+    </span>
   )
 }

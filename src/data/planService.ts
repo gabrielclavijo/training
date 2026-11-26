@@ -1,4 +1,6 @@
 import { addDays, daysBetween, localDayKey, weekStart } from '../core/dates'
+import { estimateLeg, LEG_SPORT, legShares, legStatus, presetInfo, TRI_LEGS, type LegDiagnosis, type TriLeg } from '../core/triathlon'
+import { referenceLegTimes, type TriLegs } from '../core/triathlon'
 import { dailyLoads, fitnessSeries, snapshot } from '../core/fitness'
 import { decideAdjustment, matchSessions, planDiffers, type ChangeReason, type DoneLike, type MatchResult, type PlanChange } from '../core/planner/adapt'
 import { diagnose, estimateTime, goalDemand, type Diagnosis, type PastEffort, type TimeEstimate } from '../core/planner/diagnosis'
@@ -98,7 +100,14 @@ export function toPlanGoal(g: Goal): PlanGoal {
     stageDays: g.goalType === 'stage' ? Math.max(1, ...g.stages.map((s) => s.dayOffset + 1)) : 1,
     targetTimeS: g.targetTimeS,
     elevationPerKm: tot.distanceM > 0 ? tot.elevationGainM / (tot.distanceM / 1000) : 0,
+    triMinutes: g.sport === 'triathlon' && g.legs ? triLegMinutes(g.legs) : undefined,
   }
+}
+
+/** Minutos de cada tramo: el objetivo si lo hay; si no, la duración de referencia. */
+export function triLegMinutes(l: TriLegs) {
+  const ref = referenceLegTimes(l)
+  return { swim: (l.swimS ?? ref.swim) / 60, bike: (l.bikeS ?? ref.bike) / 60, run: (l.runS ?? ref.run) / 60 }
 }
 
 export function toPlanPause(p: Pause): PlanPause {
@@ -141,7 +150,7 @@ function inputsHash(ctx: PlanContext) {
   }
   const goals = ctx.goals
     .filter((g) => g.status === 'active')
-    .map((g) => [g.id, g.eventDate, g.priority, g.goalType, g.objective, g.targetTimeS, g.distanceM, g.elevationGainM, g.stages.length])
+    .map((g) => [g.id, g.eventDate, g.priority, g.goalType, g.objective, g.targetTimeS, g.distanceM, g.elevationGainM, g.stages.length, g.legs ?? null])
   const pauses = ctx.pauses.map((p) => [p.kind, p.startsOn, p.endsOn, p.canTrain, p.available, p.minutesPerDay])
   return `${h(goals)}.${h(pauses)}.${h(ctx.availability)}`
 }
@@ -169,7 +178,10 @@ export function sessionMatches(plan: CurrentPlan, loaded: ActivityWithLoad[], to
  * Se llama al abrir el plan, tras importar actividades o al cambiar metas,
  * pausas o disponibilidad.
  */
-export async function refreshPlan(repo: Repo, opts: { health?: HealthRecord[]; isDemo?: boolean; reason?: ChangeReason } = {}): Promise<{ plan: CurrentPlan; ctx: PlanContext; changed: boolean }> {
+export async function refreshPlan(
+  repo: Repo,
+  opts: { health?: HealthRecord[]; isDemo?: boolean; reason?: ChangeReason } = {},
+): Promise<{ plan: CurrentPlan; ctx: PlanContext; changed: boolean }> {
   const ctx = await loadContext(repo, opts.health)
   const current = await repo.getCurrentPlan()
   const today = ctx.today
@@ -181,14 +193,21 @@ export async function refreshPlan(repo: Repo, opts: { health?: HealthRecord[]; i
   const adjustment = current.plan
     ? decideAdjustment({
         today,
-        sessions: current.sessions.map((s) => ({ id: s.id, date: s.date, sport: s.sport, kind: s.kind, durationMin: s.durationMin, plannedLoad: s.plannedLoad })),
+        sessions: current.sessions.map((s) => ({
+          id: s.id,
+          date: s.date,
+          sport: s.sport,
+          kind: s.kind,
+          durationMin: s.durationMin,
+          plannedLoad: s.plannedLoad,
+        })),
         matches,
         actualLoadLast7: fit.last7,
         tsb: fit.tsb,
       })
     : null
 
-  const mainSport = activeGoals[0]?.sport ?? 'cycling'
+  const mainSport = activeGoals[0]?.sport === 'triathlon' ? 'cycling' : (activeGoals[0]?.sport ?? 'cycling')
   const longestRecentMin = Math.max(
     0,
     ...ctx.loaded.filter((l) => l.activity.sport === mainSport && l.day >= addDays(today, -56)).map((l) => (l.activity.movingS || l.activity.elapsedS) / 60),
@@ -223,9 +242,10 @@ export async function refreshPlan(repo: Repo, opts: { health?: HealthRecord[]; i
   if (!current.plan || (differs && (inputsChanged || adjustment?.reasons[0] !== 'on_plan' || isNewWeek(current, today)))) {
     const reason: ChangeReason = !current.plan
       ? 'initial'
-      : opts.reason ?? (inputsChanged ? whatChanged(current, hash) : adjustment && adjustment.reasons[0] !== 'on_plan' ? adjustment.reasons[0] : 'weekly')
+      : (opts.reason ?? (inputsChanged ? whatChanged(current, hash) : adjustment && adjustment.reasons[0] !== 'on_plan' ? adjustment.reasons[0] : 'weekly'))
     const changes: PlanChange[] = [{ reason, params: { ...(adjustment?.params ?? {}), weekLoad: out.weeks[0]?.targetLoad ?? 0 } }]
-    if (adjustment && reason !== adjustment.reasons[0]) for (const r of adjustment.reasons) if (r !== 'on_plan') changes.push({ reason: r, params: adjustment.params })
+    if (adjustment && reason !== adjustment.reasons[0])
+      for (const r of adjustment.reasons) if (r !== 'on_plan') changes.push({ reason: r, params: adjustment.params })
     await repo.savePlan({ reason, inputsHash: hash, weeks: out.weeks, fromDay: today, changes, isDemo: Boolean(opts.isDemo) })
     return { plan: await repo.getCurrentPlan(), ctx, changed: true }
   }
@@ -256,6 +276,8 @@ export interface GoalDiagnosis {
   targetTimeS: number | null
   /** Solo con objetivo de tiempo: cómo va el tiempo estimado frente al objetivo */
   timeStatus: 'on_track' | 'tight' | 'behind' | null
+  /** Solo triatlón: diagnóstico y tiempo estimado por disciplina */
+  tri?: { legs: LegDiagnosis[]; weakest: TriLeg | null; estimateS: number | null; cutoffS: number | null }
 }
 
 const ORDER = { on_track: 0, tight: 1, behind: 2, past: 3 } as const
@@ -304,7 +326,9 @@ export function diagnoseGoals(ctx: PlanContext): GoalDiagnosis[] {
           const r = estimate.seconds / g.targetTimeS
           timeStatus = r <= 1 ? 'on_track' : r <= 1.05 ? 'tight' : 'behind'
           if (diagnosis.status !== 'past' && ORDER[timeStatus] > ORDER[diagnosis.status]) {
-            const suggestions = [...new Set<Diagnosis['suggestions'][number]>(['finish_only', ...diagnosis.suggestions.filter((x) => x !== 'keep_going'), 'lower_demand'])]
+            const suggestions = [
+              ...new Set<Diagnosis['suggestions'][number]>(['finish_only', ...diagnosis.suggestions.filter((x) => x !== 'keep_going'), 'lower_demand']),
+            ]
             diagnosis = { ...diagnosis, status: timeStatus, suggestions }
           }
         } else {
@@ -312,8 +336,61 @@ export function diagnoseGoals(ctx: PlanContext): GoalDiagnosis[] {
           diagnosis = diagnose({ ...base, goal: pg })
         }
       }
+      if (g.sport === 'triathlon' && g.legs) {
+        const tri = diagnoseTriathlon(g.legs, diagnosis, ctx, efforts, today)
+        tri.cutoffS = presetInfo(g.triPreset)?.cutoffS ?? null
+        let ts: GoalDiagnosis['timeStatus'] = null
+        if (g.objective === 'time' && g.targetTimeS && tri.estimateS) {
+          const r = tri.estimateS / g.targetTimeS
+          ts = r <= 1 ? 'on_track' : r <= 1.05 ? 'tight' : 'behind'
+        }
+        // El estado general no puede ser mejor que el de la disciplina más atrasada
+        const worst = tri.legs.reduce<'on_track' | 'tight' | 'behind'>(
+          (w, l) => (l.status === 'behind' ? 'behind' : l.status === 'tight' && w === 'on_track' ? 'tight' : w),
+          'on_track',
+        )
+        let d2 = diagnosis
+        for (const st of [ts, worst]) if (st && d2.status !== 'past' && ORDER[st] > ORDER[d2.status]) d2 = { ...d2, status: st }
+        return { goalId: g.id, diagnosis: d2, estimate: null, targetTimeS: g.targetTimeS, timeStatus: ts, tri }
+      }
       return { goalId: g.id, diagnosis, estimate, targetTimeS: g.targetTimeS, timeStatus }
     })
+}
+
+/**
+ * Triatlón: forma de cada disciplina (CTL solo con sus actividades) frente a su
+ * parte de la forma recomendada (según el peso del tramo en la carrera), y el
+ * tiempo estimado de cada tramo con sus actividades de referencia.
+ */
+function diagnoseTriathlon(legs: TriLegs, d: Diagnosis, ctx: PlanContext, efforts: PastEffort[], today: string) {
+  const shares = legShares(legs)
+  const grow = d.currentCtl > 0 ? d.projectedCtl / d.currentCtl : 1
+  const gain = d.currentCtl > 0 ? (d.projectedCtl / d.currentCtl) ** 0.15 : 1
+  const out: LegDiagnosis[] = TRI_LEGS.map((leg) => {
+    const sport = LEG_SPORT[leg]
+    const ctl = fitnessNow(
+      ctx.loaded.filter((l) => l.activity.sport === sport),
+      today,
+    ).ctl
+    const targetCtl = Math.max(5, Math.round(d.targetCtl * shares[leg]))
+    const projectedCtl = Math.round(ctl * grow)
+    const pct = Math.round((projectedCtl / targetCtl) * 100)
+    const dist = leg === 'swim' ? legs.swimM : leg === 'bike' ? legs.bikeM : legs.runM
+    const est = estimateLeg({ leg, distanceM: dist, efforts, today, gain })
+    return {
+      leg,
+      ctl: Math.round(ctl),
+      projectedCtl,
+      targetCtl,
+      pct,
+      status: legStatus(pct, ctl),
+      estimateS: est?.seconds ?? null,
+      targetS: (leg === 'swim' ? legs.swimS : leg === 'bike' ? legs.bikeS : legs.runS) ?? null,
+    }
+  })
+  const weakest = [...out].sort((a, b) => (a.status === 'no_data' ? -1 : b.status === 'no_data' ? 1 : a.pct - b.pct))[0]
+  const estimateS = out.every((l) => l.estimateS) ? out.reduce((a, l) => a + (l.estimateS ?? 0), 0) : null
+  return { legs: out, weakest: weakest && (weakest.status !== 'on_track' ? weakest.leg : null), estimateS, cutoffS: null as number | null }
 }
 
 export { goalDemand }
