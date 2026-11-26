@@ -149,7 +149,11 @@
       "save": "Guardar disponibilidad",
       "saved": "Listo: el plan se ajustó a tu tiempo.",
       "weekly": "Total: {{hours}} por semana"
-    }
+    },
+    "sectionTitle": "Tu plan de entreno",
+    "seeFull": "Plan completo",
+    "sectionGoal": "Las sesiones de cada día hasta «{{goal}}». Toca un día para ver qué hacer.",
+    "sectionSeason": "Las sesiones de cada día para toda la temporada. Toca un día para ver qué hacer."
   },
   "diagnosis": {
     "gaugeLabel": "Forma prevista para el evento: {{projected}} de {{target}} recomendada",

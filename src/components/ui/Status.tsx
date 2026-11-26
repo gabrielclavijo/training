@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { scalePct, type Level, type Scale } from '../../core/fitness/status'
+import { Icon } from './Icon'
 
 const reduceMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -16,7 +17,7 @@ export function Semaphore({ level, label }: { level: Level; label: string }) {
         <i className={level === 'good' ? 'on' : ''} />
       </span>
       <span className="semaphore-text">
-        <span aria-hidden="true">{level === 'good' ? '✓ ' : level === 'caution' ? '! ' : '⚠ '}</span>
+        <Icon name={level === 'good' ? 'check' : 'alert'} />
         {label}
       </span>
     </span>
@@ -133,7 +134,14 @@ export function ArcGauge({ scale, value, label, children }: { scale: Scale; valu
           const f1 = scalePct(Math.min(z.to, scale.max), scale) / 100
           from = z.to
           if (f1 - f0 <= GAP * 2) return null
-          return <path key={i} d={arc(f0 + (i ? GAP : 0), f1 - (i < scale.zones.length - 1 ? GAP : 0), 80)} className={`arc-zone arc-${z.level}`} style={{ animationDelay: `${i * 90}ms` }} />
+          return (
+            <path
+              key={i}
+              d={arc(f0 + (i ? GAP : 0), f1 - (i < scale.zones.length - 1 ? GAP : 0), 80)}
+              className={`arc-zone arc-${z.level}`}
+              style={{ animationDelay: `${i * 90}ms` }}
+            />
+          )
         })}
         <g className="arc-needle" style={{ transform: `rotate(${shown * 180 - 90}deg)` }}>
           <path d="M100,100 L96.5,98 L100,34 L103.5,98 Z" />

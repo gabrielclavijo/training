@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
+import { LegalNotice } from '../plan/SessionView'
 import { useTranslation } from 'react-i18next'
 import { Icon, type IconName } from '../../components/ui/Icon'
 import { raceFuelPlan, type RaceSegment, type RaceSport } from '../../core/nutrition/race'
@@ -173,9 +174,7 @@ export function RaceFuelCard({ goal }: { goal: Goal }) {
               )}
             </ul>
           )}
-          <p className="notice-legal" role="note">
-            <strong>⚠ {t('raceFuel.legal')}</strong>
-          </p>
+          <LegalNotice id="race" text={t('raceFuel.legal')} />
         </>
       )}
     </section>

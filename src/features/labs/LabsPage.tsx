@@ -28,7 +28,7 @@ export function LabsPage() {
 
   return (
     <Page title={t('labs.title')}>
-      <LegalNotice text={t('labs.legal')} />
+      <LegalNotice id="labs" text={t('labs.legal')} />
       <p>{t('labs.intro')}</p>
       {consent.isLoading ? (
         <Spinner />

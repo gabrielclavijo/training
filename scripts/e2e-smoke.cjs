@@ -92,6 +92,21 @@ async function makeUploadFiles() {
   console.log('subida: la actividad aparece en la lista');
   await p.getByRole('button', { name: /Calendario/ }).click();
 
+  // Aviso orientativo: sale una sola vez; el plan también está en Metas y Temporada
+  await p.goto(base + '#/plan'); await p.waitForTimeout(600);
+  if ((await p.locator('.notice-legal').count()) !== 1) throw new Error('El aviso orientativo debe salir una sola vez en Plan');
+  if (!/orientativo y no reemplaza/.test(await p.locator('.notice-legal').innerText())) throw new Error('Falta el aviso legal en el plan');
+  await p.getByRole('button', { name: 'Entendido' }).first().click();
+  await p.reload(); await p.waitForTimeout(800);
+  if ((await p.locator('.notice-legal').count()) !== 0) throw new Error('El aviso orientativo volvió a salir después de «Entendido»');
+  await p.goto(base + '#/metas'); await p.waitForTimeout(600);
+  await p.locator('a[href^="#/metas/"]:not([href$="nueva"])').first().click(); await p.waitForTimeout(1000);
+  await p.getByRole('heading', { name: 'Tu plan de entreno' }).waitFor();
+  await axe('meta con su plan de entreno');
+  await p.goto(base + '#/temporada'); await p.waitForTimeout(800);
+  await p.getByRole('heading', { name: 'Tu plan de entreno' }).waitFor();
+  console.log('aviso: una sola vez · plan visible en Metas y Temporada');
+
   // Fuerza: la rutina de una sesión de fuerza y «Tu fuerza»
   await p.goto(base + '#/plan'); await p.waitForTimeout(800);
   let rutina = null;
@@ -112,8 +127,6 @@ async function makeUploadFiles() {
   console.log('fuerza: rutina con', await p.locator('.ex-card').count(), 'ejercicios; máquinas:', await p.locator('.ex-machine').count());
 
   await p.goto(base + '#/plan'); await p.waitForTimeout(800);
-  const planText = await p.locator('main').innerText();
-  if (!/orientativo y no reemplaza/.test(planText)) throw new Error('Falta el aviso legal en el plan');
   await p.locator('.session-card').first().click(); await p.waitForTimeout(500);
   const sres = await new AxeBuilder({ page: p }).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
   console.log('sesión', sres.violations.map(v => v.id).join(',') || 'ok', '|', (await p.locator('h1').innerText()));

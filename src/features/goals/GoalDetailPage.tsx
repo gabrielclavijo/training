@@ -15,6 +15,7 @@ import { addDays, daysBetween, formatDate, localDayKey } from '../../core/dates'
 import { formatClock, formatDistance, formatElevation, formatNumber } from '../../core/units'
 import { useRepo } from '../../data/RepoProvider'
 import { DiagnosisCard } from './DiagnosisCard'
+import { PlanSection } from '../plan/PlanCalendar'
 import { RaceFuelCard } from './RaceFuelCard'
 import { goalEstimatedHours, goalTotals } from './goalUtils'
 import { TriIcons } from './GoalsPage'
@@ -362,9 +363,14 @@ export function GoalDetailPage() {
 
       <RaceFuelCard goal={g} />
 
+      {g.status === 'active' && <PlanSection goalName={g.name} until={addDays(g.eventDate, Math.max(0, ...g.stages.map((x) => x.dayOffset)) + 7)} />}
+
       <div className="row">
         <Link className="btn btn-primary" to={`/metas/${g.id}/editar`}>
           {t('goals.edit')}
+        </Link>
+        <Link className="btn btn-secondary" to="/plan">
+          {t('plan.title')}
         </Link>
         <Link className="btn btn-secondary" to="/temporada">
           {t('season.title')}

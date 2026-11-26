@@ -2,7 +2,6 @@ import { Icon, TitleIcon } from '../../components/ui/Icon'
 import { useTranslation } from 'react-i18next'
 import { formatClock } from '../../core/units'
 import { usePlan } from '../plan/usePlan'
-import { LegalNotice } from '../plan/SessionView'
 
 
 export function DiagnosisCard({ goalId }: { goalId: string }) {
@@ -51,7 +50,6 @@ export function DiagnosisCard({ goalId }: { goalId: string }) {
           </li>
         ))}
       </ul>
-      <LegalNotice />
     </section>
   )
 }

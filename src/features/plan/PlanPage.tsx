@@ -2,15 +2,14 @@ import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
-import { addDays, formatDate, weekStart } from '../../core/dates'
+import { formatDate, weekStart } from '../../core/dates'
 import { formatNumber } from '../../core/units'
 import { usePlanChanges } from './usePlanChanges'
 import { Icon, type IconName, TitleIcon } from '../../components/ui/Icon'
-import { LegalNotice, SESSION_ICON, ZonesNotice } from './SessionView'
+import { LegalNotice, ZonesNotice } from './SessionView'
 import { TodayCard } from './TodayCard'
-import { Calendar, type CalItem } from '../../components/ui/Calendar'
+import { PHASE_ICON, PlanCalendar } from './PlanCalendar'
 import { usePlan } from './usePlan'
-import { Progress } from '../../components/ui/Status'
 import { PausesSection } from '../season/SeasonPage'
 
 const fmt = (d: string) => formatDate(`${d}T12:00:00Z`)
@@ -31,11 +30,9 @@ export function PlanPage() {
         <Alert kind="error">{t('errors.generic')}</Alert>
       </Page>
     )
-  const { plan, today, matches, zones, ctx } = derived
+  const { zones, ctx } = derived
 
   const hasGoals = ctx.goals.some((g) => g.status === 'active')
-  const firstWeek = plan.weeks[0]?.weekStart ?? weekStart(today)
-  const lastWeek = plan.weeks.at(-1)?.weekStart ?? weekStart(today)
 
   return (
     <Page
@@ -52,96 +49,7 @@ export function PlanPage() {
 
       <TodayCard />
 
-      <section className="card plan-cal" aria-label={t('plan.calendar')}>
-        <Calendar
-          label={t('plan.calendar')}
-          today={today}
-          defaultView="week"
-          min={firstWeek}
-          max={addDays(lastWeek, 6)}
-          getDay={(d) => {
-            const wk = plan.weeks.find((w) => w.weekStart === weekStart(d))
-            const list = plan.sessions.filter((x) => x.date === d && x.kind !== 'rest')
-            const items: CalItem[] = list.map((x) => {
-              const st = matches.get(x.id)?.status
-              return {
-                id: x.id,
-                icon: x.kind === 'event' ? 'flag' : (SESSION_ICON[x.sport] ?? 'activity'),
-                tone: x.kind === 'event' ? 'coral' : x.kind === 'long' ? 'amber' : x.kind === 'recovery' ? 'sky' : 'mint',
-                title: `${t(`plan.kind.${x.kind}`)} · ${t(`sports.${x.sport}`)}`,
-                meta: `${t('plan.minutes', { count: x.durationMin })} · ${t('plan.load', { value: Math.round(x.plannedLoad) })}`,
-                to: `/plan/sesion/${x.id}`,
-                badge: st
-                  ? {
-                      text: t(`plan.status.${st}`),
-                      tone: st === 'done' || st === 'partial' ? 'good' : st === 'missed' || st === 'harder' ? 'warn' : 'info',
-                    }
-                  : undefined,
-              }
-            })
-            const sts = list.map((x) => matches.get(x.id)?.status)
-            const pause = wk?.phase === 'pause'
-            return {
-              items,
-              mark: list.some((x) => x.kind === 'event')
-                ? 'event'
-                : sts.some((x) => x === 'done' || x === 'partial' || x === 'harder')
-                  ? 'done'
-                  : sts.includes('missed')
-                    ? 'missed'
-                    : pause
-                      ? 'pause'
-                      : undefined,
-              total: list.length
-                ? t('plan.calTotal', {
-                    value: formatNumber(list.reduce((a, x) => a + x.plannedLoad, 0)),
-                  })
-                : undefined,
-              empty: pause ? { text: t('plan.calPause'), icon: 'pause' } : { text: t('plan.kind.rest'), icon: 'bed' },
-            }
-          }}
-          summary={({ view, from, to }) => {
-            const planned = plan.sessions.filter((x) => x.date >= from && x.date <= to).reduce((a, x) => a + x.plannedLoad, 0)
-            const done = ctx.loaded.filter((l) => l.day >= from && l.day <= to && l.day <= today).reduce((a, l) => a + (l.load.load ?? 0), 0)
-            return (
-              <>
-                {t(view === 'week' ? 'plan.calWeekLoad' : 'plan.calMonthLoad')}{' '}
-                <strong className="num">
-                  {from <= today ? `${formatNumber(done)} / ` : ''}
-                  {formatNumber(planned)}
-                </strong>
-              </>
-            )
-          }}
-          above={({ view, from }) => {
-            if (view !== 'week') return null
-            const wk = plan.weeks.find((w) => w.weekStart === from)
-            if (!wk) return null
-            const done = ctx.loaded.filter((l) => l.day >= from && l.day <= addDays(from, 6)).reduce((a, l) => a + (l.load.load ?? 0), 0)
-            const pct = wk.targetLoad > 0 && from <= today ? Math.round((done / wk.targetLoad) * 100) : null
-            return (
-              <div className="plan-week-info">
-                <span className={`phase-pill phase-pill-${wk.phase}`}>
-                  <Icon name={PHASE_ICON[wk.phase] ?? 'activity'} /> {t(`plan.phase.${wk.phase}`)}
-                </span>
-                {pct !== null && (
-                  <div className="plan-week-progress">
-                    <p className="week-pct">
-                      <strong className="num">{pct} %</strong> <span className="muted">{t('fitness.heroWeek')}</span>
-                    </p>
-                    <Progress pct={pct} level="good" label={`${pct} % ${t('fitness.heroWeek')}`} />
-                  </div>
-                )}
-                {wk.notes.map((n) => (
-                  <p key={n} className="callout">
-                    {t(`plan.notes.${n}`)}
-                  </p>
-                ))}
-              </div>
-            )
-          }}
-        />
-      </section>
+      <PlanCalendar />
 
       <UpcomingWeeks />
       <PausesSection />
@@ -150,17 +58,6 @@ export function PlanPage() {
   )
 }
 
-const PHASE_ICON: Record<string, IconName> = {
-  base: 'trend',
-  build: 'bolt',
-  recovery_week: 'leaf',
-  taper: 'gauge',
-  event: 'flag',
-  recovery: 'leaf',
-  return: 'refresh',
-  pause: 'pause',
-  maintenance: 'activity',
-}
 const REASON_ICON: Record<string, IconName> = {
   initial: 'sparkles',
   goals_changed: 'flag',

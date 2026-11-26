@@ -1,4 +1,4 @@
-import { TitleIcon, type IconName } from '../../components/ui/Icon'
+import { Icon, TitleIcon, type IconName } from '../../components/ui/Icon'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -44,7 +44,7 @@ export function ImportPage() {
                     <strong>{t(`import.providers.${p.id}`)}</strong>
                   </span>
                   <span className={`badge badge-status-${status}`}>
-                    <span aria-hidden="true">{status === 'active' ? '✓ ' : status === 'error' ? '⚠ ' : '– '}</span>
+                    {status === 'active' ? <Icon name="check" /> : status === 'error' ? <Icon name="alert" /> : null}
                     {t(`import.status.${status}`)}
                   </span>
                 </div>

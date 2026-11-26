@@ -174,7 +174,7 @@ function RecItem({
   return (
     <li className={`rec rec-${rec.severity}`} style={{ animationDelay: `${index * 60}ms` }}>
       <h3 id={id}>
-        {rec.severity === 'high' && '⚠ '}
+        {rec.severity === 'high' && <Icon name="alert" />}
         {t(`recs.${rec.key}.title`)}
       </h3>
       <p>{t(`recs.${rec.key}.body`)}</p>

@@ -2,6 +2,7 @@ import { Icon, TitleIcon, type IconName } from '../../components/ui/Icon'
 import { BusyButton } from '../../components/ui/Busy'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation } from 'react-router'
+import { PlanSection } from '../plan/PlanCalendar'
 import { useToast } from '../../components/fx/Toast'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../components/ui/EmptyState'
@@ -74,7 +75,14 @@ export function SeasonPage() {
   const pct = (d: string) => Math.min(100, Math.max(0, (daysBetween(today, d) / span) * 100))
 
   return (
-    <Page title={t('season.title')}>
+    <Page
+      title={t('season.title')}
+      actions={
+        <Link className="btn btn-secondary" to="/plan">
+          {t('plan.title')}
+        </Link>
+      }
+    >
       <SeasonExplainer />
 
       {season.warnings.map((w) => (
@@ -131,6 +139,8 @@ export function SeasonPage() {
           <span className="legend-swatch tl-pause" /> {t('season.pauses')}
         </li>
       </ul>
+
+      <PlanSection />
 
       <h2 className="card-title-icon">
         <TitleIcon name="calendar" tone="sky" />

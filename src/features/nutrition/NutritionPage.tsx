@@ -43,7 +43,7 @@ export function NutritionPage() {
 
   return (
     <Page title={t('nutrition.title')}>
-      <LegalNotice text={t('nutrition.legal')} />
+      <LegalNotice id="nutrition" text={t('nutrition.legal')} />
       <p>{t('nutrition.intro')}</p>
       <ProfileCard prefs={prefs} />
       <fieldset className="toolbar-item week-toggle">

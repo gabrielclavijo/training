@@ -3472,3 +3472,84 @@ textarea {
   flex: none;
   color: var(--secondary);
 }
+/* Aviso orientativo: una sola vez, se cierra con «Entendido» */
+.notice-legal {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 10px;
+  align-items: start;
+  border: 0;
+  border-radius: 16px;
+  background: var(--warning-bg);
+  color: #5e2c00;
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.9375rem;
+}
+.notice-legal > svg {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  color: var(--warning);
+}
+.notice-legal p {
+  margin: 0;
+}
+.notice-legal-ok {
+  grid-column: 2;
+  justify-self: start;
+  min-height: 44px;
+}
+/* «Tu plan de entreno» en Metas y Temporada */
+.plan-section {
+  display: grid;
+  gap: var(--space-3);
+  margin-block: var(--space-4);
+}
+.plan-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.plan-section-head h2 {
+  margin: 0;
+}
+.plan-section-head .btn svg {
+  width: 18px;
+  height: 18px;
+}
+.plan-section > .muted {
+  margin: -4px 0 0;
+}
+/* Íconos dentro de estados (en vez de símbolos de texto) */
+.semaphore-text,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.rec h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.semaphore-text svg,
+.badge svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+.rec h3 svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--danger, #b3261e);
+}
+/* Acciones de la pantalla (arriba a la derecha): más livianas, sin ocupar tanto */
+.page-head-quiet .btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+}

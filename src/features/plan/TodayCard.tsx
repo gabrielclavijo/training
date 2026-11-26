@@ -1,8 +1,7 @@
 import { TitleIcon } from '../../components/ui/Icon'
-import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { addDays } from '../../core/dates'
-import { LegalNotice, SessionCard } from './SessionView'
+import { SessionCard } from './SessionView'
 import { usePlan } from './usePlan'
 
 /** Inicio → «Hoy»: la sesión del día y la de mañana. */
@@ -28,8 +27,6 @@ export function TodayCard() {
           ))}
         </>
       )}
-      <LegalNotice />
-      <Link to="/plan">{t('plan.title')} →</Link>
     </section>
   )
 }

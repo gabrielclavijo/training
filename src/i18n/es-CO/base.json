@@ -98,7 +98,8 @@
     "optional": "opcional",
     "retry": "Intentar de nuevo",
     "close": "Cerrar",
-    "comingSoon": "Esta sección está en construcción."
+    "comingSoon": "Esta sección está en construcción.",
+    "understood": "Entendido"
   },
   "theme": {
     "label": "Tema",

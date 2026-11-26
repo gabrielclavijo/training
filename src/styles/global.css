@@ -48,7 +48,8 @@
   --nav-h: 68px;
   --font: 'Commissioner', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --font-display: 'Mona Sans', 'Commissioner', system-ui, sans-serif;
-  --font-mono: 'Reddit Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  /* Cifras: la misma letra del texto con números de ancho fijo (sin monoespaciada) */
+  --font-mono: 'Commissioner', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
