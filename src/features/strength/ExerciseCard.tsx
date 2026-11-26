@@ -1,38 +1,34 @@
 import { Icon } from '../../components/ui/Icon'
-import { ExerciseFigure } from './ExerciseFigure'
+import type { Exercise } from '../../core/strength/library'
+import { ExerciseArt } from './ExerciseArt'
 
-export interface ExerciseInfo {
-  id: string
-  name: string
+/** Lo que cambia según la rutina: dónde, cuántas series y el descanso. */
+export interface ExerciseDose {
   where: string
   dose: string
   rest: string
-  steps: string[]
-  mistakes: string[]
-  easier: string
-  harder: string
-  muscles: string
 }
 
 /** Tarjeta de un ejercicio: dibujo animado, cómo hacerlo, errores y variantes. */
-export function ExerciseCard({ ex, index = 0 }: { ex: ExerciseInfo; index?: number }) {
+export function ExerciseCard({ ex, dose, index = 0 }: { ex: Exercise; dose: ExerciseDose; index?: number }) {
   return (
-    <article className="ex-card" style={{ animationDelay: `${index * 80}ms` }} aria-labelledby={`ex-${ex.id}`}>
+    <article className={`ex-card ex-card-${ex.layout}`} style={{ animationDelay: `${index * 80}ms` }} aria-labelledby={`ex-${ex.id}`}>
       <div className="ex-card-art">
-        <ExerciseFigure id={ex.id} />
+        <ExerciseArt id={ex.id} frames={ex.frames} layout={ex.layout} />
         <span className="ex-muscles">
           <i aria-hidden="true" /> {ex.muscles}
         </span>
       </div>
       <div className="ex-card-body">
-        <span className="ex-where">{ex.where}</span>
+        <span className="ex-where">{dose.where}</span>
         <h3 id={`ex-${ex.id}`}>{ex.name}</h3>
+        {ex.machine && <p className="ex-machine">{ex.machine}</p>}
         <ul className="ex-dose">
           <li>
-            <Icon name="refresh" /> {ex.dose}
+            <Icon name="refresh" /> {dose.dose}
           </li>
           <li>
-            <Icon name="clock" /> {ex.rest}
+            <Icon name="clock" /> {dose.rest}
           </li>
         </ul>
         <ol className="ex-steps">

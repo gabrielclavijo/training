@@ -3107,59 +3107,54 @@ textarea {
 }
 
 /* ======================= Dibujos de ejercicios ======================= */
-.ex-figure {
-  display: block;
-  max-width: 100%;
-  height: auto;
+.ex-art {
+  position: relative;
+  display: grid;
+  width: 100%;
   border-radius: 18px;
-  background: linear-gradient(180deg, #eef6fb 0%, #f2f7f4 100%);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--border, #e3e8e5);
 }
-.ex-floor {
-  stroke: #b9c7c0;
-  stroke-width: 2;
+.ex-art img {
+  grid-area: 1 / 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transition: opacity 420ms var(--ease);
 }
-.ex-mat {
-  fill: #cfe3f3;
+.ex-art img.is-on,
+.ex-art.is-still img {
+  opacity: 1;
 }
-.ex-bench {
-  fill: #9aa6a1;
+.ex-art-cols {
+  max-width: 190px;
+  justify-self: center;
 }
-.ex-limb {
-  stroke: #2b3a34;
-  stroke-linecap: round;
+.ex-art-steps {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: 4px;
 }
-.ex-limb.ex-on {
-  stroke: var(--secondary);
+.ex-art-steps i {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-style: normal;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  background: var(--surface-low);
+  color: var(--text-muted);
+  transition: background 200ms, color 200ms;
 }
-.ex-on-fill {
-  fill: var(--secondary);
-  opacity: 0.9;
-}
-.ex-head {
-  fill: #2b3a34;
-}
-.ex-ghost {
-  opacity: 0.25;
-}
-.ex-band {
-  stroke: var(--tertiary);
-  stroke-width: 3;
-  stroke-dasharray: 5 3;
-  fill: none;
-}
-.ex-anchor {
-  fill: var(--tertiary);
-}
-.ex-weight {
-  fill: #4a5a53;
-}
-.ex-arrow line,
-.ex-arrow polyline {
-  stroke: var(--primary);
-  stroke-width: 2.5;
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.ex-art-steps i.is-on {
+  background: var(--primary);
+  color: #fff;
 }
 .ex-list {
   display: grid;
@@ -3184,10 +3179,6 @@ textarea {
   display: grid;
   gap: 6px;
   justify-items: center;
-}
-.ex-card-art .ex-figure {
-  width: 100%;
-  height: auto;
 }
 .ex-muscles {
   display: inline-flex;
@@ -3264,5 +3255,20 @@ textarea {
   display: grid;
   gap: 2px;
   font-size: 0.875rem;
+  color: var(--text-muted);
+}
+@media (min-width: 700px) {
+  .ex-card.ex-card-rows {
+    grid-template-columns: 1fr;
+  }
+}
+.ex-card-rows .ex-art {
+  max-width: 520px;
+  justify-self: center;
+}
+.ex-machine {
+  margin: -4px 0 var(--space-2);
+  font-size: 0.875rem;
+  font-weight: 600;
   color: var(--text-muted);
 }
