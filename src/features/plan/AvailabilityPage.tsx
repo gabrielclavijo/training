@@ -10,6 +10,7 @@ import type { Availability, Weekday } from '../../core/planner/plan'
 import { formatDuration } from '../../core/units'
 import { useRepo } from '../../data/RepoProvider'
 import { usePlan } from './usePlan'
+import { StrengthPrefsCard } from '../strength/StrengthPrefsCard'
 
 const DAYS: Weekday[] = [1, 2, 3, 4, 5, 6, 7]
 
@@ -123,6 +124,7 @@ export function AvailabilityPage() {
           {t('plan.availability.save')}
         </BusyButton>
       </form>
+      <StrengthPrefsCard />
     </Page>
   )
 }

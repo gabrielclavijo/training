@@ -6,6 +6,8 @@ import { Alert, Page, Spinner } from '../../components/ui/Page'
 import { formatLongDate } from '../../core/dates'
 import { LegalNotice, StatusBadge, useDescribeBlocks, ZonesNotice } from './SessionView'
 import { usePlan } from './usePlan'
+import { StrengthSession } from '../strength/StrengthSession'
+import type { RoutineSport } from '../../core/strength/routine'
 
 export function SessionDetailPage() {
   const { id = '' } = useParams()
@@ -54,30 +56,44 @@ export function SessionDetailPage() {
       )}
       <LegalNotice />
       <ZonesNotice zones={derived.zones} />
-      <section className="card" aria-labelledby="what-h">
-        <h2 id="what-h" className="card-title-icon">
-          <TitleIcon name="activity" />
-          {t('plan.whatToDo')}
-        </h2>
-        <p>{t(`plan.kindHelp.${s.kind}`)}</p>
-        <div className="session-profile" aria-hidden="true">
-          {s.blocks.map((b, i) => (
-            <span key={i} className={`zone-seg z${b.zone}`} style={{ flex: b.minutes * (b.repeat ?? 1) }}>
-              Z{b.zone}
-            </span>
-          ))}
-        </div>
-        <ol className="block-list">
-          {describe(s.blocks, derived.zones, s.sport).map((l, i) => (
-            <li key={i} style={{ animationDelay: `${i * 60}ms` }}>
-              <span className={`zone-pill z${s.blocks[i]?.zone}`} aria-hidden="true">
-                Z{s.blocks[i]?.zone}
+      {s.kind === 'strength' && (
+        <StrengthSession
+          prefs={derived.ctx.strength}
+          askPrefs={derived.ctx.strengthIsDefault}
+          sport={(['cycling', 'running', 'swimming', 'triathlon'].includes(goal?.sport ?? '') ? goal!.sport : 'other') as RoutineSport}
+          phase={week?.phase ?? s.phase ?? 'base'}
+          minutes={s.durationMin}
+          mobility={s.note === 'mobility'}
+          indexInWeek={week ? derived.plan.sessions.filter((x) => x.kind === 'strength' && x.date >= week.weekStart && x.date < s.date).length : 0}
+          weekInPhase={week ? weekInPhase(derived.plan.weeks, week.weekStart) : 1}
+        />
+      )}
+      {s.kind !== 'strength' && (
+        <section className="card" aria-labelledby="what-h">
+          <h2 id="what-h" className="card-title-icon">
+            <TitleIcon name="activity" />
+            {t('plan.whatToDo')}
+          </h2>
+          <p>{t(`plan.kindHelp.${s.kind}`)}</p>
+          <div className="session-profile" aria-hidden="true">
+            {s.blocks.map((b, i) => (
+              <span key={i} className={`zone-seg z${b.zone}`} style={{ flex: b.minutes * (b.repeat ?? 1) }}>
+                Z{b.zone}
               </span>
-              <span>{l}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
+            ))}
+          </div>
+          <ol className="block-list">
+            {describe(s.blocks, derived.zones, s.sport).map((l, i) => (
+              <li key={i} style={{ animationDelay: `${i * 60}ms` }}>
+                <span className={`zone-pill z${s.blocks[i]?.zone}`} aria-hidden="true">
+                  Z{s.blocks[i]?.zone}
+                </span>
+                <span>{l}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
       <section className="card" aria-labelledby="why-h">
         <h2 id="why-h" className="card-title-icon">
           <TitleIcon name="bulb" tone="sky" />
@@ -97,6 +113,20 @@ export function SessionDetailPage() {
       <Link to="/plan">← {t('plan.title')}</Link>
     </Page>
   )
+}
+
+/** Cuántas semanas seguidas lleva en la misma etapa (1 = la primera). */
+function weekInPhase(weeks: { weekStart: string; phase: string }[], ws: string) {
+  const sorted = [...weeks].sort((a, b) => a.weekStart.localeCompare(b.weekStart))
+  let i = sorted.findIndex((w) => w.weekStart === ws)
+  if (i < 0) return 1
+  const phase = sorted[i].phase
+  let n = 1
+  while (i > 0 && sorted[i - 1].phase === phase) {
+    n++
+    i--
+  }
+  return n
 }
 
 function addDaysSafe(d: string, n: number) {

@@ -58,7 +58,7 @@
       "vo2": "Intervalos cortos",
       "climb": "Subidas",
       "recovery": "Recuperación",
-      "strength": "Fuerza",
+      "strength": "Rutina",
       "openers": "Activación",
       "event": "Evento",
       "rest": "Descanso"
@@ -71,7 +71,7 @@
       "vo2": "Esfuerzos cortos y muy duros: suben tu techo aeróbico.",
       "climb": "Repeticiones en subida a ritmo sostenido: prepara el desnivel de tu meta.",
       "recovery": "Muy suave, para recuperar. Menos es más.",
-      "strength": "Gimnasio: fuerza general, piernas y tronco. Termina con algo de movilidad.",
+      "strength": "Rutina de fuerza pensada para tu deporte. Abajo están los ejercicios, cada uno con su dibujo, series y descanso.",
       "openers": "Suave con unos arranques cortos para llegar «despierto» al evento.",
       "event": "¡Tu meta! Sal tranquilo, come y toma líquido desde el principio.",
       "rest": "Descanso."
@@ -85,7 +85,8 @@
       "stage_day": "Día de etapa",
       "back_to_back": "Segundo día seguido",
       "openers": "Dos días antes del evento",
-      "day_before": "Víspera del evento"
+      "day_before": "Víspera del evento",
+      "mobility": "Movilidad y core: suave, para recuperar"
     },
     "calendar": "Calendario del plan",
     "calTotal": "{{value}} puntos de carga",

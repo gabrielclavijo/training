@@ -25,8 +25,7 @@ export function usePerson(): { person: PersonData | null; missing: MissingPerson
     if (!p?.birthDate) missing.push('birthDate')
     if (!p?.sexForFormulas) missing.push('sex')
     const today = new Date().toISOString().slice(0, 10)
-    const person =
-      missing.length === 0 ? { weightKg: w!, heightCm: p!.heightCm!, ageYears: ageOn(p!.birthDate!, today), sex: p!.sexForFormulas! } : null
+    const person = missing.length === 0 ? { weightKg: w!, heightCm: p!.heightCm!, ageYears: ageOn(p!.birthDate!, today), sex: p!.sexForFormulas! } : null
     return { person, missing, isLoading: profile.isLoading || weights.isLoading }
   }, [profile.data, weights.data, profile.isLoading, weights.isLoading])
 }

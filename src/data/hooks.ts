@@ -24,8 +24,13 @@ export const keys = {
   pauses: ['pauses'] as const,
   jobs: ['jobs'] as const,
   checkins: ['checkins'] as const,
+  strength: ['strength'] as const,
 }
 
+export function useStrengthPrefs() {
+  const repo = useRepo()
+  return useQuery({ queryKey: keys.strength, queryFn: () => repo.getStrengthPrefs() })
+}
 export function useProfile() {
   const repo = useRepo()
   return useQuery({ queryKey: keys.profile, queryFn: () => repo.getProfile() })

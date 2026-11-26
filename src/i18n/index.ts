@@ -10,6 +10,7 @@ import nutrition from './es-CO/nutrition.json'
 import admin from './es-CO/admin.json'
 import plan from './es-CO/plan.json'
 import profile from './es-CO/profile.json'
+import strength from './es-CO/strength.json'
 
 // Todos los textos viven en archivos JSON por idioma (src/i18n/<idioma>/*.json).
 // Para agregar otro idioma: copiar la carpeta es-CO, traducir y registrarla aquí.
@@ -17,7 +18,7 @@ export const SUPPORTED_LOCALES = ['es-CO'] as const
 export type Locale = (typeof SUPPORTED_LOCALES)[number]
 export const DEFAULT_LOCALE: Locale = 'es-CO'
 
-const esCO = { ...base, ...app, ...profile, ...activities, ...fitness, ...goals, ...guides, ...plan, ...nutrition, ...admin }
+const esCO = { ...base, ...app, ...profile, ...activities, ...fitness, ...goals, ...guides, ...plan, ...nutrition, ...admin, ...strength }
 
 void i18n.use(initReactI18next).init({
   resources: { 'es-CO': { translation: esCO } },

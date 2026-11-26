@@ -27,11 +27,47 @@ describe('panel de administración', () => {
     { userId: 'b', day: '2026-11-22', seconds: 300, visits: 1, lastSeenAt: '2026-11-22T20:00:00Z' },
   ]
   const ai: RawAi[] = [
-    { userId: 'a', kind: 'menu', createdAt: '2026-11-25T18:00:00Z', costUsd: 0.18, inputTokens: 3000, outputTokens: 8000, counted: true, model: 'claude-opus-5-5' },
-    { userId: 'a', kind: 'swap', createdAt: '2026-11-25T18:10:00Z', costUsd: 0.02, inputTokens: 900, outputTokens: 800, counted: true, model: 'claude-opus-5-5' },
-    { userId: 'a', kind: 'menu', createdAt: '2026-11-26T14:00:00Z', costUsd: 0.05, inputTokens: 3000, outputTokens: 1500, counted: false, model: 'claude-opus-5-5' },
+    {
+      userId: 'a',
+      kind: 'menu',
+      createdAt: '2026-11-25T18:00:00Z',
+      costUsd: 0.18,
+      inputTokens: 3000,
+      outputTokens: 8000,
+      counted: true,
+      model: 'claude-opus-5-5',
+    },
+    {
+      userId: 'a',
+      kind: 'swap',
+      createdAt: '2026-11-25T18:10:00Z',
+      costUsd: 0.02,
+      inputTokens: 900,
+      outputTokens: 800,
+      counted: true,
+      model: 'claude-opus-5-5',
+    },
+    {
+      userId: 'a',
+      kind: 'menu',
+      createdAt: '2026-11-26T14:00:00Z',
+      costUsd: 0.05,
+      inputTokens: 3000,
+      outputTokens: 1500,
+      counted: false,
+      model: 'claude-opus-5-5',
+    },
   ]
-  const s = buildStats({ now, users, usage, ai, topups: [{ id: 't', amountUsd: 5, note: null, toppedOn: '2026-11-20' }], thresholdUsd: 2, activitiesByUser: { a: 12 }, stravaUsers: ['a'] })
+  const s = buildStats({
+    now,
+    users,
+    usage,
+    ai,
+    topups: [{ id: 't', amountUsd: 5, note: null, toppedOn: '2026-11-20' }],
+    thresholdUsd: 2,
+    activitiesByUser: { a: 12 },
+    stravaUsers: ['a'],
+  })
 
   it('cuenta registrados, nuevos y por forma de entrar', () => {
     expect(s.users).toEqual({ total: 2, new7d: 1, byProvider: { google: 1, email: 1 } })
@@ -53,9 +89,27 @@ describe('panel de administración', () => {
     expect(s.ai.daysLeft).toBeGreaterThan(100)
   })
   it('semáforo del saldo: amarillo bajo el umbral, rojo sin saldo', () => {
-    const low = buildStats({ now, users, usage, ai, topups: [{ id: 't', amountUsd: 1, note: null, toppedOn: '2026-11-20' }], thresholdUsd: 2, activitiesByUser: {}, stravaUsers: [] })
+    const low = buildStats({
+      now,
+      users,
+      usage,
+      ai,
+      topups: [{ id: 't', amountUsd: 1, note: null, toppedOn: '2026-11-20' }],
+      thresholdUsd: 2,
+      activitiesByUser: {},
+      stravaUsers: [],
+    })
     expect(low.ai.level).toBe('caution')
-    const none = buildStats({ now, users, usage, ai, topups: [{ id: 't', amountUsd: 0.1, note: null, toppedOn: '2026-11-20' }], thresholdUsd: 2, activitiesByUser: {}, stravaUsers: [] })
+    const none = buildStats({
+      now,
+      users,
+      usage,
+      ai,
+      topups: [{ id: 't', amountUsd: 0.1, note: null, toppedOn: '2026-11-20' }],
+      thresholdUsd: 2,
+      activitiesByUser: {},
+      stravaUsers: [],
+    })
     expect(none.ai.level).toBe('alert')
   })
 })

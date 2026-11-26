@@ -497,7 +497,7 @@ function buildWeekSessions(a: {
         sport,
         strengthOn: !!a.strength,
       })
-  if (a.strength?.enabled) addStrength({ plan, days, free, cap, phase, win, minutes: a.strength.minutes })
+  if (a.strength?.enabled) addStrength({ plan, days, free: free.filter((i) => days[i] >= a.today), cap, phase, win, minutes: a.strength.minutes })
   return finishWeek({ plan, out, days, cap, phase, win, goalId, sport, a })
 }
 

@@ -35,23 +35,16 @@ export function useDescribeBlocks() {
     })
 }
 
-export function SessionCard({
-  session: s,
-  match,
-  zones,
-  compact = false,
-}: {
-  session: StoredSession
-  match?: MatchResult
-  zones: ZoneSet
-  compact?: boolean
-}) {
+export function SessionCard({ session: s, match, zones, compact = false }: { session: StoredSession; match?: MatchResult; zones: ZoneSet; compact?: boolean }) {
   const { t } = useTranslation()
   const describe = useDescribeBlocks()
   const lines = describe(s.blocks, zones, s.sport)
   return (
     <Link to={`/plan/sesion/${s.id}`} className="session-card">
-      <span className={`icon-tile session-tile${s.kind === 'event' ? ' icon-tile-coral' : s.kind === 'rest' || s.kind === 'recovery' ? ' icon-tile-soft' : ''}`} aria-hidden="true">
+      <span
+        className={`icon-tile session-tile${s.kind === 'event' ? ' icon-tile-coral' : s.kind === 'rest' || s.kind === 'recovery' ? ' icon-tile-soft' : ''}`}
+        aria-hidden="true"
+      >
         <Icon name={SESSION_ICON[s.sport] ?? 'activity'} />
       </span>
       <span className="row-between">
@@ -90,8 +83,7 @@ export function ZonesNotice({ zones }: { zones: ZoneSet }) {
   if (!zones.hrEstimated) return null
   return (
     <p className="notice-estimate">
-      <strong>{t('plan.estimatedZones', { source: t(`plan.estimatedSource.${zones.hrSource}`) })}</strong>{' '}
-      <Link to="/perfil">{t('nav.profile')}</Link>
+      <strong>{t('plan.estimatedZones', { source: t(`plan.estimatedSource.${zones.hrSource}`) })}</strong> <Link to="/perfil">{t('nav.profile')}</Link>
     </p>
   )
 }

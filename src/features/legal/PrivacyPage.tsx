@@ -33,6 +33,12 @@ const STORED: [IconName, string, string, ('coral' | 'sky' | 'soft')?][] = [
   ],
   ['flag', 'Metas y temporada', 'Lo que escribas sobre tus eventos y tus pausas.', 'soft'],
   [
+    'dumbbell',
+    'Tu fuerza',
+    'Si incluyes fuerza en tu plan: dónde la haces (casa o gimnasio), el equipo que tienes, el peso de tus mancuernas, tu experiencia y las molestias que quieres cuidar (rodilla, espalda baja, hombro). Solo sirve para elegir tus ejercicios; no va a la IA ni lo ve la persona que administra el grupo.',
+    'sky',
+  ],
+  [
     'heart',
     '¿Cómo te sientes hoy?',
     'Si lo usas: cómo te sentiste cada día (de 1 a 5) y las etiquetas que marques (dormí mal, piernas cansadas, estrés, con energía, enfermo). Solo sirve para tus recomendaciones; no va a la IA ni lo ve la persona que administra el grupo.',
@@ -58,7 +64,7 @@ export function PrivacyPage() {
           </span>
           <div>
             <p className="help-ask">Tus datos, en tus manos</p>
-            <p className="muted">Última actualización: 27/11/2026 · Versión 5</p>
+            <p className="muted">Última actualización: 30/11/2026 · Versión 6</p>
           </div>
         </div>
 
@@ -143,8 +149,8 @@ export function PrivacyPage() {
                 <Icon name="alert" /> Qué nunca se envía
               </h3>
               <p>
-                Tus actividades, recorridos, pulso o potencia; cómo te sientes cada día; nada que venga de Strava o Garmin; tus exámenes, medicamentos u otros datos de salud; tu nombre,
-                correo, edad o peso.
+                Tus actividades, recorridos, pulso o potencia; cómo te sientes cada día; tus respuestas de fuerza y molestias; nada que venga de Strava o
+                Garmin; tus exámenes, medicamentos u otros datos de salud; tu nombre, correo, edad o peso.
               </p>
             </div>
           </div>
@@ -169,8 +175,8 @@ export function PrivacyPage() {
             Estadísticas de uso
           </h2>
           <p>
-            Para saber si la app le sirve al grupo de prueba, mientras la tienes abierta y a la vista se cuenta el tiempo de uso (minutos y visitas
-            por día) y la hora de tu última conexión. También se cuenta cuántos menús pides a la IA y cuánto cuestan.
+            Para saber si la app le sirve al grupo de prueba, mientras la tienes abierta y a la vista se cuenta el tiempo de uso (minutos y visitas por día) y
+            la hora de tu última conexión. También se cuenta cuántos menús pides a la IA y cuánto cuestan.
           </p>
           <div className="yes-no">
             <div className="yes">
@@ -178,8 +184,8 @@ export function PrivacyPage() {
                 <Icon name="check" /> Qué ve la persona que administra el grupo
               </h3>
               <p>
-                Tu nombre y correo, cuándo te registraste y si entraste con Google, tu última conexión, los minutos y días de uso, cuántas actividades
-                tienes y cuántos menús pediste con su costo.
+                Tu nombre y correo, cuándo te registraste y si entraste con Google, tu última conexión, los minutos y días de uso, cuántas actividades tienes y
+                cuántos menús pediste con su costo.
               </p>
             </div>
             <div className="no">
