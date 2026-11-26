@@ -15,6 +15,8 @@ import { latestWeight, physiologyOn } from '../../data/analysis'
 import { useRepo } from '../../data/RepoProvider'
 import { HealthSection } from './HealthSection'
 import { BasicsForm, PhysiologyForm, WeightSection } from './forms'
+import { AvailabilityForm } from '../plan/AvailabilityPage'
+import { StrengthPrefsCard } from '../strength/StrengthPrefsCard'
 
 export function ProfilePage() {
   const { t } = useTranslation()
@@ -43,6 +45,14 @@ export function ProfilePage() {
         <PhysiologyForm />
         <PhysiologyHistory />
       </section>
+      <section className="card profile-training" aria-labelledby="training-h">
+        <h2 id="training-h" className="card-title-icon">
+          <TitleIcon name="calendar" />
+          {t('plan.availability.title')}
+        </h2>
+        <AvailabilityForm />
+      </section>
+      <StrengthPrefsCard />
       <section className="card" aria-labelledby="health-h">
         <h2 id="health-h" className="card-title-icon">
           <TitleIcon name="shield" tone="soft" />

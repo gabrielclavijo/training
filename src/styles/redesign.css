@@ -3447,3 +3447,28 @@ textarea {
   width: 16px;
   height: 16px;
 }
+/* Perfil: el formulario de tiempo disponible va dentro de su tarjeta */
+.profile-training > form.card {
+  box-shadow: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.pool-days {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.pool-days .legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pool-days .legend svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--secondary);
+}

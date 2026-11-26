@@ -16,6 +16,17 @@ const DAYS: Weekday[] = [1, 2, 3, 4, 5, 6, 7]
 
 export function AvailabilityPage() {
   const { t } = useTranslation()
+  return (
+    <Page title={t('plan.availability.title')}>
+      <AvailabilityForm />
+      <StrengthPrefsCard />
+    </Page>
+  )
+}
+
+/** Minutos por día, día largo y días con piscina (en Plan y en Perfil). */
+export function AvailabilityForm() {
+  const { t } = useTranslation()
   const toast = useToast()
   const repo = useRepo()
   const qc = useQueryClient()
@@ -35,12 +46,7 @@ export function AvailabilityPage() {
     setPool(a.poolDays ?? [])
   }, [derived, mins])
 
-  if (isLoading || !mins)
-    return (
-      <Page title={t('plan.availability.title')}>
-        <Spinner full />
-      </Page>
-    )
+  if (isLoading || !mins) return <Spinner />
   const total = DAYS.reduce((s, d) => s + (parseWhole(mins[d]) || 0), 0)
 
   async function onSubmit(e: FormEvent) {
@@ -63,7 +69,7 @@ export function AvailabilityPage() {
   }
 
   return (
-    <Page title={t('plan.availability.title')}>
+    <>
       <p className="muted">{t('plan.availability.help')}</p>
       {derived?.ctx.availabilityIsDefault && <Alert kind="info">{t('plan.availability.suggested')}</Alert>}
       <form className="card" onSubmit={onSubmit} noValidate>
@@ -124,7 +130,6 @@ export function AvailabilityPage() {
           {t('plan.availability.save')}
         </BusyButton>
       </form>
-      <StrengthPrefsCard />
-    </Page>
+    </>
   )
 }
