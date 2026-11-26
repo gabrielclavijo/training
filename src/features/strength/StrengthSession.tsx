@@ -19,6 +19,7 @@ export function StrengthSession({
   phase,
   minutes,
   mobility,
+  core = false,
   indexInWeek,
   weekInPhase,
 }: {
@@ -29,12 +30,14 @@ export function StrengthSession({
   phase: Phase
   minutes: number
   mobility: boolean
+  /** Sesión corta solo de core */
+  core?: boolean
   indexInWeek: number
   weekInPhase: number
 }) {
   const { t } = useTranslation()
   const [place, setPlace] = useState<'home' | 'gym'>(prefs.location === 'gym' ? 'gym' : 'home')
-  const focus = focusFor(sport, indexInWeek, mobility)
+  const focus = focusFor(sport, indexInWeek, mobility, core)
   const routine = buildRoutine({ prefs, place, sport, phase, focus, minutes, weekInPhase })
   const where = place === 'gym' ? t('strength.session.gym') : prefs.equipment.length ? t('strength.session.homeEquip') : t('strength.session.homeBody')
 

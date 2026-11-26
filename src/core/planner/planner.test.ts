@@ -351,19 +351,21 @@ describe('fuerza en el plan', () => {
 
   it('sesiones por etapa: base/desarrollo 2, descarga y puesta a punto 1, semana del evento 0', () => {
     for (const w of weeks) {
-      const n = w.sessions.filter((s) => s.kind === 'strength').length
+      const n = w.sessions.filter((s) => s.kind === 'strength' && s.note !== 'core').length
       if (w.phase === 'event') expect(n).toBe(0)
       if (w.phase === 'recovery_week' || w.phase === 'taper' || w.phase === 'recovery') expect(n).toBeLessThanOrEqual(1)
       if (w.phase === 'base' || w.phase === 'build') expect(n).toBeLessThanOrEqual(2)
     }
     const baseWeeks = weeks.filter((w) => w.phase === 'base' || w.phase === 'build')
-    expect(baseWeeks.filter((w) => w.sessions.filter((s) => s.kind === 'strength').length === 2).length).toBeGreaterThan(baseWeeks.length / 2)
+    expect(baseWeeks.filter((w) => w.sessions.filter((s) => s.kind === 'strength' && s.note !== 'core').length === 2).length).toBeGreaterThan(
+      baseWeeks.length / 2,
+    )
   })
 
   it('nunca la víspera de la larga o de una clave de running, ni el día después de la larga, ni días seguidos', () => {
     const KEY = ['long', 'tempo', 'threshold', 'vo2', 'climb', 'openers', 'event']
     for (const w of weeks) {
-      const str = w.sessions.filter((s) => s.kind === 'strength').map((s) => idx(w, s.date))
+      const str = w.sessions.filter((s) => s.kind === 'strength' && s.note !== 'core').map((s) => idx(w, s.date))
       for (const i of str) {
         const next = w.sessions.filter((s) => idx(w, s.date) === i + 1)
         const prev = w.sessions.filter((s) => idx(w, s.date) === i - 1)
@@ -380,7 +382,7 @@ describe('fuerza en el plan', () => {
 
   it('nada de fuerza en los 5 días antes del evento', () => {
     for (const g of [gravel, vuelta])
-      for (const s of weeks.flatMap((w) => w.sessions).filter((x) => x.kind === 'strength'))
+      for (const s of weeks.flatMap((w) => w.sessions).filter((x) => x.kind === 'strength' && x.note !== 'core'))
         expect(s.date >= g.eventDate || Date.parse(g.eventDate) - Date.parse(s.date) > 5 * 86_400_000).toBe(true)
   })
 
@@ -400,8 +402,132 @@ describe('fuerza en el plan', () => {
     for (const s of rec) expect([s.note, s.durationMin]).toEqual(['mobility', 25])
   })
 
+  it('core corto: al menos 1 por semana en preparación (2 si hay tiempo), nunca en los 3 días antes de un evento ni la víspera de la larga', () => {
+    const prep = weeks.filter((w) => w.phase === 'base' || w.phase === 'build')
+    // Core corto o, si la semana está llena, el core dentro de la rutina de fuerza
+    expect(prep.every((w) => w.sessions.some((s) => s.kind === 'strength'))).toBe(true)
+    expect(prep.filter((w) => w.sessions.some((s) => s.note === 'core')).length).toBeGreaterThan(0)
+    const all = weeks.flatMap((w) => w.sessions)
+    for (const c of all.filter((s) => s.note === 'core')) {
+      expect(c.durationMin).toBeLessThanOrEqual(20)
+      for (const g of [gravel, vuelta]) expect(c.date >= g.eventDate || Date.parse(g.eventDate) - Date.parse(c.date) > 3 * 86_400_000).toBe(true)
+      const next = addDays(c.date, 1)
+      expect(all.some((s) => s.date === next && (s.kind === 'long' || s.kind === 'event'))).toBe(false)
+    }
+  })
+
   it('si la persona la desactiva, no hay fuerza', () => {
     const off = generatePlan({ ...on, strength: { enabled: false, minutes: 40 } })
     expect(off.weeks.flatMap((w) => w.sessions).some((s) => s.kind === 'strength')).toBe(false)
+  })
+})
+
+describe('varias metas cercanas', () => {
+  const ride: PlanGoal = { ...gravel, id: 'ride', name: 'Gran fondo', priority: 'secondary', eventDate: addDays(today, 40), estimatedHours: 4, stageDays: 1 }
+  const tri: PlanGoal = {
+    ...gravel,
+    id: 'tri70',
+    name: 'IRONMAN 70.3',
+    sport: 'triathlon',
+    subSport: null,
+    priority: 'primary',
+    eventDate: addDays(today, 42),
+    estimatedHours: 6,
+    stageDays: 1,
+    triMinutes: { swim: 40, bike: 195, run: 125 },
+  }
+  const input: PlanInput = {
+    ...base,
+    goals: [ride, tri],
+    pauses: [],
+    availability: { minutesByDay: { 1: 60, 2: 75, 3: 60, 4: 75, 5: 60, 6: 240, 7: 120 }, longDay: 6, poolDays: [1, 3, 5] },
+  }
+  const all = generatePlan(input).weeks.flatMap((w) => w.sessions)
+
+  it('las dos metas aparecen con su día de evento, aunque estén a 2 días', () => {
+    expect(all.some((s) => s.kind === 'event' && s.date === ride.eventDate && s.goalId === 'ride')).toBe(true)
+    expect(
+      all
+        .filter((s) => s.kind === 'event' && s.date === tri.eventDate && s.goalId === 'tri70')
+        .map((s) => s.sport)
+        .sort(),
+    ).toEqual(['cycling', 'running', 'swimming'])
+  })
+
+  it('entre las dos: descanso o víspera suave, nada fuerte', () => {
+    const between = all.filter((s) => s.date > ride.eventDate && s.date < tri.eventDate)
+    expect(between.every((s) => s.kind === 'recovery' || s.kind === 'rest')).toBe(true)
+  })
+
+  it('con 3 semanas entre metas, la recuperación de la primera cede a la preparación de la siguiente', () => {
+    const later: PlanGoal = { ...tri, eventDate: addDays(today, 61) }
+    const weeks = generatePlan({ ...input, goals: [ride, later] }).weeks
+    const after = weeks.filter((w) => w.weekStart > ride.eventDate && w.weekStart <= later.eventDate)
+    expect(after.some((w) => w.phase === 'taper' && w.goalId === 'tri70')).toBe(true)
+    expect(weeks.flatMap((w) => w.sessions).some((s) => s.kind === 'event' && s.goalId === 'tri70')).toBe(true)
+  })
+})
+
+describe('fuerza después de un evento', () => {
+  it('ni fuerza ni movilidad en los días siguientes a una meta de 2 días', () => {
+    const stage: PlanGoal = { ...vuelta, id: 'st2', eventDate: addDays(today, 26), stageDays: 2, goalType: 'stage', priority: 'primary' }
+    const weeks = generatePlan({ ...base, goals: [stage], pauses: [], strength: { enabled: true, minutes: 40 } }).weeks
+    const end = addDays(stage.eventDate, 1)
+    const str = weeks.flatMap((w) => w.sessions).filter((s) => s.kind === 'strength' && s.date > end)
+    for (const s of str) expect(Date.parse(s.date) - Date.parse(end)).toBeGreaterThan(10 * 86_400_000)
+  })
+})
+
+describe('caso real: dos metas en diciembre', () => {
+  // A Guaduas (secundaria, 1 día, 05/12) y Magdalena - Tati (principal, 2 etapas, 19-20/12)
+  const guaduas: PlanGoal = {
+    ...gravel,
+    id: 'guaduas',
+    name: 'A Guaduas de cumple',
+    priority: 'secondary',
+    eventDate: '2026-12-05',
+    estimatedHours: 5.5,
+    stageDays: 1,
+    goalType: 'single',
+  }
+  const tati: PlanGoal = {
+    ...vuelta,
+    id: 'tati',
+    name: 'Magdalena - Tati',
+    priority: 'primary',
+    eventDate: '2026-12-19',
+    estimatedHours: 14,
+    stageDays: 2,
+    goalType: 'stage',
+    objective: 'finish',
+  }
+  const weeks = generatePlan({ ...base, goals: [guaduas, tati], pauses: [], strength: { enabled: true, minutes: 40 } }).weeks
+  const all = weeks.flatMap((w) => w.sessions)
+
+  it('las dos metas están en el calendario', () => {
+    expect(all.filter((s) => s.kind === 'event').map((s) => `${s.goalId}:${s.date}`)).toEqual(['guaduas:2026-12-05', 'tati:2026-12-19', 'tati:2026-12-20'])
+  })
+  it('entre las dos: recuperar de la primera y llegar fresco a la segunda (disminución previa)', () => {
+    const wk = weeks.find((w) => w.weekStart === '2026-12-14')!
+    expect(wk.phase).toBe('event')
+    expect(weeks.find((w) => w.weekStart === '2026-12-07')!.goalId).toBe('tati')
+    expect(all.some((s) => s.date === '2026-12-06' && s.kind !== 'rest')).toBe(false)
+  })
+  it('después del 20: nada de fuerza hasta pasados 10 días', () => {
+    expect(all.some((s) => s.kind === 'strength' && s.date > '2026-12-20' && s.date <= '2026-12-30')).toBe(false)
+  })
+})
+
+describe('core cuando hay tiempo', () => {
+  it('2 sesiones de core por semana de base con buena disponibilidad', () => {
+    const weeks = generatePlan({
+      ...base,
+      pauses: [],
+      availability: { minutesByDay: { 1: 60, 2: 105, 3: 75, 4: 90, 5: 60, 6: 240, 7: 120 }, longDay: 6 },
+      strength: { enabled: true, minutes: 40 },
+    }).weeks
+    const baseWeeks = weeks.filter((w) => w.phase === 'base')
+    expect(baseWeeks.length).toBeGreaterThan(0)
+    expect(baseWeeks.every((w) => w.sessions.filter((s) => s.note === 'core').length === 2)).toBe(true)
   })
 })

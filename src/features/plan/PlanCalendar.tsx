@@ -33,6 +33,7 @@ export function PlanCalendar({ until }: { until?: string } = {}) {
   const firstWeek = plan.weeks[0]?.weekStart ?? weekStart(today)
   const lastWeek = plan.weeks.at(-1)?.weekStart ?? weekStart(today)
   const max = until && until < addDays(lastWeek, 6) ? until : addDays(lastWeek, 6)
+  const goalName = new Map(ctx.goals.map((g) => [g.id, g.name]))
   return (
     <section className="card plan-cal" aria-label={t('plan.calendar')}>
       <Calendar
@@ -50,7 +51,10 @@ export function PlanCalendar({ until }: { until?: string } = {}) {
               id: x.id,
               icon: x.kind === 'event' ? 'flag' : (SESSION_ICON[x.sport] ?? 'activity'),
               tone: x.kind === 'event' ? 'coral' : x.kind === 'long' ? 'amber' : x.kind === 'recovery' ? 'sky' : 'mint',
-              title: `${t(`plan.kind.${x.kind}`)} · ${t(`sports.${x.sport}`)}`,
+              title:
+                x.kind === 'event' && goalName.get(x.goalId ?? '')
+                  ? `${goalName.get(x.goalId ?? '')} · ${t(`sports.${x.sport}`)}`
+                  : `${t(`plan.kind.${x.kind}`)} · ${t(`sports.${x.sport}`)}`,
               meta: `${t('plan.minutes', { count: x.durationMin })} · ${t('plan.load', { value: Math.round(x.plannedLoad) })}`,
               to: `/plan/sesion/${x.id}`,
               badge: st

@@ -175,9 +175,7 @@ export function estimateTime(args: {
   ctlNow: number
   ctlAtEvent: number
 }): TimeEstimate | null {
-  const recent = args.efforts.filter(
-    (e) => e.sport === args.sport && e.movingS >= 3600 && e.distanceM > 0 && daysBetween(e.day, args.today) <= 120,
-  )
+  const recent = args.efforts.filter((e) => e.sport === args.sport && e.movingS >= 3600 && e.distanceM > 0 && daysBetween(e.day, args.today) <= 120)
   if (recent.length < 2) return null
   // Las salidas más largas reflejan mejor el ritmo de un evento largo
   const longest = [...recent].sort((a, b) => b.movingS - a.movingS).slice(0, 5)

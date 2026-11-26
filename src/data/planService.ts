@@ -148,6 +148,9 @@ export function capacityLoad(a: Availability) {
 }
 
 /** Huella de lo que, si cambia, obliga a rehacer el plan: «metas.pausas.disponibilidad». */
+/** Sube cuando cambian las reglas del plan: así se recalcula el plan de todos. */
+const PLANNER_VERSION = 'p2'
+
 function inputsHash(ctx: PlanContext) {
   const h = (v: unknown) => {
     const s = JSON.stringify(v)
@@ -159,7 +162,7 @@ function inputsHash(ctx: PlanContext) {
     .filter((g) => g.status === 'active')
     .map((g) => [g.id, g.eventDate, g.priority, g.goalType, g.objective, g.targetTimeS, g.distanceM, g.elevationGainM, g.stages.length, g.legs ?? null])
   const pauses = ctx.pauses.map((p) => [p.kind, p.startsOn, p.endsOn, p.canTrain, p.available, p.minutesPerDay])
-  return `${h(goals)}.${h(pauses)}.${h(ctx.availability)}.${h(strengthInput(ctx.strength))}`
+  return `${h(goals)}.${h(pauses)}.${h(ctx.availability)}.${h(strengthInput(ctx.strength))}.${PLANNER_VERSION}`
 }
 
 /** Lo que el plan necesita de «Tu fuerza»: si va y cuánto dura una sesión. */

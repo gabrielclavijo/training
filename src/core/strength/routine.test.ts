@@ -63,9 +63,17 @@ describe('rutina de fuerza', () => {
     expect(w1.items.map((i) => i.ex.id)).toEqual(w2.items.map((i) => i.ex.id))
   })
 
+  it('toda rutina lleva al menos 2 ejercicios de core; la sesión de core es casi todo core', () => {
+    for (const sport of ['cycling', 'running', 'swimming', 'triathlon', 'other'] as RoutineSport[])
+      for (const focus of ['full', 'legs', 'upper'] as Focus[])
+        for (const minutes of [30, 40, 45]) expect(r({ sport, focus, minutes }).items.filter((i) => i.ex.pattern === 'core').length).toBeGreaterThanOrEqual(2)
+    const c = r({ focus: 'core', minutes: 20, prefs: P({ equipment: ['bands'] }) })
+    expect(c.items.filter((i) => i.ex.pattern === 'core').length).toBeGreaterThanOrEqual(3)
+  })
+
   it('siempre arma una rutina completa, con cualquier combinación', () => {
     const sports: RoutineSport[] = ['cycling', 'running', 'swimming', 'triathlon', 'other']
-    const foci: Focus[] = ['full', 'legs', 'upper', 'mobility']
+    const foci: Focus[] = ['full', 'legs', 'upper', 'mobility', 'core']
     const phases: Phase[] = ['base', 'build', 'taper', 'recovery']
     for (const sport of sports)
       for (const focus of foci)

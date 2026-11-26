@@ -86,7 +86,9 @@
       "back_to_back": "Segundo día seguido",
       "openers": "Dos días antes del evento",
       "day_before": "Víspera del evento",
-      "mobility": "Movilidad y core: suave, para recuperar"
+      "mobility": "Movilidad y core: suave, para recuperar",
+      "after_event": "Recuperación después del evento: suave y corta",
+      "core": "Core corto: unos 20 minutos, no cansa las piernas"
     },
     "calendar": "Calendario del plan",
     "calTotal": "{{value}} puntos de carga",

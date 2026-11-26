@@ -50,9 +50,7 @@ export function matchSessions(sessions: PlannedLike[], activities: DoneLike[], t
   for (const pass of [0, 1]) {
     for (const s of sorted) {
       if (out.has(s.id) || s.kind === 'rest') continue
-      const cands = activities.filter(
-        (a) => !used.has(a.id) && sameSport(a.sport, s.sport) && Math.abs(daysBetween(s.date, a.day)) === pass,
-      )
+      const cands = activities.filter((a) => !used.has(a.id) && sameSport(a.sport, s.sport) && Math.abs(daysBetween(s.date, a.day)) === pass)
       if (!cands.length) continue
       const best = cands.sort((x, y) => Math.abs(x.durationS / 60 - s.durationMin) - Math.abs(y.durationS / 60 - s.durationMin))[0]
       used.add(best.id)
@@ -120,15 +118,7 @@ export function decideAdjustment(args: {
   return { weekFactor: Math.round(weekFactor * 100) / 100, easyDays, reasons, params }
 }
 
-export type ChangeReason =
-  | 'initial'
-  | 'goals_changed'
-  | 'pause'
-  | 'availability'
-  | 'overreached'
-  | 'missed_sessions'
-  | 'harder_than_planned'
-  | 'weekly'
+export type ChangeReason = 'initial' | 'goals_changed' | 'pause' | 'availability' | 'overreached' | 'missed_sessions' | 'harder_than_planned' | 'weekly'
 
 export interface PlanChange {
   reason: ChangeReason

@@ -5,8 +5,16 @@
     "enabled": "Incluir fuerza en mi plan",
     "disabledHint": "Sin fuerza, el plan solo tendrá tu deporte. Puedes volver a activarla cuando quieras.",
     "where": "¿Dónde la harías?",
-    "location": { "home": "En casa", "gym": "En gimnasio", "both": "Ambos" },
-    "locationHint": { "home": "Con tu peso o lo que tengas", "gym": "Rutina con máquinas", "both": "Eliges en cada sesión" },
+    "location": {
+      "home": "En casa",
+      "gym": "En gimnasio",
+      "both": "Ambos"
+    },
+    "locationHint": {
+      "home": "Con tu peso o lo que tengas",
+      "gym": "Rutina con máquinas",
+      "both": "Eliges en cada sesión"
+    },
     "equipment": "¿Qué tienes en casa?",
     "equipmentHint": "Marca todo lo que tengas. Si no tienes nada, la rutina es con el peso de tu cuerpo.",
     "equip": {
@@ -22,11 +30,23 @@
     "nothing": "No tengo nada",
     "dumbbellKg": "Peso máximo de tus mancuernas (kg)",
     "experience": "¿Cuánta experiencia tienes con pesas?",
-    "exp": { "new": "Poca o ninguna", "some": "Algo", "regular": "Entreno fuerza seguido" },
-    "expMinutes": { "new": "Sesiones de unos 30 min", "some": "Sesiones de unos 40 min", "regular": "Sesiones de unos 45 min" },
+    "exp": {
+      "new": "Poca o ninguna",
+      "some": "Algo",
+      "regular": "Entreno fuerza seguido"
+    },
+    "expMinutes": {
+      "new": "Sesiones de unos 30 min",
+      "some": "Sesiones de unos 40 min",
+      "regular": "Sesiones de unos 45 min"
+    },
     "discomfort": "¿Alguna molestia que debamos cuidar?",
     "discomfortHint": "Evitamos los ejercicios que la cargan. Si hay dolor fuerte o lesión, consulta a un profesional.",
-    "disc": { "knee": "Rodilla", "low_back": "Espalda baja", "shoulder": "Hombro" },
+    "disc": {
+      "knee": "Rodilla",
+      "low_back": "Espalda baja",
+      "shoulder": "Hombro"
+    },
     "save": "Guardar mi fuerza",
     "saved": "Listo: ajustamos la fuerza de tu plan.",
     "kgInvalid": "Entre 0,5 y 100 kg",
@@ -36,7 +56,13 @@
     "session": {
       "title": "Rutina de fuerza",
       "mobility": "Movilidad y core",
-      "focus": { "legs": "Piernas y core", "upper": "Tronco y espalda", "full": "Cuerpo completo", "mobility": "Movilidad y core" },
+      "focus": {
+        "legs": "Piernas y core",
+        "upper": "Tronco y espalda",
+        "full": "Cuerpo completo",
+        "mobility": "Movilidad y core",
+        "core": "Core"
+      },
       "warmup": "Calentamiento: 5 min de movilidad (círculos de cadera, hombros y tobillos) y 10 sentadillas suaves.",
       "dose": "{{sets}} series × {{reps}}",
       "doseHold": "{{sets}} × {{secs}} s",
@@ -57,7 +83,11 @@
         "other": "la fuerza ayuda a cualquier deporte y a prevenir lesiones."
       },
       "progress": "Semana {{n}} de la etapa: {{text}}",
-      "progressText": { "start": "aprende la técnica, sin llegar al fallo", "more": "una serie más que la semana pasada", "harder": "prueba la variante más difícil si te queda fácil" },
+      "progressText": {
+        "start": "aprende la técnica, sin llegar al fallo",
+        "more": "una serie más que la semana pasada",
+        "harder": "prueba la variante más difícil si te queda fácil"
+      },
       "easyNote": "Deja siempre 2 repeticiones en reserva: debe quedarte energía para tu deporte."
     }
   }

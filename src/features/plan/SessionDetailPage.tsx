@@ -63,7 +63,14 @@ export function SessionDetailPage() {
           phase={week?.phase ?? s.phase ?? 'base'}
           minutes={s.durationMin}
           mobility={s.note === 'mobility'}
-          indexInWeek={week ? derived.plan.sessions.filter((x) => x.kind === 'strength' && x.date >= week.weekStart && x.date < s.date).length : 0}
+          core={s.note === 'core'}
+          indexInWeek={
+            week
+              ? derived.plan.sessions.filter(
+                  (x) => x.kind === 'strength' && x.note !== 'core' && x.note !== 'mobility' && x.date >= week.weekStart && x.date < s.date,
+                ).length
+              : 0
+          }
           weekInPhase={week ? weekInPhase(derived.plan.weeks, week.weekStart) : 1}
         />
       )}

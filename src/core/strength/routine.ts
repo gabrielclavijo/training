@@ -6,7 +6,7 @@
 import type { Phase } from '../planner/plan'
 import { EQUIPMENT, EXERCISES, type Exercise, type Pattern, type StrengthPrefs } from './library'
 
-export type Focus = 'legs' | 'upper' | 'full' | 'mobility'
+export type Focus = 'legs' | 'upper' | 'full' | 'mobility' | 'core'
 export type RoutineSport = 'cycling' | 'running' | 'swimming' | 'triathlon' | 'other'
 
 export interface RoutineItem {
@@ -29,19 +29,21 @@ export interface Routine {
 
 /** Patrones de movimiento por enfoque y deporte (el orden es el de la rutina). */
 function patterns(focus: Focus, sport: RoutineSport, phase: Phase): Pattern[] {
+  // El core va intercalado: al menos 2 ejercicios de core en cada rutina
   if (focus === 'mobility') return ['core', 'hinge', 'core', 'core']
-  if (focus === 'legs') return ['squat', 'single_leg', 'hinge', 'calf', 'core', 'core']
-  if (focus === 'upper') return ['pull', 'push', 'shoulder_health', 'core', 'pull', 'core']
+  if (focus === 'core') return ['core', 'core', 'core', 'hinge', 'core']
+  if (focus === 'legs') return ['squat', 'core', 'single_leg', 'core', 'hinge', 'calf']
+  if (focus === 'upper') return ['pull', 'core', 'push', 'core', 'shoulder_health', 'pull']
   const plyo = phase === 'base' || phase === 'build' || phase === 'maintenance'
   switch (sport) {
     case 'cycling':
-      return ['squat', 'hinge', 'single_leg', 'core', 'pull', 'core']
+      return ['squat', 'core', 'hinge', 'core', 'single_leg', 'pull']
     case 'running':
-      return ['single_leg', 'calf', 'hinge', plyo ? 'plyo' : 'squat', 'core', 'core']
+      return ['single_leg', 'core', 'calf', 'core', plyo ? 'plyo' : 'squat', 'hinge']
     case 'swimming':
-      return ['pull', 'shoulder_health', 'push', 'core', 'hinge', 'core']
+      return ['pull', 'core', 'shoulder_health', 'core', 'push', 'hinge']
     default:
-      return ['squat', 'push', 'pull', 'hinge', 'core', 'core']
+      return ['squat', 'core', 'push', 'core', 'pull', 'hinge']
   }
 }
 
@@ -110,7 +112,7 @@ export function buildRoutine(a: {
   for (let k = 0; items.length < want && k < pats.length + 4; k++) {
     const pat: Pattern = k < pats.length ? pats[k] : 'core'
     let options = EXERCISES.filter((e) => e.pattern === pat && !used.has(e.id) && canDo(e, prefs, place))
-    if (focus === 'mobility') options = options.filter((e) => e.needs.length === 0 && e.place === 'home')
+    if (focus === 'mobility' || focus === 'core') options = options.filter((e) => e.place === 'home' && (e.needs.length === 0 || focus === 'core'))
     if (options.length === 0 && pat === 'shoulder_health') options = EXERCISES.filter((e) => e.id === 'superman' && !used.has(e.id) && canDo(e, prefs, place))
     if (options.length === 0) continue
     const best = Math.min(...options.map((e) => rank(e, prefs, place)))
@@ -140,7 +142,8 @@ function dose(ex: Exercise, p: StrengthPrefs, phase: Phase, focus: Focus, progre
 }
 
 /** Enfoque de una sesión según el deporte y su lugar entre las de la semana. */
-export function focusFor(sport: RoutineSport, indexInWeek: number, mobility: boolean): Focus {
+export function focusFor(sport: RoutineSport, indexInWeek: number, mobility: boolean, core = false): Focus {
+  if (core) return 'core'
   if (mobility) return 'mobility'
   if (sport === 'triathlon') return indexInWeek % 2 === 0 ? 'legs' : 'upper'
   return 'full'
