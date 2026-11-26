@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:db": "bash scripts/test-db.sh",
-    "test:e2e": "node scripts/e2e-smoke.cjs"
+    "test:e2e": "node scripts/e2e-smoke.cjs",
+    "qa:agentes": "node scripts/qa/agentes.cjs"
   },
   "dependencies": {
     "@fontsource/commissioner": "^5.3.0",

@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { BusyButton } from '../../components/ui/Busy'
 import { useToast } from '../../components/fx/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { ClockField, NumberField, RadioGroup, SelectField, TextField, parseClock, parseNum, parseWhole, toClock } from '../../components/ui/Field'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
@@ -27,8 +27,13 @@ interface StageDraft {
   time: string
 }
 
+/** Límites de sentido común (más que esto, casi seguro es un error al escribir) */
+const MAX_KM_PER_DAY = { cycling: 600, running: 250, swimming: 40, other: 600 }
+const MAX_KMH = { cycling: 50, running: 22, swimming: 7, other: 60 }
+
 export function GoalFormPage() {
   const { id } = useParams()
+  const location = useLocation()
   const repo = useRepo()
   const { t } = useTranslation()
   const q = useQuery({
@@ -42,7 +47,9 @@ export function GoalFormPage() {
         <Spinner full />
       </Page>
     )
-  return <GoalForm initial={q.data ?? null} />
+  // Cada vez que se abre la pantalla, el formulario empieza de cero (aunque la
+  // pantalla anterior aún esté cargando)
+  return <GoalForm key={location.key} initial={q.data ?? null} />
 }
 
 function GoalForm({ initial }: { initial: Goal | null }) {
@@ -120,6 +127,8 @@ function GoalForm({ initial }: { initial: Goal | null }) {
     if (s === 2) {
       if (!name.trim()) e.name = t('goals.requiredName')
       if (!date) e.date = t('goals.requiredDate')
+      // Una meta nueva no puede ser en el pasado (editar una pasada sí se puede)
+      else if (!initial && date < localDayKey(new Date())) e.date = t('goals.datePast')
       if (isTri) {
         if (preset === 'custom')
           (['swim', 'bike', 'run'] as const).forEach((k) => {
@@ -129,12 +138,17 @@ function GoalForm({ initial }: { initial: Goal | null }) {
       } else if (goalType === 'single') {
         const d = parseNum(km)
         if (d === null || Number.isNaN(d) || d <= 0) e.km = t('goals.requiredDistance')
+        else if (d > MAX_KM_PER_DAY[sport as keyof typeof MAX_KM_PER_DAY])
+          e.km = t('goals.distanceTooLong', { km: MAX_KM_PER_DAY[sport as keyof typeof MAX_KM_PER_DAY] })
         const up = parseWhole(elev)
+        if (up !== null && !Number.isNaN(up) && d && up > d * 100) e.elev = t('goals.elevTooHigh')
         if (up !== null && (Number.isNaN(up) || up < 0)) e.elev = t('activities.mustBePositive')
       } else {
         stages.forEach((st, i) => {
           const d = parseNum(st.km)
           if (d === null || Number.isNaN(d) || d <= 0) e[`stage-${i}`] = t('goals.requiredDistance')
+          else if (d > MAX_KM_PER_DAY[sport as keyof typeof MAX_KM_PER_DAY])
+            e[`stage-${i}`] = t('goals.distanceTooLong', { km: MAX_KM_PER_DAY[sport as keyof typeof MAX_KM_PER_DAY] })
         })
       }
     }
@@ -149,6 +163,12 @@ function GoalForm({ initial }: { initial: Goal | null }) {
       const v = parseClock(target, 'hh:mm')
       if (goalType === 'single' || target.trim()) {
         if (v === null || Number.isNaN(v)) e.target = t('goals.timeInvalid')
+        else {
+          // ¿Un tiempo posible? Velocidad media por encima de récords mundiales → revisar
+          const totalKm = goalType === 'single' ? (parseNum(km) ?? 0) : stages.reduce((a, st) => a + (parseNum(st.km) ?? 0), 0)
+          const kmh = v > 0 ? totalKm / (v / 3600) : Infinity
+          if (kmh > MAX_KMH[sport as keyof typeof MAX_KMH]) e.target = t('goals.timeImpossible')
+        }
       }
       stages.forEach((st, i) => {
         if (st.time.trim() && Number.isNaN(parseClock(st.time, 'hh:mm'))) e[`time-${i}`] = t('goals.timeInvalid')

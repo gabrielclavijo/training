@@ -143,6 +143,18 @@ export const blocksMinutes = (blocks: Block[]) =>
   blocks.reduce((s, b) => s + b.minutes * (b.repeat ?? 1) + (b.restMinutes ?? 0) * Math.max(0, (b.repeat ?? 1) - 1), 0)
 
 /** Estructura de cada tipo de sesión para una duración dada. */
+/**
+ * Calentamiento + bloque de trabajo + vuelta a la calma, sin pasarse de los
+ * minutos de la sesión: si no cabe, menos repeticiones o repeticiones más cortas.
+ */
+function withWarmup(work: Block, m: number): Block[] {
+  const w = { ...work }
+  while ((w.repeat ?? 1) > 1 && blocksMinutes([w]) + 20 > m) w.repeat = (w.repeat ?? 1) - 1
+  if (blocksMinutes([w]) + 20 > m) w.minutes = Math.max(3, m - 20 - (w.restMinutes ?? 0) * ((w.repeat ?? 1) - 1))
+  const rest = Math.max(20, m - blocksMinutes([w]))
+  return [{ minutes: Math.ceil(rest / 2), zone: 2 }, w, { minutes: Math.floor(rest / 2), zone: 2 }]
+}
+
 export function structureFor(kind: SessionKind, minutes: number): Block[] {
   const m = Math.max(20, Math.round(minutes))
   switch (kind) {
@@ -153,23 +165,19 @@ export function structureFor(kind: SessionKind, minutes: number): Block[] {
       return [{ minutes: m, zone: 2 }]
     case 'tempo': {
       const work: Block = { minutes: m >= 75 ? 20 : 15, zone: 3, repeat: 2, restMinutes: 5 }
-      const rest = m - blocksMinutes([work])
-      return [{ minutes: Math.max(10, Math.ceil(rest / 2)), zone: 2 }, work, { minutes: Math.max(10, Math.floor(rest / 2)), zone: 2 }]
+      return withWarmup(work, m)
     }
     case 'threshold': {
       const work: Block = { minutes: 10, zone: 4, repeat: m >= 70 ? 3 : 2, restMinutes: 5 }
-      const rest = m - blocksMinutes([work])
-      return [{ minutes: Math.max(10, Math.ceil(rest / 2)), zone: 2 }, work, { minutes: Math.max(10, Math.floor(rest / 2)), zone: 2 }]
+      return withWarmup(work, m)
     }
     case 'vo2': {
       const work: Block = { minutes: 3, zone: 5, repeat: 5, restMinutes: 3 }
-      const rest = m - blocksMinutes([work])
-      return [{ minutes: Math.max(10, Math.ceil(rest / 2)), zone: 2 }, work, { minutes: Math.max(10, Math.floor(rest / 2)), zone: 2 }]
+      return withWarmup(work, m)
     }
     case 'climb': {
       const work: Block = { minutes: 8, zone: 3, repeat: 4, restMinutes: 4 }
-      const rest = m - blocksMinutes([work])
-      return [{ minutes: Math.max(10, Math.ceil(rest / 2)), zone: 2 }, work, { minutes: Math.max(10, Math.floor(rest / 2)), zone: 2 }]
+      return withWarmup(work, m)
     }
     case 'openers':
       return [
@@ -435,25 +443,6 @@ function buildWeekSessions(a: {
     cap[restIdx] = 0
   }
 
-  // Días de pausa con entrenamiento posible: sesiones según lo disponible
-  const normalIdx: number[] = []
-  days.forEach((d, i) => {
-    const p = pauseDays[i]
-    if (cap[i] === 0) return
-    if (p) {
-      const s = p.available.includes('gym')
-        ? session(d, 'strength', 'strength', Math.min(cap[i], 60), goalId, a.phase, 'hotel_gym')
-        : p.available.includes('run')
-          ? session(d, 'running', 'easy', Math.min(cap[i], 45), goalId, a.phase, 'travel')
-          : p.available.includes('bike')
-            ? session(d, 'cycling', 'easy', Math.min(cap[i], 60), goalId, a.phase, 'travel')
-            : session(d, 'swimming', 'easy', Math.min(cap[i], 45), goalId, a.phase, 'travel')
-      out.push(s)
-    } else normalIdx.push(i)
-  })
-
-  if (phase === 'pause' || a.target <= 0) return out.sort((x, y) => x.date.localeCompare(y.date))
-
   // Evento: sesiones de cada meta con evento esta semana (puede haber varias)
   const allWins = a.wins ?? (win ? [win] : [])
   const weekEvents = allWins.filter((x) => x.eventStart <= days[6] && x.eventEnd >= days[0])
@@ -490,6 +479,41 @@ function buildWeekSessions(a: {
       }
     })
   }
+
+  // Días de pausa con entrenamiento posible: sesiones según lo disponible
+  const normalIdx: number[] = []
+  days.forEach((d, i) => {
+    const p = pauseDays[i]
+    if (cap[i] === 0 || eventIdx.has(i)) return
+    if (p) {
+      // También en pausa: descanso y recuperación después de un evento
+      const after = allWins
+        .filter((x) => d > x.eventEnd && daysBetween(x.eventEnd, d) <= noStrengthAfter(x.goal.stageDays))
+        .sort((x, y) => y.eventEnd.localeCompare(x.eventEnd))[0]
+      if (after && daysBetween(after.eventEnd, d) <= restAfter(after)) return
+      if (after) {
+        const sp: Sport | null = p.available.includes('run')
+          ? 'running'
+          : p.available.includes('bike')
+            ? 'cycling'
+            : p.available.includes('pool')
+              ? 'swimming'
+              : null
+        if (sp) out.push(session(d, sp, 'recovery', Math.min(cap[i], PLAN_RULES.recoveryMaxMin), goalId, a.phase, 'after_event'))
+        return
+      }
+      const s = p.available.includes('gym')
+        ? session(d, 'strength', 'strength', Math.min(cap[i], 60), goalId, a.phase, 'hotel_gym')
+        : p.available.includes('run')
+          ? session(d, 'running', 'easy', Math.min(cap[i], 45), goalId, a.phase, 'travel')
+          : p.available.includes('bike')
+            ? session(d, 'cycling', 'easy', Math.min(cap[i], 60), goalId, a.phase, 'travel')
+            : session(d, 'swimming', 'easy', Math.min(cap[i], 45), goalId, a.phase, 'travel')
+      out.push(s)
+    } else normalIdx.push(i)
+  })
+
+  if (phase === 'pause' || a.target <= 0) return out.sort((x, y) => x.date.localeCompare(y.date))
 
   // Días libres para sesiones normales (excluye días de evento)
   // …ni los días de descanso después de un evento: 1 (o 2 si fue de varios días)
@@ -592,6 +616,21 @@ function normalSlots(args: SlotArgs & { pauseDays: (PlanPause | undefined)[]; sp
         if (existing) Object.assign(existing, { sport, kind: 'long' as SessionKind, minutes: mins, note: 'back_to_back' as const })
         else plan.push({ i: nextIdx, sport, kind: 'long', minutes: mins, note: 'back_to_back' })
       }
+    }
+  }
+
+  // Natación solo en días con piscina (si la persona los marcó): los demás días,
+  // otro deporte suave que practique, o descanso
+  const pool = new Set(availability.poolDays ?? [])
+  if (pool.size) {
+    const alt = (['running', 'cycling'] as Sport[])
+      .filter((x) => mix[x as 'running' | 'cycling'] >= 0.05)
+      .sort((x, y) => mix[y as 'running'] - mix[x as 'running'])[0]
+    for (let k = plan.length - 1; k >= 0; k--) {
+      const p = plan[k]
+      if (p.sport !== 'swimming' || pool.has(isoWeekday(days[p.i]))) continue
+      if (alt) Object.assign(p, { sport: alt, kind: 'easy' as SessionKind, minutes: Math.min(p.minutes, 45) })
+      else plan.splice(k, 1)
     }
   }
 
@@ -813,8 +852,10 @@ function finishWeek(f: {
     for (const p of plan) {
       const ahead = wins.map((x) => daysBetween(days[p.i], x.eventStart)).filter((n) => n > 0)
       const toEvent = ahead.length ? Math.min(...ahead) : 99
-      if (toEvent === 1) Object.assign(p, { kind: 'recovery', minutes: Math.min(30, cap[p.i]), note: 'day_before' })
-      else if (toEvent === 2 && p.sport === sport) Object.assign(p, { kind: 'openers', minutes: Math.min(50, cap[p.i]), note: 'openers' })
+      const others = plan.filter((q) => q !== p && q.i === p.i).reduce((t, q) => t + q.minutes, 0)
+      const room = Math.max(20, cap[p.i] - others)
+      if (toEvent === 1) Object.assign(p, { kind: 'recovery', minutes: Math.min(30, room), note: 'day_before' })
+      else if (toEvent === 2 && p.sport === sport) Object.assign(p, { kind: 'openers', minutes: Math.min(50, room), note: 'openers' })
     }
   }
 
@@ -859,8 +900,32 @@ function finishWeek(f: {
     return session(d.date, d.sport, d.kind, minutes, goalId, phase, d.note)
   })
 
+  // Nunca más que el tiempo del día: si dos sesiones flexibles se alargaron, se recortan
+  for (const d of new Set(scaled.map((x) => x.date))) {
+    const i = days.indexOf(d)
+    if (cap[i] <= 0) continue
+    const dayAll = [...rigid, ...scaled].filter((x) => x.date === d)
+    let excess = dayAll.reduce((t, x) => t + x.durationMin, 0) - cap[i]
+    for (const x of scaled.filter((y) => y.date === d).sort((u, v) => v.durationMin - u.durationMin)) {
+      if (excess <= 0) break
+      const cut = Math.min(excess, x.durationMin - 15)
+      if (cut <= 0) continue
+      const k = scaled.indexOf(x)
+      scaled[k] = session(x.date, x.sport, x.kind, x.durationMin - cut, goalId, phase, x.note)
+      excess -= x.durationMin - scaled[k].durationMin
+    }
+  }
+
+  // Último control: si aún se pasa del tiempo del día, se quita primero el core corto
+  const finalRigid = rigid.filter((x) => {
+    if (x.note !== 'core') return true
+    const i = days.indexOf(x.date)
+    const tot = [...rigid, ...scaled].filter((y) => y.date === x.date).reduce((t, y) => t + y.durationMin, 0)
+    return tot <= cap[i]
+  })
+
   // Orden del día: natación → bici → running (como en carrera y en las combinadas); gimnasio al final
   const rank = (x: SessionDraft) =>
     x.sport === 'strength' ? 9 : x.note === 'brick' ? 5 : (({ swimming: 1, cycling: 2, running: 3 } as Record<string, number>)[x.sport] ?? 4)
-  return [...out, ...rigid, ...scaled].sort((x, y) => x.date.localeCompare(y.date) || rank(x) - rank(y))
+  return [...out, ...finalRigid, ...scaled].sort((x, y) => x.date.localeCompare(y.date) || rank(x) - rank(y))
 }

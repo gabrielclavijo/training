@@ -48,7 +48,6 @@
     "inDays_other": "en {{count}} días",
     "past": "ya pasó",
     "stagesCount": "{{count}} etapa",
-    "stagesCount_other": "{{count}} etapas",
     "step": "Paso {{current}} de {{total}}",
     "typeStep": "¿Qué tipo de meta es?",
     "typeSingleHelp": "Un evento de un día: una carrera, una salida larga, un reto.",
@@ -96,7 +95,11 @@
     "estimated": "Duración estimada: {{time}}",
     "estimatedHelp": "Estimación general por distancia, desnivel y terreno (sirve para planear la recuperación). El tiempo calculado con tus salidas y tu forma está en el diagnóstico.",
     "diagnosisSoon": "",
-    "clockHint": "Horas y minutos. Escribe solo los números: 1500 queda 15:00."
+    "clockHint": "Horas y minutos. Escribe solo los números: 1500 queda 15:00.",
+    "datePast": "Esa fecha ya pasó: elige una fecha de hoy en adelante.",
+    "distanceTooLong": "Parece demasiado para un solo día (máximo {{km}} km). Revisa la distancia.",
+    "elevTooHigh": "Ese desnivel no parece posible para esa distancia. Revisa el número.",
+    "timeImpossible": "Ese tiempo sería más rápido que un récord mundial. Revisa las horas y minutos."
   },
   "season": {
     "title": "Temporada",
