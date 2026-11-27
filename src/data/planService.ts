@@ -149,7 +149,7 @@ export function capacityLoad(a: Availability) {
 
 /** Huella de lo que, si cambia, obliga a rehacer el plan: «metas.pausas.disponibilidad». */
 /** Sube cuando cambian las reglas del plan: así se recalcula el plan de todos. */
-const PLANNER_VERSION = 'p2'
+const PLANNER_VERSION = 'p3'
 
 function inputsHash(ctx: PlanContext) {
   const h = (v: unknown) => {
