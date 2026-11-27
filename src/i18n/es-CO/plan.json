@@ -155,7 +155,12 @@
     "sectionTitle": "Tu plan de entreno",
     "seeFull": "Plan completo",
     "sectionGoal": "Las sesiones de cada día hasta «{{goal}}». Toca un día para ver qué hacer.",
-    "sectionSeason": "Las sesiones de cada día para toda la temporada. Toca un día para ver qué hacer."
+    "sectionSeason": "Las sesiones de cada día para toda la temporada. Toca un día para ver qué hacer.",
+    "medWarnTitle": "Tomas un medicamento que altera el pulso",
+    "medWarn": "La app no calcula un plan exacto para ti: no usamos zonas de pulso y cada sesión es solo una guía general. Guíate por el esfuerzo percibido (de 1 a 10) y ajusta el plan a mano según las recomendaciones de tu médico.",
+    "injuryWarnTitle": "Lesión: este no es un plan de recuperación",
+    "injuryWarn": "La app no calcula el plan exacto para volver después de una lesión. Las semanas de pausa y de regreso son una guía general: ajusta cada sesión a mano según las recomendaciones de tu fisioterapeuta o médico, y para si aparece dolor.",
+    "seeHealth": "Ver mis datos de salud"
   },
   "diagnosis": {
     "gaugeLabel": "Forma prevista para el evento: {{projected}} de {{target}} recomendada",

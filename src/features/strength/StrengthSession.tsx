@@ -76,6 +76,12 @@ export function StrengthSession({
         </div>
       )}
 
+      {prefs.discomfort.length > 0 && (
+        <div className="notice-health" role="note">
+          <Icon name="alert" />
+          <p>{t('strength.session.discomfortWarn', { list: prefs.discomfort.map((d) => t(`strength.disc.${d}`).toLowerCase()).join(', ') })}</p>
+        </div>
+      )}
       <p className="muted">{t('strength.session.why', { text: t(`strength.session.whyText.${sport}`) })}</p>
       <ul className="str-tips">
         <li>

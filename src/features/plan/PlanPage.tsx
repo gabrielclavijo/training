@@ -6,7 +6,7 @@ import { formatDate, weekStart } from '../../core/dates'
 import { formatNumber } from '../../core/units'
 import { usePlanChanges } from './usePlanChanges'
 import { Icon, type IconName, TitleIcon } from '../../components/ui/Icon'
-import { LegalNotice, ZonesNotice } from './SessionView'
+import { InjuryNotice, LegalNotice, ZonesNotice } from './SessionView'
 import { TodayCard } from './TodayCard'
 import { PHASE_ICON, PlanCalendar } from './PlanCalendar'
 import { usePlan } from './usePlan'
@@ -45,6 +45,7 @@ export function PlanPage() {
     >
       <LegalNotice />
       <ZonesNotice zones={zones} />
+      <InjuryNotice pauses={ctx.pauses} today={derived.today} />
       {!hasGoals && <EmptyState icon="goal" title={t('plan.noPlan')} body={t('plan.noPlanBody')} actionLabel={t('plan.createGoal')} actionTo="/metas/nueva" />}
 
       <TodayCard />

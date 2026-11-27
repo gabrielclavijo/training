@@ -164,6 +164,7 @@
       "active": "En curso",
       "upcoming": "Próxima",
       "past": "Terminada"
-    }
+    },
+    "injuryFormWarn": "La app no calcula un plan exacto para recuperarte de una lesión: durante la pausa no programa entrenamientos y el regreso es una guía general. Ajusta el plan a mano según las recomendaciones de tu fisioterapeuta o médico."
   }
 }

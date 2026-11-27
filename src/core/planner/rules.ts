@@ -24,6 +24,16 @@ export const PLAN_RULES = {
   noStrengthAfterEvent: { single: 7, stage: 10 },
   /** La fuerza cuenta como carga reducida: puntos por minuto */
   strengthLoadPerMin: 0.5,
+  /** Sesión larga: tope por deporte (min). Solo crece con su progresión semanal, nunca por repartir carga */
+  longMaxMin: { running: 180, cycling: 330, swimming: 120, other: 240 } as Record<string, number>,
+  /** La primera larga parte de la más larga reciente (o de esto si no hay historial) */
+  longStartNoHistoryMin: 30,
+  /** Principiante: forma (CTL) por debajo de esto */
+  noviceCtl: 15,
+  /** …sin sesiones de calidad las primeras N semanas */
+  noviceEasyWeeks: 3,
+  /** Con N días de entreno o menos (o principiante), máximo 1 sesión de calidad por semana */
+  lowDaysOneQuality: 3,
 } as const
 
 export const restAfter = (stageDays: number) => (stageDays > 1 ? PLAN_RULES.restAfterEvent.stage : PLAN_RULES.restAfterEvent.single)

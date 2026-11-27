@@ -330,6 +330,12 @@ function PausesSection() {
               ))}
             </div>
           </fieldset>
+          {kind === 'injury' && (
+            <div className="notice-health" role="note">
+              <Icon name="alert" />
+              <p>{t('season.injuryFormWarn')}</p>
+            </div>
+          )}
           <div className="grid-2">
             <div className="field">
               <label htmlFor="p-from">{t('season.pauseStart')}</label>

@@ -12,6 +12,15 @@ Los valores están en `src/core/planner/rules.ts`, `diagnosis.ts` y `season`.
 - Nunca más que el tiempo disponible de cada día. Mínimo 1 día de descanso por semana.
 - Las sesiones que no se hicieron no se recuperan doblando otras.
 
+### Punto de partida, sesión larga e intensidad
+- La primera sesión larga parte de **la más larga reciente** de la persona (30 min si no hay
+  historial) y crece como máximo ~10 % por semana.
+- **Tope de la sesión larga:** running 3 h, ciclismo 5,5 h, natación 2 h. Nunca se alarga para
+  completar la carga semanal; el resto de la carga va a otras sesiones.
+- **Principiante** (forma < 15): sin sesiones de calidad las primeras 3 semanas; después,
+  máximo 1 por semana. Con **3 días de entreno o menos**, también máximo 1 por semana.
+- La fuerza no reemplaza una sesión de resistencia si la semana queda con 3 o menos.
+
 ## 2. Varias metas (retos)
 - Todas las metas aparecen en el calendario con sus días de evento, aunque
   caigan en la misma semana o con pocos días de diferencia.
@@ -51,11 +60,19 @@ Los valores están en `src/core/planner/rules.ts`, `diagnosis.ts` y `season`.
   core; running una pierna, pantorrillas y saltos; natación espalda, hombros y
   core; triatlón una de piernas y otra de tronco y espalda.
 
-## 6. Pausas
+## 6. Salud: lo que la app NO calcula
+- **Lesión:** la pausa no programa entrenamientos y el regreso es solo una guía general. La app
+  lo avisa en el formulario, en el Plan y en las sesiones del regreso: el plan exacto se ajusta a
+  mano según el fisioterapeuta o médico.
+- **Medicamentos que alteran el pulso:** no se usan zonas de pulso (solo esfuerzo percibido) y se
+  avisa que el plan es una guía general que se ajusta con el médico.
+- **Molestias en «Tu fuerza»:** solo se evitan ejercicios; la rutina avisa que no es rehabilitación.
+
+## 7. Pausas
 - Enfermedad o lesión: descanso y regreso gradual según los días parados.
 - Viajes y vacaciones: solo lo que se pueda hacer, el tiempo que se pueda.
 
-## 7. Cuándo se recalcula el plan
+## 8. Cuándo se recalcula el plan
 - Al cambiar metas, pausas, tiempo disponible o «Tu fuerza», cada semana, y
   cuando cambian estas reglas (versión del plan): el plan de todas las
   personas se recalcula solo desde hoy; lo ya hecho no cambia.

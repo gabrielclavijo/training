@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { Alert, Page, Spinner } from '../../components/ui/Page'
 import { formatLongDate } from '../../core/dates'
-import { StatusBadge, useDescribeBlocks, ZonesNotice } from './SessionView'
+import { InjuryNotice, StatusBadge, useDescribeBlocks, ZonesNotice } from './SessionView'
 import { usePlan } from './usePlan'
 import { StrengthSession } from '../strength/StrengthSession'
 import type { RoutineSport } from '../../core/strength/routine'
@@ -55,6 +55,7 @@ export function SessionDetailPage() {
         </p>
       )}
       <ZonesNotice zones={derived.zones} />
+      {(week?.phase === 'return' || week?.phase === 'pause') && <InjuryNotice pauses={derived.ctx.pauses} today={derived.today} />}
       {s.kind === 'strength' && (
         <StrengthSession
           prefs={derived.ctx.strength}

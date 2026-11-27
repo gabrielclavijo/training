@@ -25,8 +25,9 @@ export function usePlan() {
       today: ctx.today,
       matches: sessionMatches(plan, ctx.loaded, ctx.today),
       diagnoses: diagnoseGoals(ctx),
-      zones: zonesFor(ctx, ctx.today),
+      // Con los datos de salud actuales (un medicamento recién guardado cuenta de inmediato)
+      zones: zonesFor({ ...ctx, health: health.data ?? ctx.health }, ctx.today),
     }
-  }, [q.data])
+  }, [q.data, health.data])
   return { ...q, derived }
 }

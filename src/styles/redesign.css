@@ -3567,3 +3567,32 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* Avisos de salud (lesión, medicamentos): fijos, no se cierran */
+.notice-health {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: var(--space-3) var(--space-4);
+  border-radius: 16px;
+  background: #fde8e8;
+  border-left: 4px solid #b3261e;
+  color: #5c0d0d;
+  font-size: 0.9375rem;
+  margin-bottom: var(--space-3);
+}
+.notice-health > svg {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  color: #b3261e;
+}
+.notice-health p {
+  margin: 2px 0 0;
+}
+.notice-health a {
+  display: inline-block;
+  margin-top: 6px;
+  font-weight: 700;
+  color: #7a1212;
+}

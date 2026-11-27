@@ -88,7 +88,8 @@
         "more": "una serie más que la semana pasada",
         "harder": "prueba la variante más difícil si te queda fácil"
       },
-      "easyNote": "Deja siempre 2 repeticiones en reserva: debe quedarte energía para tu deporte."
+      "easyNote": "Deja siempre 2 repeticiones en reserva: debe quedarte energía para tu deporte.",
+      "discomfortWarn": "Marcaste molestia en {{list}}: la app solo evita los ejercicios que más la cargan; no es una rutina de rehabilitación ni calcula la carga exacta para ti. Ajústala a mano según las recomendaciones de tu fisioterapeuta y detente si aparece dolor."
     }
   }
 }

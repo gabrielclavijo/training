@@ -45,6 +45,8 @@ export interface ZoneInputs {
   hrRest?: number | null
   ageYears?: number | null
   usesPowerMeter?: boolean
+  /** Toma un medicamento que altera el pulso: no se usan zonas de pulso */
+  hrMedication?: boolean
 }
 
 export interface ZoneSet {
@@ -55,6 +57,8 @@ export interface ZoneSet {
   hrThreshold: number | null
   power: boolean
   ftpW: number | null
+  /** Medicamento que altera el pulso: las sesiones van por esfuerzo percibido */
+  hrMedication: boolean
 }
 
 /** Decide con qué se medirán las zonas y si son estimaciones. */
@@ -82,6 +86,7 @@ export function zoneSet(p: ZoneInputs): ZoneSet {
     hrThreshold,
     power: Boolean(p.usesPowerMeter && p.ftpW),
     ftpW: p.ftpW ?? null,
+    hrMedication: Boolean(p.hrMedication),
   }
 }
 
@@ -97,7 +102,9 @@ export function zoneTarget(z: Zone, zs: ZoneSet, sport: string): ZoneTarget {
   const [hl, hh] = HR_PCT[z - 1]
   const [pl, ph] = POWER_PCT[z - 1]
   const hr: [number, number] | null =
-    zs.hrThreshold && sport !== 'swimming' && sport !== 'strength' ? [Math.round(zs.hrThreshold * (hl || 0.7)), Math.round(zs.hrThreshold * hh)] : null
+    zs.hrThreshold && !zs.hrMedication && sport !== 'swimming' && sport !== 'strength'
+      ? [Math.round(zs.hrThreshold * (hl || 0.7)), Math.round(zs.hrThreshold * hh)]
+      : null
   const power: [number, number] | null = zs.power && zs.ftpW && sport === 'cycling' ? [Math.round(zs.ftpW * (pl || 0.45)), Math.round(zs.ftpW * ph)] : null
   return { zone: z, rpe: RPE_BY_ZONE[z], hr, power, hrEstimated: zs.hrEstimated }
 }

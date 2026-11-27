@@ -531,3 +531,74 @@ describe('core cuando hay tiempo', () => {
     expect(baseWeeks.every((w) => w.sessions.filter((s) => s.note === 'core').length === 2)).toBe(true)
   })
 })
+
+describe('revisión profesional: principiantes y sesión larga', () => {
+  const run = (x: Partial<PlanGoal>): PlanGoal => ({
+    ...gravel,
+    id: 'r',
+    name: 'Carrera',
+    sport: 'running',
+    goalType: 'single',
+    priority: 'primary',
+    stageDays: 1,
+    ...x,
+  })
+  const novice: PlanInput = {
+    today,
+    goals: [run({ eventDate: addDays(today, 58), estimatedHours: 0.6 })],
+    availability: { minutesByDay: { 1: 0, 2: 30, 3: 0, 4: 30, 5: 0, 6: 45, 7: 0 }, longDay: 6 },
+    mix: { cycling: 0, running: 1, swimming: 0, strength: 0 },
+    ctl: 5,
+    recentWeeklyLoad: 40,
+    longestRecentMin: 20,
+    pauses: [],
+    strength: { enabled: true, minutes: 30 },
+  }
+  const QUALITY = ['tempo', 'threshold', 'vo2', 'climb']
+
+  it('el principiante parte de lo que ya hace: sin calidad 3 semanas y la larga cerca de su máximo', () => {
+    const weeks = generatePlan(novice).weeks
+    for (const w of weeks.slice(0, 3)) expect(w.sessions.some((s) => QUALITY.includes(s.kind))).toBe(false)
+    const firstLong = weeks[0].sessions.find((s) => s.kind === 'long')
+    expect(firstLong?.durationMin ?? 0).toBeLessThanOrEqual(22)
+  })
+
+  it('con 3 días o menos: máximo 1 sesión fuerte por semana, y la fuerza no reemplaza las carreras', () => {
+    for (const w of generatePlan(novice).weeks) {
+      expect(w.sessions.filter((s) => QUALITY.includes(s.kind)).length).toBeLessThanOrEqual(1)
+      if (w.phase === 'base' || w.phase === 'build') expect(w.sessions.filter((s) => s.sport === 'running').length).toBeGreaterThanOrEqual(2)
+    }
+  })
+
+  it('maratón: la larga nunca pasa de 3 h y crece máximo ~10 % por semana', () => {
+    const weeks = generatePlan({
+      today,
+      goals: [run({ eventDate: addDays(today, 115), estimatedHours: 4, objective: 'time', targetTimeS: 4 * 3600 })],
+      availability: { minutesByDay: { 1: 0, 2: 60, 3: 60, 4: 60, 5: 0, 6: 60, 7: 240 }, longDay: 7 },
+      mix: { cycling: 0, running: 0.9, swimming: 0, strength: 0.1 },
+      ctl: 45,
+      recentWeeklyLoad: 320,
+      longestRecentMin: 110,
+      pauses: [],
+      strength: { enabled: true, minutes: 40 },
+    }).weeks
+    let prev = 110
+    for (const w of weeks) {
+      const long = w.sessions.find((s) => s.kind === 'long')
+      if (!long) continue
+      expect(long.durationMin).toBeLessThanOrEqual(180)
+      expect(long.durationMin).toBeLessThanOrEqual(Math.ceil(prev * 1.1) + 2)
+      prev = long.durationMin
+    }
+  })
+})
+
+describe('medicamentos que alteran el pulso', () => {
+  it('sin zonas de pulso: la sesión se guía por esfuerzo percibido', () => {
+    const z = zoneSet({ hrMax: 185, hrRest: 55, hrMedication: true })
+    expect(z.hrMedication).toBe(true)
+    expect(zoneTarget(2, z, 'running').hr).toBeNull()
+    expect(zoneTarget(2, z, 'running').rpe).toEqual([3, 4])
+    expect(zoneTarget(2, zoneSet({ hrMax: 185, hrRest: 55 }), 'running').hr).not.toBeNull()
+  })
+})

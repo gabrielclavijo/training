@@ -8,7 +8,7 @@ import { diagnose, estimateTime, goalDemand, type Diagnosis, type PastEffort, ty
 import { generatePlan, isoWeekday, type Availability, type PlanGoal, type PlanPause, type SportMix, type Weekday } from '../core/planner/plan'
 import { zoneSet, type ZoneSet } from '../core/planner/zones'
 import { goalEstimatedHours, goalTotals } from '../features/goals/goalUtils'
-import { loadsFor, physiologyOn, TIMEZONE, type ActivityWithLoad } from './analysis'
+import { loadsFor, physiologyOn, TIMEZONE, type ActivityWithLoad, takesHrMedication } from './analysis'
 import type { Repo } from './repo'
 import type { Activity, CurrentPlan, Goal, HealthRecord, Pause, PhysiologyEntry, Profile, StoredSession } from './types'
 import { ageOn } from '../core/dates'
@@ -412,7 +412,7 @@ function diagnoseTriathlon(legs: TriLegs, d: Diagnosis, ctx: PlanContext, effort
 export { goalDemand }
 
 /** Zonas de la persona para mostrar las sesiones. */
-export function zonesFor(ctx: Pick<PlanContext, 'physiology' | 'profile' | 'activities'>, today: string): ZoneSet {
+export function zonesFor(ctx: Pick<PlanContext, 'physiology' | 'profile' | 'activities'> & { health?: PlanContext['health'] }, today: string): ZoneSet {
   const ph = physiologyOn(ctx.physiology, today)
   const rides = ctx.activities.filter((a) => a.sport === 'cycling').slice(0, 20)
   const usesPowerMeter = rides.length > 0 && rides.filter((a) => a.hasPower).length / rides.length >= 0.5
@@ -424,6 +424,7 @@ export function zonesFor(ctx: Pick<PlanContext, 'physiology' | 'profile' | 'acti
     hrRest: ph?.hrRest,
     ageYears: ctx.profile?.birthDate ? ageOn(ctx.profile.birthDate, today) : null,
     usesPowerMeter,
+    hrMedication: takesHrMedication(ctx.health ?? []),
   })
 }
 

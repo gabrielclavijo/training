@@ -108,8 +108,32 @@ export function LegalNotice({ text, id = 'plan' }: { text?: string; id?: string 
   )
 }
 
+/** Aviso fijo (no se cierra): la app no calcula un plan exacto en este caso. */
+export function HealthNotice({ title, text, to, link }: { title: string; text: string; to?: string; link?: string }) {
+  return (
+    <div className="notice-health" role="note">
+      <Icon name="alert" />
+      <div>
+        <strong>{title}</strong>
+        <p>{text}</p>
+        {to && link && <Link to={to}>{link}</Link>}
+      </div>
+    </div>
+  )
+}
+
+/** Lesión registrada (en curso, futura o terminada hace menos de 6 semanas). */
+export function InjuryNotice({ pauses, today }: { pauses: { kind: string; startsOn: string; endsOn: string | null }[]; today: string }) {
+  const { t } = useTranslation()
+  const limit = new Date(Date.parse(`${today}T12:00:00Z`) - 42 * 86_400_000).toISOString().slice(0, 10)
+  const relevant = pauses.some((p) => p.kind === 'injury' && (p.endsOn ?? today) >= limit)
+  if (!relevant) return null
+  return <HealthNotice title={t('plan.injuryWarnTitle')} text={t('plan.injuryWarn')} />
+}
+
 export function ZonesNotice({ zones }: { zones: ZoneSet }) {
   const { t } = useTranslation()
+  if (zones.hrMedication) return <HealthNotice title={t('plan.medWarnTitle')} text={t('plan.medWarn')} to="/perfil" link={t('plan.seeHealth')} />
   if (!zones.hrThreshold) return <p className="notice-estimate">{t('plan.noZones')}</p>
   if (!zones.hrEstimated) return null
   return (
