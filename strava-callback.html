@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es-CO">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conectando con Strava…</title>
+  </head>
+  <body>
+    <p>Conectando con Strava…</p>
+    <script>
+      // Strava vuelve aquí con ?code=…&scope=…&state=…; se pasa a la app por el «#»
+      // para que no se confunda con el inicio de sesión de Supabase (que usa ?code=).
+      var q = new URLSearchParams(location.search);
+      var p = new URLSearchParams();
+      ['code', 'scope', 'state', 'error'].forEach(function (k) {
+        if (q.get(k)) p.set(k, q.get(k));
+      });
+      location.replace('./#/strava?' + p.toString());
+    </script>
+  </body>
+</html>
