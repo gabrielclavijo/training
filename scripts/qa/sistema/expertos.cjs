@@ -38,8 +38,11 @@ function vista(caso) {
       days: new Set(ss.map((x) => x.date)).size,
       quality: train.filter((x) => QUALITY.includes(x.kind)).length,
       endurance: train.filter((x) => ENDURANCE.includes(x.sport)).length,
-      long: Math.max(0, ...train.filter((x) => x.kind === 'long').map((x) => x.durationMin)),
+      // La sesión de resistencia más larga de la semana (larga o suave larga)
+      long: Math.max(0, ...train.filter((x) => ENDURANCE.includes(x.sport)).map((x) => x.durationMin)),
       full: w.weekStart >= today,
+      // Semana con viaje, vacaciones, enfermedad o lesión (el plan se adapta a la pausa)
+      pausa: (s.pauses || []).some((p) => p.startsOn <= add(w.weekStart, 6) && (p.endsOn || p.startsOn) >= w.weekStart),
     }
   })
   const goals = (s.goals || []).filter((g) => g.status === 'active')
@@ -233,10 +236,12 @@ function entrenador(caso) {
         obtenido: `hasta ${w.weekStart}`,
       })
   }
+  // La larga se compara con la mayor de las 3 semanas anteriores (una semana de viaje o de descarga no cuenta como base)
   for (let i = 1; i < v.weeks.length; i++) {
     const a = v.weeks[i - 1]
     const b = v.weeks[i]
-    if (a.full && a.long > 0 && b.long > a.long * 1.15 + 5 && ['base', 'build'].includes(a.phase))
+    const ref = Math.max(...v.weeks.slice(Math.max(0, i - 3), i).map((w) => w.long))
+    if (a.full && !b.pausa && ref > 0 && b.long > ref * 1.15 + 5 && ['base', 'build'].includes(a.phase))
       r({
         categoria: 'contenido',
         severidad: 'media',
@@ -244,7 +249,7 @@ function entrenador(caso) {
         clave: 'cont:larga-salto',
         titulo: 'La sesión larga crece más de un 15 % en una semana',
         esperado: 'Crecimiento gradual',
-        obtenido: `${a.long} → ${b.long} min (${b.weekStart})`,
+        obtenido: `${ref} → ${b.long} min (${b.weekStart})`,
       })
   }
   for (const w of v.weeks.filter((w) => w.full && w.days <= 4 && w.endurance >= 2))
@@ -289,7 +294,7 @@ function entrenador(caso) {
       })
   }
   if (v.goals.some((g) => g.sport === 'triathlon')) {
-    const falta = v.weeks.filter((w) => w.full && w.phase === 'build' && !['swimming', 'cycling', 'running'].every((sp) => w.ss.some((x) => x.sport === sp)))
+    const falta = v.weeks.filter((w) => w.full && !w.pausa && w.phase === 'build' && !['swimming', 'cycling', 'running'].every((sp) => w.ss.some((x) => x.sport === sp)))
     if (falta.length)
       r({
         categoria: 'contenido',

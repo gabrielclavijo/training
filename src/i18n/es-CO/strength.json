@@ -90,6 +90,42 @@
       },
       "easyNote": "Deja siempre 2 repeticiones en reserva: debe quedarte energía para tu deporte.",
       "discomfortWarn": "Marcaste molestia en {{list}}: la app solo evita los ejercicios que más la cargan; no es una rutina de rehabilitación ni calcula la carga exacta para ti. Ajústala a mano según las recomendaciones de tu fisioterapeuta y detente si aparece dolor."
+    },
+    "cooldown": {
+      "title": "Movilidad y estiramientos para terminar (5 min)",
+      "intro": "Despacio y respirando hondo. Estira hasta sentir tensión suave, nunca dolor.",
+      "secs": "{{s}} s",
+      "reps": "{{n}} veces",
+      "items": {
+        "hip_flexor": {
+          "name": "Estiramiento de cadera (flexores)",
+          "how": "De pie, un pie adelante y el otro atrás; aprieta el glúteo de atrás y lleva la cadera un poco adelante."
+        },
+        "hamstring": {
+          "name": "Estiramiento de la parte de atrás del muslo",
+          "how": "Acostado boca arriba, sube una pierna estirada con una toalla o banda en el pie."
+        },
+        "calf": {
+          "name": "Estiramiento de pantorrilla en la pared",
+          "how": "Manos en la pared, una pierna atrás con el talón en el piso; luego dobla un poco esa rodilla."
+        },
+        "thoracic": {
+          "name": "Movilidad de espalda alta (libro abierto)",
+          "how": "Acostado de lado con las rodillas dobladas, abre el brazo de arriba hacia el otro lado siguiéndolo con la mirada."
+        },
+        "chest": {
+          "name": "Estiramiento de pecho en la puerta",
+          "how": "Antebrazos en el marco de una puerta, da un paso suave adelante hasta sentir el pecho."
+        },
+        "knees_chest": {
+          "name": "Rodillas al pecho",
+          "how": "Acostado boca arriba, abraza las rodillas y respira; relaja la espalda baja."
+        },
+        "child_pose": {
+          "name": "Postura del niño",
+          "how": "De rodillas, siéntate sobre los talones y estira los brazos adelante en el piso."
+        }
+      }
     }
   }
 }

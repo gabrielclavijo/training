@@ -2197,7 +2197,7 @@ details[open] > *:not(summary) {
 /* Con muchas barras en pantallas angostas: valores más pequeños y fechas alternas */
 @container (max-width: 520px) {
   .bars-dense .bar-value {
-    font-size: 0.625rem;
+    font-size: 0.75rem;
   }
   .bars-dense {
     gap: 3px;
@@ -2412,7 +2412,7 @@ details[open] > *:not(summary) {
   position: absolute;
   top: 16px;
   right: 0;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-muted);
   white-space: nowrap;
@@ -2635,7 +2635,7 @@ details[open] > *:not(summary) {
   background: var(--outline);
 }
 .nday-kcal {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 .nday-icon svg {

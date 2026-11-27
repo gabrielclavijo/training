@@ -19,7 +19,7 @@ const path = require('path')
 const { BASE, OUT, findings, log, newIsolatedUser } = require('./lib.cjs')
 const { USUARIOS, EXPERTOS } = require('./personas.cjs')
 const { recorrer } = require('./usuarios.cjs')
-const { revisar } = require('./expertos.cjs')
+const { revisar, vista } = require('./expertos.cjs')
 const { consolidar, markdown } = require('./consolidar.cjs')
 
 ;(async () => {
@@ -82,6 +82,19 @@ const { consolidar, markdown } = require('./consolidar.cjs')
   fs.writeFileSync(path.join(OUT, 'consolidado.json'), JSON.stringify({ ...meta, consolidado }, null, 2))
   fs.writeFileSync(path.join(OUT, 'informe.md'), markdown(consolidado, meta))
   fs.writeFileSync(path.join(OUT, 'bitacora.txt'), log.join('\n'))
+  if (process.env.QA_ESTADO) fs.writeFileSync(path.join(OUT, 'estados.json'), JSON.stringify(casos.map((c) => ({ persona: c.persona.id, estado: c.estado }))))
+  // Resumen semanal de cada plan (para revisar a mano lo que vieron los expertos)
+  fs.writeFileSync(
+    path.join(OUT, 'planes.json'),
+    JSON.stringify(
+      casos.map((c) => ({
+        persona: c.persona.id,
+        semanas: vista(c).weeks.map((w) => ({ semana: w.weekStart, fase: w.phase, minutos: w.minutes, larga: w.long, sesiones: w.ss.map((x) => `${x.date.slice(5)} ${x.sport} ${x.kind} ${Math.round(x.durationMin)}`) })),
+      })),
+      null,
+      1,
+    ),
+  )
   fs.writeFileSync(
     path.join(OUT, 'casos.json'),
     JSON.stringify(

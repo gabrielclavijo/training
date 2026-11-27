@@ -14,7 +14,10 @@ Los valores están en `src/core/planner/rules.ts`, `diagnosis.ts` y `season`.
 
 ### Punto de partida, sesión larga e intensidad
 - La primera sesión larga parte de **la más larga reciente** de la persona (30 min si no hay
-  historial) y crece como máximo ~10 % por semana.
+  historial) y crece como máximo ~10 % por semana, y nunca más de un 10 % sobre la sesión más
+  larga de las 3 semanas anteriores (también al cambiar de meta).
+- **Bloques de carga:** cuando la semana ya usa todo el tiempo disponible, el bloque ondula
+  (90 % → 95 % → 100 %) en vez de repetir semanas idénticas.
 - **Tope de la sesión larga:** running 3 h, ciclismo 5,5 h, natación 2 h. Nunca se alarga para
   completar la carga semanal; el resto de la carga va a otras sesiones.
 - **Principiante** (forma < 15): sin sesiones de calidad las primeras 3 semanas; después,
@@ -26,6 +29,9 @@ Los valores están en `src/core/planner/rules.ts`, `diagnosis.ts` y `season`.
   caigan en la misma semana o con pocos días de diferencia.
 - La **principal** tiene disminución previa de 10 días; la **secundaria**, de 4–5
   y se toma como parte del entrenamiento.
+- **Mientras se prepara una secundaria y hay una principal después**, la base y el desarrollo
+  siguen a la principal (deporte, disciplinas y salida larga). Ej.: IRONMAN principal con un
+  maratón antes → las semanas de desarrollo mantienen natación, bici y running.
 - Después de una meta, su recuperación **cede ante la preparación de la
   siguiente** si esta ya está cerca: el entrenamiento es acumulativo.
 - Si hay poco tiempo entre metas, la temporada avisa y sugiere opciones.
@@ -52,7 +58,10 @@ Los valores están en `src/core/planner/rules.ts`, `diagnosis.ts` y `season`.
   ni el día después de la larga; con al menos un día entre sesiones de fuerza.
 - Sin fuerza en los 5 días antes de un evento ni en los 7 días después
   (10 si fue de varios días). Sin core en los 3 días antes de un evento ni
-  durante el descanso y la recuperación corta posterior.
+  en los 7 días después (10 si fue de varios días), igual que la fuerza.
+- **Toda rutina termina con 5 min de movilidad y estiramientos** según el deporte
+  (cadera, parte de atrás del muslo, pantorrilla, espalda alta, pecho); con molestia de
+  rodilla, sin apoyar la rodilla; con molestia de hombro, sin estiramiento de pecho.
 - La fuerza cuenta con carga reducida (~0,5 puntos por minuto) para no
   quitarle tiempo a la salida larga.
 - Ejercicios según el lugar (casa/gimnasio), el equipo, la experiencia y las

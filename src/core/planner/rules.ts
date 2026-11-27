@@ -26,6 +26,10 @@ export const PLAN_RULES = {
   strengthLoadPerMin: 0.5,
   /** Sesión larga: tope por deporte (min). Solo crece con su progresión semanal, nunca por repartir carga */
   longMaxMin: { running: 180, cycling: 330, swimming: 120, other: 240 } as Record<string, number>,
+  /** La larga real no crece más que esto sobre la mayor de las 3 semanas anteriores */
+  longStepMax: 1.1,
+  /** Bloque de carga con el tiempo disponible lleno: semanas 1-2-3 al 90 %, 95 % y 100 % */
+  blockWave: [0.9, 0.95, 1] as readonly number[],
   /** La primera larga parte de la más larga reciente (o de esto si no hay historial) */
   longStartNoHistoryMin: 30,
   /** Principiante: forma (CTL) por debajo de esto */

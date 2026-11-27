@@ -47,6 +47,13 @@ async function makeUploadFiles() {
   };
   await p.goto(base);
   await p.getByRole('button', { name: 'Probar en modo local' }).click();
+  // Aviso de responsabilidad: no deja seguir sin aceptarlo
+  await p.getByRole('heading', { name: 'Aviso de responsabilidad' }).waitFor();
+  await axe('aviso');
+  await p.getByRole('button', { name: 'Acepto y continúo' }).click();
+  await p.getByText('Para usar Entreno debes marcar la casilla').waitFor();
+  await p.getByLabel(/Leí el aviso/).check();
+  await p.getByRole('button', { name: 'Acepto y continúo' }).click();
   await p.waitForURL(/bienvenida/);
   await p.getByLabel('Nombre').fill('Gabriel');
   await p.getByLabel('Confirmo que soy mayor de 18 años').check();

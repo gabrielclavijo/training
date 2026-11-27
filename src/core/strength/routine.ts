@@ -141,6 +141,30 @@ function dose(ex: Exercise, p: StrengthPrefs, phase: Phase, focus: Focus, progre
   return { ex, sets, reps, perSide, restS }
 }
 
+/** Movilidad y estiramientos para cerrar la rutina (≈5 min, suaves y sin dolor). */
+export type CooldownId = 'hip_flexor' | 'hamstring' | 'calf' | 'thoracic' | 'chest' | 'knees_chest' | 'child_pose'
+export interface CooldownItem {
+  id: CooldownId
+  secs?: number
+  reps?: number
+  perSide: boolean
+}
+
+export function cooldownFor(sport: RoutineSport, discomfort: StrengthPrefs['discomfort']): CooldownItem[] {
+  const knee = discomfort.includes('knee')
+  const shoulder = discomfort.includes('shoulder')
+  const out: CooldownItem[] = [
+    // De pie o acostado: sin apoyar la rodilla si molesta
+    { id: 'hip_flexor', secs: 30, perSide: true },
+    { id: 'hamstring', secs: 30, perSide: true },
+  ]
+  if (sport === 'running' || sport === 'triathlon' || sport === 'other') out.push({ id: 'calf', secs: 30, perSide: true })
+  if (sport === 'swimming' || sport === 'cycling' || sport === 'triathlon') out.push({ id: 'thoracic', reps: 6, perSide: true })
+  if (!shoulder && (sport === 'swimming' || sport === 'cycling')) out.push({ id: 'chest', secs: 30, perSide: false })
+  out.push(knee ? { id: 'knees_chest', secs: 40, perSide: false } : { id: 'child_pose', secs: 40, perSide: false })
+  return out.slice(0, 5)
+}
+
 /** Enfoque de una sesión según el deporte y su lugar entre las de la semana. */
 export function focusFor(sport: RoutineSport, indexInWeek: number, mobility: boolean, core = false): Focus {
   if (core) return 'core'

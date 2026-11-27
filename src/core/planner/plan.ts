@@ -261,6 +261,8 @@ export function generatePlan(input: PlanInput): PlanOutput {
   let loadingStreak = 0
   // La larga parte de lo que la persona ya hace (no de un mínimo fijo)
   let longMin = Math.max(20, input.longestRecentMin || PLAN_RULES.longStartNoHistoryMin)
+  // Larga real de las últimas semanas: la de esta semana no crece más de un 10 % sobre la mayor de ellas
+  const recentLongs: number[] = []
 
   // Días parados por enfermedad/lesión (para el regreso gradual)
   const sickPauses = input.pauses.filter((p) => p.kind === 'illness' || p.kind === 'injury')
@@ -293,6 +295,14 @@ export function generatePlan(input: PlanInput): PlanOutput {
         const pos = daysBetween(prevEnd, ws) / 7
         phase = span >= 6 && pos < span * 0.35 ? 'base' : 'build'
       }
+    }
+
+    // Preparando una meta secundaria con una principal después: el entreno sigue la
+    // principal (deporte, disciplinas y larga); la secundaria cuenta como entreno
+    let focus = win
+    if (win && win.goal.priority === 'secondary' && (phase === 'base' || phase === 'build')) {
+      const primary = wins.find((x) => x.goal.priority === 'primary' && x.eventStart > win!.eventEnd)
+      if (primary) focus = primary
     }
 
     // Pausas de esta semana
@@ -330,8 +340,12 @@ export function generatePlan(input: PlanInput): PlanOutput {
     } else if (phase === 'base' || phase === 'build' || phase === 'maintenance' || phase === 'return') {
       const maxByRamp = 7 * (ctl + 5 / K7) // la forma no sube más de ~5 pts/semana
       const grow = phase === 'maintenance' ? 1 : phase === 'base' ? 1.06 : 1.1
-      target = Math.min(lastLoading * grow, maxByRamp, Math.max(capacityLoad, MIN_WEEKLY))
-      if (target >= capacityLoad * 0.98) notes.push('capacity_limited')
+      // Techo: el tiempo disponible
+      const ceiling = Math.max(capacityLoad, MIN_WEEKLY)
+      // En el techo, el bloque ondula (90 % → 95 % → 100 %) en vez de repetir semanas iguales
+      const wave = phase === 'maintenance' || phase === 'return' ? 1 : PLAN_RULES.blockWave[loadingStreak % 3]
+      target = Math.min(lastLoading * grow, maxByRamp, ceiling * wave)
+      if (target >= capacityLoad * 0.98 * wave) notes.push('capacity_limited')
       if (phase !== 'return') {
         lastLoading = target
         peak = Math.max(peak, target)
@@ -366,10 +380,10 @@ export function generatePlan(input: PlanInput): PlanOutput {
       pauseDays,
       phase,
       target,
-      win,
+      win: focus,
       availability,
       mix,
-      longMin,
+      longMin: recentLongs.length ? Math.min(longMin, Math.max(...recentLongs.slice(-3)) * PLAN_RULES.longStepMax) : longMin,
       easyFirstDays: w === 0 ? (input.adjustment?.easyDays ?? 0) : 0,
       today,
       weekIndex: w,
@@ -381,7 +395,10 @@ export function generatePlan(input: PlanInput): PlanOutput {
     if (sessions.some((s) => s.note === 'brick')) notes.push('brick')
     if (win?.goal.triMinutes && !(availability.poolDays ?? []).length && phase !== 'pause') notes.push('no_pool')
     const load = Math.round(sessions.reduce((s, x) => s + x.load, 0))
-    if (phase === 'build' || phase === 'base') longMin = Math.min(longMin * 1.1, longCap(win))
+    if (phase === 'build' || phase === 'base') longMin = Math.min(longMin * 1.1, longCap(focus))
+    // La sesión de resistencia más larga de la semana (sin eventos ni fuerza)
+    const longest = Math.max(0, ...sessions.filter((s) => s.kind !== 'event' && s.sport !== 'strength' && s.note !== 'back_to_back').map((s) => s.durationMin))
+    if (longest > 0) recentLongs.push(longest)
 
     // Evolución aproximada de la forma con la carga planeada
     ctl += (load / 7 - ctl) * K7
@@ -850,7 +867,9 @@ function addStrength(f: {
   const coreDays = free
     .filter((i) => !chosen.includes(i) && !at(i).some((p) => p.sport === 'strength'))
     .filter(
-      (i) => !wins.some((x) => days[i] >= addDays(x.eventStart, -PLAN_RULES.noCoreBeforeEvent) && days[i] <= addDays(x.eventEnd, restAfter(x) + easyAfter(x))),
+      // Tampoco core en la semana siguiente a un evento (mismo margen que la fuerza)
+      (i) =>
+        !wins.some((x) => days[i] >= addDays(x.eventStart, -PLAN_RULES.noCoreBeforeEvent) && days[i] <= addDays(x.eventEnd, noStrengthAfter(x.goal.stageDays))),
     )
     .filter((i) => !isLong(i) && !at(i).some((p) => KEY_KINDS.includes(p.kind) && p.sport !== 'cycling'))
     .filter((i) => !(i + 1 < 7 && at(i + 1).some((p) => p.kind === 'long' || p.kind === 'event')))

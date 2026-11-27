@@ -66,7 +66,9 @@ export function ProfilePage() {
           {t('profile.nutrition')}
         </h2>
         <p>{t('nutrition.profileHelp')}</p>
-        <Link to="/nutricion">{t('nutrition.editProfile')} →</Link>
+        <Link to="/nutricion" className="tap-link">
+          {t('nutrition.editProfile')} →
+        </Link>
       </section>
       <AccountSection />
     </Page>

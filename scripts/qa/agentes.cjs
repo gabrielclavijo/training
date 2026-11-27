@@ -122,6 +122,8 @@ async function onboarding(A, { name, birth, sex, height, weight, demo }) {
   A.step('Entrar en modo local')
   await p.goto(BASE)
   await p.getByRole('button', { name: 'Probar en modo local' }).click()
+  await p.getByLabel(/Leí el aviso/).check()
+  await p.getByRole('button', { name: 'Acepto y continúo' }).click()
   await p.waitForURL(/bienvenida/)
   A.step(`Paso 1: datos básicos (${name})`)
   await p.getByLabel('Nombre').fill(name)

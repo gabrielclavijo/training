@@ -88,7 +88,7 @@ export function FitnessCards() {
         ))}
       </p>
       <p>
-        <Link to="/glosario">{t('nav.glossary')}</Link>
+        <Link to="/glosario" className="tap-link">{t('nav.glossary')}</Link>
       </p>
     </section>
   )

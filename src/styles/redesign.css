@@ -804,9 +804,14 @@ html.has-sheet {
 .small {
   font-size: 0.8125rem;
 }
-.small-link {
-  font-size: 0.875rem;
+.small-link,
+.tap-link {
+  font-size: 0.9375rem;
   font-weight: 600;
+  /* Área de toque cómoda (≥ 44 px) aunque el texto sea corto */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 /* Saludo */
@@ -1122,7 +1127,7 @@ html.has-sheet {
   display: grid;
   justify-items: center;
   gap: 2px;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -1279,7 +1284,7 @@ html.has-sheet {
   color: #8c0009;
 }
 @keyframes delta-in {
-  from { opacity: 0; transform: translateY(6px) scale(0.8); }
+  from { transform: translateY(6px) scale(0.8); }
 }
 
 /* Barra de la semana */
@@ -1511,7 +1516,7 @@ html.has-sheet {
 }
 .kpi-delta.is-info {
   background: var(--surface-2);
-  color: var(--text-muted);
+  color: var(--text);
 }
 .art-kpis {
   display: grid;
@@ -1599,8 +1604,8 @@ html.has-sheet {
   font-weight: 500;
 }
 .cal-arrow {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: 10px;
   background: transparent;
@@ -1858,7 +1863,7 @@ a.cal-item:hover {
 .cal-badge {
   padding: 1px 8px;
   border-radius: 999px;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -2101,7 +2106,7 @@ a.cal-item:hover {
   transform: scale(0.95);
 }
 .ncal-dow {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-muted);
 }
@@ -2144,7 +2149,7 @@ a.cal-item:hover {
   transform-origin: left;
 }
 .ncal-kcal {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-muted);
 }
@@ -3146,7 +3151,7 @@ textarea {
   height: 20px;
   border-radius: 50%;
   font-style: normal;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 800;
   background: var(--surface-low);
   color: var(--text-muted);
@@ -3447,6 +3452,29 @@ textarea {
   width: 16px;
   height: 16px;
 }
+/* Movilidad para cerrar la rutina */
+.str-cooldown {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-4);
+}
+.str-cooldown h3 {
+  font-size: 1.0625rem;
+  margin: 0 0 4px;
+}
+.str-cool-list {
+  margin: var(--space-3) 0 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 10px;
+}
+.str-cool-list li > * {
+  display: block;
+}
+.str-cool-dose {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.9375rem;
+}
 /* Perfil: el formulario de tiempo disponible va dentro de su tarjeta */
 .profile-training > form.card {
   box-shadow: none;
@@ -3595,4 +3623,25 @@ textarea {
   margin-top: 6px;
   font-weight: 700;
   color: #7a1212;
+}
+
+/* Aviso de responsabilidad: pantalla de aceptación (una vez por persona) */
+.disclaimer-gate {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-5) 16px var(--space-6);
+}
+.disclaimer-gate h1 {
+  margin-bottom: var(--space-2);
+}
+.disclaimer-gate .card {
+  display: grid;
+  gap: var(--space-4);
+}
+.disclaimer-points p {
+  margin: 0;
+}
+.disclaimer-gate .btn-link {
+  justify-self: center;
+  min-height: 44px;
 }

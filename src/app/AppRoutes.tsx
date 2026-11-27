@@ -9,6 +9,7 @@ import { useAuth } from '../features/auth/AuthProvider'
 import { NotFoundPage } from '../features/common/Placeholder'
 import { HomePage } from '../features/dashboard/HomePage'
 import { PrivacyPage } from '../features/legal/PrivacyPage'
+import { DisclaimerGate, DisclaimerPage } from '../features/legal/Disclaimer'
 import { Layout } from './Layout'
 
 // Pantallas cargadas bajo demanda para que la primera carga en celular sea liviana
@@ -51,7 +52,7 @@ function OnboardingGate({ children }: { children: ReactNode }) {
         <Spinner full />
       </main>
     )
-  const free = ['/bienvenida', '/guias', '/ayuda', '/privacidad', '/subir', '/metas/nueva', '/cambiar-clave', '/ajustes', '/strava']
+  const free = ['/bienvenida', '/guias', '/ayuda', '/privacidad', '/aviso-legal', '/subir', '/metas/nueva', '/cambiar-clave', '/ajustes', '/strava']
   if (profile.data && !profile.data.onboardingDone && !free.includes(location.pathname)) {
     return <Navigate to="/bienvenida" replace />
   }
@@ -66,9 +67,11 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <RepoProvider>
-              <OnboardingGate>
-                <Layout />
-              </OnboardingGate>
+              <DisclaimerGate>
+                <OnboardingGate>
+                  <Layout />
+                </OnboardingGate>
+              </DisclaimerGate>
             </RepoProvider>
           </RequireAuth>
         }
@@ -290,6 +293,9 @@ export function AppRoutes() {
       {/* La política se puede leer sin cuenta */}
       <Route path="/privacidad" element={<PrivacyGate />}>
         <Route index element={<PrivacyPage />} />
+      </Route>
+      <Route path="/aviso-legal" element={<PrivacyGate />}>
+        <Route index element={<DisclaimerPage />} />
       </Route>
     </Routes>
   )

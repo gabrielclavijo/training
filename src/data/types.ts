@@ -42,7 +42,7 @@ export interface PhysiologyEntry {
   isDemo?: boolean
 }
 
-export type ConsentType = 'privacy_policy' | 'health_data'
+export type ConsentType = 'privacy_policy' | 'health_data' | 'disclaimer'
 export interface Consent {
   id: string
   type: ConsentType

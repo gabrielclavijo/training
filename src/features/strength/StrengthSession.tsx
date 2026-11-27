@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Icon, TitleIcon } from '../../components/ui/Icon'
-import { buildRoutine, focusFor, type RoutineItem, type RoutineSport } from '../../core/strength/routine'
+import { buildRoutine, cooldownFor, focusFor, type RoutineItem, type RoutineSport } from '../../core/strength/routine'
 import type { StrengthPrefs } from '../../core/strength/library'
 import type { Phase } from '../../core/planner/plan'
 import { ExerciseCard } from './ExerciseCard'
@@ -105,6 +105,25 @@ export function StrengthSession({
           <ExerciseCard key={i.ex.id} ex={i.ex} index={k} dose={{ where, dose: doseText(i), rest: t('strength.session.rest', { s: i.restS }) }} />
         ))}
       </div>
+
+      <section className="str-cooldown" aria-labelledby="str-cool">
+        <h3 id="str-cool" className="card-title-icon">
+          <Icon name="heart" /> {t('strength.cooldown.title')}
+        </h3>
+        <p className="muted">{t('strength.cooldown.intro')}</p>
+        <ol className="str-cool-list">
+          {cooldownFor(sport, prefs.discomfort).map((c) => (
+            <li key={c.id}>
+              <strong>{t(`strength.cooldown.items.${c.id}.name`)}</strong>
+              <span className="str-cool-dose">
+                {c.secs ? t('strength.cooldown.secs', { s: c.secs }) : t('strength.cooldown.reps', { n: c.reps })}
+                {c.perSide ? ` ${t('strength.session.perSide')}` : ''}
+              </span>
+              <span className="muted">{t(`strength.cooldown.items.${c.id}.how`)}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <Link to="/plan/disponibilidad#tu-fuerza" className="str-change">
         <Icon name="edit" /> {t('strength.session.change')}

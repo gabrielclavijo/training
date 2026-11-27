@@ -152,7 +152,9 @@ export function SeasonPage() {
             <h3 className="card-title-icon">
               <TitleIcon name="flag" tone={g.priority === 'primary' ? undefined : 'soft'} />
               <span>
-                <Link to={`/metas/${g.id}`}>{g.name}</Link>{' '}
+                <Link to={`/metas/${g.id}`} className="tap-link">
+                  {g.name}
+                </Link>{' '}
                 <span className="muted">({g.priority === 'primary' ? t('goals.primary') : t('goals.secondary')})</span>
               </span>
             </h3>

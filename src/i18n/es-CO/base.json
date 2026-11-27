@@ -52,7 +52,8 @@
       "pauseHint": "Viaje, enfermedad o descanso",
       "menu": "Generar menú",
       "menuHint": "Tu menú de la semana"
-    }
+    },
+    "disclaimer": "Aviso de responsabilidad"
   },
   "toast": {
     "activitySaved": "Actividad registrada",
@@ -168,7 +169,8 @@
     "passwordShort": "La contraseña debe tener al menos 8 caracteres.",
     "privacyNotice": "Al crear tu cuenta aceptas la",
     "privacyLink": "política de privacidad",
-    "finishing": "Terminando de ingresar…"
+    "finishing": "Terminando de ingresar…",
+    "and": "y el"
   },
   "privacy": {
     "title": "Política de privacidad"
@@ -186,5 +188,19 @@
     "/glosario": "Qué significa cada número",
     "/privacidad": "Cómo cuidamos tus datos",
     "/admin": "Uso de la app y saldo de la IA"
+  },
+  "disclaimer": {
+    "title": "Aviso de responsabilidad",
+    "lead": "Entreno te orienta; no reemplaza a los profesionales",
+    "updated": "Última actualización: {{date}} · Versión {{v}}",
+    "gateIntro": "Antes de usar Entreno, lee y acepta este aviso. Solo te lo pedimos una vez.",
+    "check": "Leí el aviso y entiendo que Entreno solo orienta y que no me exime de consultar a profesionales de la salud y del deporte.",
+    "mustAccept": "Para usar Entreno debes marcar la casilla y aceptar el aviso.",
+    "accept": "Acepto y continúo",
+    "leave": "Salir sin aceptar",
+    "signupCheck": "Leí y acepto el",
+    "signupLink": "aviso de responsabilidad",
+    "signupCheckEnd": ": Entreno solo orienta y no me exime de consultar a profesionales.",
+    "signupRequired": "Para crear la cuenta debes aceptar el aviso de responsabilidad."
   }
 }

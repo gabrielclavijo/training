@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { Alert } from '../../components/ui/Page'
 import { authRedirectUrl, isSupabaseConfigured, supabase } from '../../lib/supabase'
 import { useAuth } from './AuthProvider'
+import { markDisclaimerAccepted } from '../legal/Disclaimer'
 
 type Mode = 'signIn' | 'signUp' | 'forgot'
 
@@ -19,7 +20,8 @@ export function LoginPage() {
   const [mode, setMode] = useState<Mode>('signIn')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({})
+  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string; terms?: string }>({})
+  const [terms, setTerms] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [viaGoogle, setViaGoogle] = useState(false)
@@ -51,7 +53,7 @@ export function LoginPage() {
           <Alert kind="error">{t('errors.config')}</Alert>
         )}
         <p className="muted" style={{ marginTop: 'var(--space-5)', fontSize: '0.9rem' }}>
-          <Link to="/privacidad">{t('auth.privacyLink')}</Link>
+          <Link to="/privacidad">{t('auth.privacyLink')}</Link> · <Link to="/aviso-legal">{t('disclaimer.title')}</Link>
         </p>
       </main>
     )
@@ -62,6 +64,7 @@ export function LoginPage() {
     const e: typeof errors = {}
     if (!emailSchema.safeParse(email.trim()).success) e.email = t('auth.emailInvalid')
     if (mode !== 'forgot' && password.length < 8) e.password = t('auth.passwordShort')
+    if (mode === 'signUp' && !terms) e.terms = t('disclaimer.signupRequired')
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -77,6 +80,7 @@ export function LoginPage() {
         const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password })
         if (error) setErrors({ form: t('auth.invalidCredentials') })
       } else if (mode === 'signUp') {
+        markDisclaimerAccepted()
         const { data, error } = await sb.auth.signUp({
           email: email.trim(),
           password,
@@ -96,6 +100,13 @@ export function LoginPage() {
   }
 
   async function google() {
+    if (mode === 'signUp') {
+      if (!terms) {
+        setErrors({ terms: t('disclaimer.signupRequired') })
+        return
+      }
+      markDisclaimerAccepted()
+    }
     setViaGoogle(true)
     setBusy(true)
     const { error } = await sb.auth.signInWithOAuth({
@@ -181,6 +192,35 @@ export function LoginPage() {
             </div>
           )}
 
+          {mode === 'signUp' && (
+            <div className="field">
+              <label className="choice">
+                <input
+                  type="checkbox"
+                  checked={terms}
+                  onChange={(e) => {
+                    setTerms(e.target.checked)
+                    setErrors((x) => ({ ...x, terms: undefined }))
+                  }}
+                  aria-invalid={errors.terms ? true : undefined}
+                  aria-describedby={errors.terms ? 'terms-error' : undefined}
+                />
+                <span>
+                  {t('disclaimer.signupCheck')}{' '}
+                  <Link to="/aviso-legal" target="_blank" rel="noopener">
+                    {t('disclaimer.signupLink')}
+                  </Link>
+                  {t('disclaimer.signupCheckEnd')}
+                </span>
+              </label>
+              {errors.terms && (
+                <span id="terms-error" className="error" role="alert">
+                  {errors.terms}
+                </span>
+              )}
+            </div>
+          )}
+
           <BusyButton type="submit" className="btn btn-primary btn-block" busy={busy && !viaGoogle} busyLabel={t('common.loading')} disabled={busy}>
             {submitLabel}
           </BusyButton>
@@ -206,7 +246,8 @@ export function LoginPage() {
       </div>
 
       <p className="muted" style={{ marginTop: 'var(--space-5)', fontSize: '0.9rem' }}>
-        {t('auth.privacyNotice')} <Link to="/privacidad">{t('auth.privacyLink')}</Link>.
+        {t('auth.privacyNotice')} <Link to="/privacidad">{t('auth.privacyLink')}</Link> {t('auth.and')}{' '}
+        <Link to="/aviso-legal">{t('disclaimer.signupLink')}</Link>.
       </p>
     </main>
   )

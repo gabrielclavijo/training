@@ -62,6 +62,7 @@ update public.activities set primary_source_id = 'a0000000-0000-0000-0000-000000
   where id = 'a0000000-0000-0000-0000-0000000000ac';
 insert into public.body_measurements (measured_on, weight_kg) values ('2026-11-20', 68.5);
 insert into public.consents (consent_type, policy_version) values ('health_data', '1');
+insert into public.consents (consent_type, policy_version) values ('disclaimer', '1');
 update public.profiles set birth_date = '1990-05-01' where user_id = auth.uid();
 
 select test.ok((select count(*) from public.goals) = 1, 'Ana ve su meta');

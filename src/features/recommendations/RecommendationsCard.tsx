@@ -183,7 +183,7 @@ function RecItem({
         {t(`recs.${rec.key}.why`, rec.params)}
       </p>
       <div className="row">
-        {rec.link && <Link to={rec.link.to}>{t(`recs.link.${rec.link.label}`)}</Link>}
+        {rec.link && <Link to={rec.link.to} className="tap-link">{t(`recs.link.${rec.link.label}`)}</Link>}
         <button
           type="button"
           className="btn btn-secondary btn-small"

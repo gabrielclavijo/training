@@ -67,7 +67,7 @@ export function HomePage() {
         <>
           {pending.length > 0 && (
             <Alert kind="info">
-              <Link to={`/actividades/${pending[0].activity.id}`}>{t('rpe.pending', { count: pending.length })}</Link>
+              <Link to={`/actividades/${pending[0].activity.id}`} className="tap-link">{t('rpe.pending', { count: pending.length })}</Link>
             </Alert>
           )}
           {overview && overview.series.length > 1 && <Trend />}
@@ -83,7 +83,7 @@ export function HomePage() {
                 <ActivityRow key={l.activity.id} item={l} />
               ))}
             </ul>
-            <Link to="/actividades">{t('activities.title')} →</Link>
+            <Link to="/actividades" className="tap-link">{t('activities.title')} →</Link>
           </section>
         </>
       )}
@@ -169,7 +169,9 @@ function GoalOverview() {
           )}
         </>
       )}
-      <Link to={`/metas/${goal.id}`}>{t('fitness.goalSeeMore')} →</Link>
+      <Link to={`/metas/${goal.id}`} className="tap-link">
+        {t('fitness.goalSeeMore')} →
+      </Link>
     </section>
   )
 }

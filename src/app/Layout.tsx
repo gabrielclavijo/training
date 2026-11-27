@@ -39,6 +39,7 @@ export const SECONDARY: NavItem[] = [
   { to: '/ajustes', label: 'nav.settings', icon: 'settings' },
   { to: '/glosario', label: 'nav.glossary', icon: 'book' },
   { to: '/privacidad', label: 'nav.privacy', icon: 'shield' },
+  { to: '/aviso-legal', label: 'nav.disclaimer', icon: 'alert' },
 ]
 
 export const ADMIN_ITEM: NavItem = { to: '/admin', label: 'nav.admin', icon: 'gauge' }
@@ -47,7 +48,7 @@ export const ADMIN_ITEM: NavItem = { to: '/admin', label: 'nav.admin', icon: 'ga
 const GROUPS: { key: string; items: string[] }[] = [
   { key: 'train', items: ['/', '/plan', '/actividades', '/metas', '/temporada', '/metricas', '/importacion'] },
   { key: 'body', items: ['/nutricion', '/laboratorio', '/perfil'] },
-  { key: 'app', items: ['/ajustes', '/ayuda', '/glosario', '/privacidad', '/admin'] },
+  { key: 'app', items: ['/ajustes', '/ayuda', '/glosario', '/privacidad', '/aviso-legal', '/admin'] },
 ]
 
 const QUICK: { key: string; icon: IconName; to: string; state?: Record<string, unknown> }[] = [

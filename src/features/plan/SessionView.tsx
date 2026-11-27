@@ -116,7 +116,11 @@ export function HealthNotice({ title, text, to, link }: { title: string; text: s
       <div>
         <strong>{title}</strong>
         <p>{text}</p>
-        {to && link && <Link to={to}>{link}</Link>}
+        {to && link && (
+          <Link to={to} className="tap-link">
+            {link}
+          </Link>
+        )}
       </div>
     </div>
   )
